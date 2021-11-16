@@ -1,0 +1,18 @@
+[
+  {
+    "name": "BNB",
+    "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "symbol": "BNB",
+    "decimals": 18,
+    "chainId": 4,
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png"
+  },
+  {
+    "name": "Blueberry",
+    "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "symbol": "Blueberry",
+    "decimals": 18,
+    "chainId": 4,
+    "logoURI": "https://github.com/blueberrynetwork/blueberry_swap/blob/main/src/images/logo_200_200.png?raw=true"
+  }
+]
