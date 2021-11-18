@@ -124,8 +124,10 @@ class App extends Component<IProps, IApp> {
     console.log('IN');
     this.setState({
       tokensData: data,
+      tokenAData: data[0],
       tokensGData: data,
     });
+    console.log(this.state.tokenBData, this.state.tokenAData);
   }
 
   async componentDidUpdate(prevProps: any, prevState: any) {
@@ -190,7 +192,6 @@ class App extends Component<IProps, IApp> {
         provider,
         signer,
       });
-      await this.getEthBalance();
     } else {
       console.log('Wrong network');
       this.setState({
