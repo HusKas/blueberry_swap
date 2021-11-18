@@ -70,8 +70,10 @@ class App extends Component<IProps, IApp> {
       factory: {},
       exchange: {},
       Pair: {},
-      ethBalance: '0',
-      tokenBalance: '0',
+      ethBalanceTokenA: '0',
+      ethBalanceTokenB: '0',
+      tokenABalance: '0',
+      tokenBBalance: '0',
       loading: true,
       provider: {},
       signer: {},
@@ -118,15 +120,14 @@ class App extends Component<IProps, IApp> {
   };
   async componentWillMount() {
     this._isMounted = true;
-    await this.connectToWeb3();
-    await this.loadBlockchainData();
-    await this.getLiquidityOwner(this.state.tokenBData);
-    console.log('IN');
     this.setState({
       tokensData: data,
       tokenAData: data[0],
       tokensGData: data,
     });
+    await this.connectToWeb3();
+    await this.loadBlockchainData();
+    await this.getLiquidityOwner(this.state.tokenBData);
   }
 
   async componentDidUpdate(prevProps: any, prevState: any) {
@@ -205,9 +206,18 @@ class App extends Component<IProps, IApp> {
         account: accounts[0],
       });
 
-      await this.getEthBalance();
-      await this.getTokenBalance(this.state.tokenBData);
+      if (
+        this.state.tokenAData.address === REACT_APP_WETH_ADDRESS ||
+        this.state.tokenBData.address === REACT_APP_WETH_ADDRESS
+      )
+        await this.getEthBalanceTokenA();
     });
+
+    if (
+      this.state.tokenAData.address === REACT_APP_WETH_ADDRESS ||
+      this.state.tokenBData.address === REACT_APP_WETH_ADDRESS
+    )
+      await this.getEthBalanceTokenA();
   }
 
   toWei(value: any) {
@@ -220,30 +230,62 @@ class App extends Component<IProps, IApp> {
     );
   }
 
-  async getEthBalance() {
+  async getEthBalanceTokenA() {
     try {
       let ethBalance: any;
       ethBalance = await this.state.provider.getBalance(this.state.account);
       ethBalance = this.fromWei(ethBalance).toString();
-      this.setState({ ethBalance });
+      this.setState({ tokenABalance: ethBalance });
     } catch (err) {
       console.log(err);
     }
   }
-  async getTokenBalance(tokenBData: ITokenData) {
+
+  async getEthBalanceTokenB() {
+    try {
+      let ethBalance: any;
+      ethBalance = await this.state.provider.getBalance(this.state.account);
+      ethBalance = this.fromWei(ethBalance).toString();
+      this.setState({ tokenBBalance: ethBalance });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async getTokenABalance(tokenData: ITokenData) {
     try {
       const token1 = new ethers.Contract(
-        tokenBData.address,
+        tokenData.address,
         Token.abi,
         this.state.signer
       );
 
-      let tokenBalance: any;
-      tokenBalance = await token1.balanceOf(this.state.account);
+      let tokenBalance = await token1.balanceOf(this.state.account);
       tokenBalance = this.fromWei(tokenBalance).toString();
-      this.setState({ tokenBalance, token1 });
+      console.log(tokenBalance);
+
+      this.setState({ tokenABalance: tokenBalance, token1 });
     } catch (err) {
       console.log(err);
+      this.setState({ tokenABalance: '0' });
+    }
+  }
+
+  async getTokenBBalance(tokenData: ITokenData) {
+    try {
+      const token1 = new ethers.Contract(
+        tokenData.address,
+        Token.abi,
+        this.state.signer
+      );
+
+      let tokenBalance = await token1.balanceOf(this.state.account);
+      tokenBalance = this.fromWei(tokenBalance).toString();
+
+      this.setState({ tokenBBalance: tokenBalance, token1 });
+    } catch (err) {
+      console.log(err);
+      this.setState({ tokenBBalance: '0' });
     }
   }
   addLiquidity = async (ethAmount: string, tokenAmount: string) => {
@@ -555,33 +597,33 @@ class App extends Component<IProps, IApp> {
   getTokenAData = async (tokenAData: ITokenData) => {
     console.log('getTokenAData selected... ');
     this.setState({ tokenAData, isOpen: !this.state.isOpen });
-    this.getTokenBalance(tokenAData);
     if (this.child.current) {
       this.child.current.resetForms();
-      console.log(tokenAData.name);
-      if (tokenAData.address === REACT_APP_WETH_ADDRESS)
-        await this.getEthBalance();
-
-      await this.getTokenBalance(this.state.tokenAData);
+      if (tokenAData.address === REACT_APP_WETH_ADDRESS) {
+        await this.getEthBalanceTokenA();
+      } else {
+        await this.getTokenABalance(tokenAData);
+      }
     }
   };
 
   getTokenBData = async (tokenBData: ITokenData) => {
     console.log('getTokenBData selected... ');
     this.setState({ tokenBData, isOpen: !this.state.isOpen });
-    this.getTokenBalance(tokenBData);
+
     if (this.child.current) {
       this.child.current.resetForms();
-      if (tokenBData.address === REACT_APP_WETH_ADDRESS)
-        await this.getEthBalance();
-
-      await this.getTokenBalance(this.state.tokenBData);
+      if (tokenBData.address === REACT_APP_WETH_ADDRESS) {
+        await this.getEthBalanceTokenB();
+      } else {
+        await this.getTokenBBalance(tokenBData);
+      }
     }
   };
 
   getUniqueTokenList = async (tokenAlist: any, tokenBlist: any) => {
     const res = await tokenAlist.filter((obj: ITokenData) => {
-      return tokenBlist.indexOf(obj) == -1;
+      return tokenBlist.indexOf(obj) === -1;
     });
     return res;
   };

@@ -2,7 +2,6 @@ import { Component } from 'react';
 import styled from 'styled-components';
 import Context from '../Context';
 import { FaAngleDown } from 'react-icons/fa';
-import data from '../../data.json';
 
 export interface ProcessEnv {
   [key: string]: string | undefined;
@@ -245,7 +244,7 @@ export class AddLiquidity extends Component<any, IState> {
               </label>
               <span className="float-right text-muted">
                 Balance:
-                {this.context.ethBalance}
+                {this.context.tokenABalance}
               </span>
             </div>
             <div className="input-group mb-4">
@@ -286,7 +285,7 @@ export class AddLiquidity extends Component<any, IState> {
               </label>
               <span className="float-right text-muted">
                 Balance:
-                {this.context.tokenBalance}
+                {this.context.tokenBBalance}
               </span>
             </div>
             <div className="input-group mb-2">

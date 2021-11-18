@@ -17,8 +17,10 @@ export interface IApp {
   exchange: any;
   factory: any;
   Pair: any;
-  ethBalance: string;
-  tokenBalance: string;
+  ethBalanceTokenA: string;
+  ethBalanceTokenB: string;
+  tokenABalance: string;
+  tokenBBalance: string;
   loading: boolean;
   provider: any;
   signer: any;

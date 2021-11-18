@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import BuyForm from './BuyForm';
-import SellForm from './SellForm';
+// import BuyForm from './BuyForm';
+// import SellForm from './SellForm';
 
 interface IProps {
   buyTokens(ethAmount: string, _minTokens: string): any;

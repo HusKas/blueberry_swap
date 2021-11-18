@@ -101,17 +101,17 @@ export const Modal = ({
   tokenBSelected,
   tokensData,
 }) => {
-  // const [tokens, setTokens] = useState<IToken[]>([]);
+  const [tokens, setTokens] = useState<IToken[]>([]);
   const [searchVals, setSearchVals] = useState<IToken[]>([]);
 
   useEffect(() => {
-    // setTokens(data);
+    setTokens(tokensData);
     setSearchVals(tokensData);
-  }, []);
+  }, [tokensData]);
   const toggleItems = (event: any) => {
     event.preventDefault();
     toggleTokenListModal();
-    // setTokens(searchVals);
+    setTokens(searchVals);
   };
 
   const handleInput = (e: any) => {
@@ -122,7 +122,7 @@ export const Modal = ({
       const res = searchVals.filter((item: any) => {
         return item.name.toLowerCase().includes(inputVal);
       });
-      //setTokens(res);
+      setTokens(res);
     }
   };
 
@@ -144,7 +144,7 @@ export const Modal = ({
                 height={300}
                 width={300}
                 itemSize={50}
-                itemCount={tokensData.length}
+                itemCount={tokens.length}
               >
                 {({ index, style }) => (
                   <ContainerRow
@@ -153,16 +153,13 @@ export const Modal = ({
                     style={style}
                     onClick={() =>
                       tokenBSelected
-                        ? getTokenBData(tokensData[index])
-                        : getTokenAData(tokensData[index])
+                        ? getTokenBData(tokens[index])
+                        : getTokenAData(tokens[index])
                     }
                   >
-                    <Image
-                      src={tokensData[index].logoURI}
-                      key={index + 1}
-                    ></Image>
+                    <Image src={tokens[index].logoURI} key={index + 1}></Image>
                     <NameSymbolContainer key={index + 2}>
-                      <RowSymbol>{tokensData[index].symbol}</RowSymbol>
+                      <RowSymbol>{tokens[index].symbol}</RowSymbol>
                     </NameSymbolContainer>
                   </ContainerRow>
                 )}
