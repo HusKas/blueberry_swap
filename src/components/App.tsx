@@ -127,7 +127,6 @@ class App extends Component<IProps, IApp> {
       tokenAData: data[0],
       tokensGData: data,
     });
-    console.log(this.state.tokenBData, this.state.tokenAData);
   }
 
   async componentDidUpdate(prevProps: any, prevState: any) {
@@ -205,6 +204,7 @@ class App extends Component<IProps, IApp> {
       this.setState({
         account: accounts[0],
       });
+
       await this.getEthBalance();
       await this.getTokenBalance(this.state.tokenBData);
     });
@@ -554,11 +554,15 @@ class App extends Component<IProps, IApp> {
 
   getTokenAData = async (tokenAData: ITokenData) => {
     console.log('getTokenAData selected... ');
-    console.log(this.state.tokenBData);
     this.setState({ tokenAData, isOpen: !this.state.isOpen });
     this.getTokenBalance(tokenAData);
     if (this.child.current) {
       this.child.current.resetForms();
+      console.log(tokenAData.name);
+      if (tokenAData.address === REACT_APP_WETH_ADDRESS)
+        await this.getEthBalance();
+
+      await this.getTokenBalance(this.state.tokenAData);
     }
   };
 
@@ -568,6 +572,10 @@ class App extends Component<IProps, IApp> {
     this.getTokenBalance(tokenBData);
     if (this.child.current) {
       this.child.current.resetForms();
+      if (tokenBData.address === REACT_APP_WETH_ADDRESS)
+        await this.getEthBalance();
+
+      await this.getTokenBalance(this.state.tokenBData);
     }
   };
 
@@ -707,7 +715,7 @@ class App extends Component<IProps, IApp> {
     return (
       <>
         {<Navbar account={this.state.account} />}
-        <div className="container-fluid mt-5 ">
+        <div className="container-fluid mt-5 background-img ">
           <div className="row">
             <main
               role="main"
