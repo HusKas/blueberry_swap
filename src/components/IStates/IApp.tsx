@@ -34,10 +34,12 @@ export interface IApp {
   fromWei(value: any): string;
   toWei(value: any): BigNumber;
   isOpen: boolean;
-  toggleTokenListModal(): any;
+  toggleTokenListModal(tokenBSelected: boolean): void;
   setMsg(value: string): any;
   tokensData: ITokenData[];
-  tokenData: ITokenData;
+  tokensGData: ITokenData[];
+  tokenAData: ITokenData;
+  tokenBData: ITokenData;
   tx: any;
   msg: boolean;
   msgTxt: string;
@@ -51,4 +53,5 @@ export interface IApp {
   lpAccountShare: number;
   tokenAShare: number;
   tokenBShare: number;
+  tokenBSelected: boolean;
 }

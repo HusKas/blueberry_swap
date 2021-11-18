@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FixedSizeList } from 'react-window';
-import data from '../../data.json';
+// import data from '../../data.json';
 
 require('dotenv').config();
 
@@ -93,18 +93,25 @@ interface IToken {
   logoURI: string;
 }
 
-export const Modal = ({ isOpen, toggleTokenListModal, getTokenData }) => {
-  const [tokens, setTokens] = useState<IToken[]>([]);
+export const Modal = ({
+  isOpen,
+  toggleTokenListModal,
+  getTokenAData,
+  getTokenBData,
+  tokenBSelected,
+  tokensData,
+}) => {
+  // const [tokens, setTokens] = useState<IToken[]>([]);
   const [searchVals, setSearchVals] = useState<IToken[]>([]);
 
   useEffect(() => {
-    setTokens(data);
-    setSearchVals(data);
+    // setTokens(data);
+    setSearchVals(tokensData);
   }, []);
   const toggleItems = (event: any) => {
     event.preventDefault();
     toggleTokenListModal();
-    setTokens(searchVals);
+    // setTokens(searchVals);
   };
 
   const handleInput = (e: any) => {
@@ -115,7 +122,7 @@ export const Modal = ({ isOpen, toggleTokenListModal, getTokenData }) => {
       const res = searchVals.filter((item: any) => {
         return item.name.toLowerCase().includes(inputVal);
       });
-      setTokens(res);
+      //setTokens(res);
     }
   };
 
@@ -137,18 +144,25 @@ export const Modal = ({ isOpen, toggleTokenListModal, getTokenData }) => {
                 height={300}
                 width={300}
                 itemSize={50}
-                itemCount={tokens.length}
+                itemCount={tokensData.length}
               >
                 {({ index, style }) => (
                   <ContainerRow
                     className="containerTokenlist"
                     key={index}
                     style={style}
-                    onClick={() => getTokenData(tokens[index])}
+                    onClick={() =>
+                      tokenBSelected
+                        ? getTokenBData(tokensData[index])
+                        : getTokenAData(tokensData[index])
+                    }
                   >
-                    <Image src={tokens[index].logoURI} key={index + 1}></Image>
+                    <Image
+                      src={tokensData[index].logoURI}
+                      key={index + 1}
+                    ></Image>
                     <NameSymbolContainer key={index + 2}>
-                      <RowSymbol>{tokens[index].symbol}</RowSymbol>
+                      <RowSymbol>{tokensData[index].symbol}</RowSymbol>
                     </NameSymbolContainer>
                   </ContainerRow>
                 )}

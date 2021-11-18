@@ -28,10 +28,10 @@ class BuySellMain extends Component<IProps, IState> {
       <div id="content">
         <div className="card mb-4">
           <div className="card-body">
-            <BuyForm
+            {/* <BuyForm
               buyTokens={this.props.buyTokens}
               switchForms={this.switchForms}
-            />
+            /> */}
           </div>
         </div>
       </div>
@@ -39,10 +39,10 @@ class BuySellMain extends Component<IProps, IState> {
       <div id="content">
         <div className="card mb-4">
           <div className="card-body">
-            <SellForm
+            {/* <SellForm
               sellTokens={this.props.sellTokens}
               switchForms={this.switchForms}
-            />
+            /> */}
           </div>
         </div>
       </div>

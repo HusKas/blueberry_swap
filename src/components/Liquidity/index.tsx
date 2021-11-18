@@ -99,7 +99,7 @@ export class AddLiquidity extends Component<any, IState> {
     });
 
     const exchangeAddress = await this.context.getExchangeAddress(
-      this.context.tokenData.address,
+      this.context.tokenBData.address,
       REACT_APP_WETH_ADDRESS
     );
 
@@ -109,7 +109,7 @@ export class AddLiquidity extends Component<any, IState> {
 
     if (res) {
       await exchange.sync();
-      await this.context.getLiquidityOwner(this.context.tokenData);
+      await this.context.getLiquidityOwner(this.context.tokenBData);
       this.setState({
         loading: false,
       });
@@ -149,7 +149,7 @@ export class AddLiquidity extends Component<any, IState> {
             outputAmount,
             outputAmountInWei,
           });
-          this.context.getLiquidityOwner(this.context.tokenData);
+          this.context.getLiquidityOwner(this.context.tokenBData);
         } else {
           this.setState({
             outputAmount,
@@ -196,7 +196,7 @@ export class AddLiquidity extends Component<any, IState> {
             outputAmount,
             outputAmountInWei,
           });
-          this.context.getLiquidityOwner(this.context.tokenData);
+          this.context.getLiquidityOwner(this.context.tokenBData);
         } else {
           this.setState({
             inputAmount,
@@ -212,8 +212,8 @@ export class AddLiquidity extends Component<any, IState> {
     }
   };
 
-  toggleModal = () => {
-    this.context.toggleTokenListModal();
+  toggleModal = (tokenBSelected: boolean) => {
+    this.context.toggleTokenListModal(tokenBSelected);
   };
 
   checkLoadingStatus = () => {
@@ -263,11 +263,21 @@ export class AddLiquidity extends Component<any, IState> {
                 className="form-control form-control-lg"
                 required
               />
-              <div className="input-group-append">
-                <div className="input-group-text">
-                  <Image src={data[0].logoURI}></Image>
-                  &nbsp; {data[0].symbol}
-                </div>
+              <div
+                className="input-group-append"
+                onClick={() => this.toggleModal(false)}
+              >
+                {this.context.tokenAData?.symbol ? (
+                  <div className="input-group-text">
+                    <Image src={this.context.tokenAData.logoURI}></Image>
+                    &nbsp; {this.context.tokenAData.symbol} <FaAngleDown />
+                  </div>
+                ) : (
+                  <div className="input-group-text">
+                    Select
+                    <FaAngleDown />
+                  </div>
+                )}
               </div>
             </div>
             <div>
@@ -295,11 +305,14 @@ export class AddLiquidity extends Component<any, IState> {
                 required
               />
 
-              <div className="input-group-append" onClick={this.toggleModal}>
-                {this.context.tokenData?.symbol ? (
+              <div
+                className="input-group-append"
+                onClick={() => this.toggleModal(true)}
+              >
+                {this.context.tokenBData?.symbol ? (
                   <div className="input-group-text">
-                    <Image src={this.context.tokenData.logoURI}></Image>
-                    &nbsp; {this.context.tokenData.symbol} <FaAngleDown />
+                    <Image src={this.context.tokenBData.logoURI}></Image>
+                    &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
                   </div>
                 ) : (
                   <div className="input-group-text">
@@ -316,7 +329,7 @@ export class AddLiquidity extends Component<any, IState> {
                   <br />
                   <span className="float-right text-muted">
                     <i style={{ margin: '3px' }}>1</i>
-                    {this.context.tokenData.symbol} =
+                    {this.context.tokenBData.symbol} =
                     <i style={{ margin: '3px' }}>{this.state.calc}</i>
                     BNB
                   </span>
@@ -349,7 +362,7 @@ export class AddLiquidity extends Component<any, IState> {
                 <Column>{this.context.lpPairBalanceAccount}</Column>
               </Row>
               <Row>
-                <Column> {this.context.tokenData.symbol}</Column>
+                <Column> {this.context.tokenBData.symbol}</Column>
                 <Column>{this.context.tokenAShare}</Column>
               </Row>
               <Row>

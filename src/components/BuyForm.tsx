@@ -156,12 +156,12 @@ class BuyForm extends Component<IProps, IState> {
           />
           <div
             className="input-group-append"
-            onClick={this.context.toggleTokenListModal}
+            onClick={this.context.toggleTokenListModal(true)}
           >
-            {this.context.tokenData.symbol ? (
+            {this.context.tokenBData?.symbol ? (
               <div className="input-group-text">
-                <Image src={this.context.tokenData.logoURI}></Image>
-                &nbsp; {this.context.tokenData.symbol} <FaAngleDown />
+                <Image src={this.context.tokenBData.logoURI}></Image>
+                &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
               </div>
             ) : (
               <div className="input-group-text">

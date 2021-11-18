@@ -89,7 +89,9 @@ class App extends Component<IProps, IApp> {
       isOpen: false,
       toggleTokenListModal: this.toggleTokenListModal,
       tokensData: [] as ITokenData[],
-      tokenData: {} as ITokenData,
+      tokensGData: [] as ITokenData[],
+      tokenAData: {} as ITokenData,
+      tokenBData: {} as ITokenData,
       setMsg: this.setMsg,
       tx: '',
       msg: false,
@@ -104,28 +106,32 @@ class App extends Component<IProps, IApp> {
       lpAccountShare: 0,
       tokenAShare: 0,
       tokenBShare: 0,
+      tokenBSelected: false,
     };
-    this.setState({
-      tokensData: data,
-    });
   }
 
   clearStates = () => {
     this.setState({
-      tokenData: null,
+      tokenAData: null,
+      tokenBData: null,
     });
   };
   async componentWillMount() {
     this._isMounted = true;
     await this.connectToWeb3();
     await this.loadBlockchainData();
-    await this.getLiquidityOwner(this.state.tokenData);
+    await this.getLiquidityOwner(this.state.tokenBData);
+    console.log('IN');
+    this.setState({
+      tokensData: data,
+      tokensGData: data,
+    });
   }
 
   async componentDidUpdate(prevProps: any, prevState: any) {
     // only update chart if the data has changed
     if (prevState.account !== this.state.account) {
-      await this.getLiquidityOwner(this.state.tokenData);
+      await this.getLiquidityOwner(this.state.tokenBData);
     }
   }
   connectToWeb3 = async () => {
@@ -199,7 +205,7 @@ class App extends Component<IProps, IApp> {
         account: accounts[0],
       });
       await this.getEthBalance();
-      await this.getTokenBalance(this.state.tokenData);
+      await this.getTokenBalance(this.state.tokenBData);
     });
   }
 
@@ -223,10 +229,10 @@ class App extends Component<IProps, IApp> {
       console.log(err);
     }
   }
-  async getTokenBalance(tokenData: ITokenData) {
+  async getTokenBalance(tokenBData: ITokenData) {
     try {
       const token1 = new ethers.Contract(
-        tokenData.address,
+        tokenBData.address,
         Token.abi,
         this.state.signer
       );
@@ -242,11 +248,11 @@ class App extends Component<IProps, IApp> {
   addLiquidity = async (ethAmount: string, tokenAmount: string) => {
     this.setState({ loading: true });
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
-    if (Object.keys(this.state.tokenData).length > 0) {
+    if (Object.keys(this.state.tokenBData).length > 0) {
       let exchangeAddress: any;
 
       exchangeAddress = await this.getExchangeAddress(
-        this.state.tokenData.address,
+        this.state.tokenBData.address,
         this.state.weth.address
       );
       console.log(`Token pair - àddLiquidity : ${exchangeAddress}`);
@@ -255,7 +261,7 @@ class App extends Component<IProps, IApp> {
         console.log('Adding liquditiy now ...');
         //Router load
         const token1 = new ethers.Contract(
-          this.state.tokenData.address,
+          this.state.tokenBData.address,
           Token.abi,
           this.state.signer
         );
@@ -277,7 +283,7 @@ class App extends Component<IProps, IApp> {
         const minToken = BigNumber.from(tokenAmount).mul(70).div(100);
 
         const tx2 = await this.state.router.addLiquidityETH(
-          this.state.tokenData.address,
+          this.state.tokenBData.address,
           tokenAmount,
           minToken,
           minEth,
@@ -434,16 +440,16 @@ class App extends Component<IProps, IApp> {
 
   getTokenAAmount = async (tokenAmount: string) => {
     try {
-      console.log(`Selected token: ${this.state.tokenData.address}`);
-      if (Object.keys(this.state.tokenData).length > 0) {
+      console.log(`Selected token: ${this.state.tokenBData.address}`);
+      if (Object.keys(this.state.tokenBData).length > 0) {
         const exchangeAddress = await this.getExchangeAddress(
-          this.state.tokenData.address
+          this.state.tokenBData.address
         );
         console.log(`Exchange address - getTokenBAmount: ${exchangeAddress}`);
         if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
           const res = await this._getTokenAmountOut(
             tokenAmount,
-            this.state.tokenData.address,
+            this.state.tokenBData.address,
             this.state.weth.address
           );
 
@@ -471,17 +477,17 @@ class App extends Component<IProps, IApp> {
 
   getTokenBAmount = async (tokenAmount: string) => {
     try {
-      console.log(`Selected token: ${this.state.tokenData.address}`);
-      if (Object.keys(this.state.tokenData).length > 0) {
+      console.log(`Selected token: ${this.state.tokenBData.address}`);
+      if (Object.keys(this.state.tokenBData).length > 0) {
         const exchangeAddress = await this.getExchangeAddress(
-          this.state.tokenData.address
+          this.state.tokenBData.address
         );
         console.log(`Exchange address - getTokenBAmount: ${exchangeAddress}`);
         if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
           const res = await this._getTokenAmountOut(
             tokenAmount,
             this.state.weth.address,
-            this.state.tokenData.address
+            this.state.tokenBData.address
           );
 
           setTimeout(() => {
@@ -524,8 +530,20 @@ class App extends Component<IProps, IApp> {
     }
   };
 
-  toggleTokenListModal = () => {
-    this.setState({ isOpen: !this.state.isOpen });
+  toggleTokenListModal = async (tokenBSelected: boolean) => {
+    this.setState({ isOpen: !this.state.isOpen, tokenBSelected });
+
+    if (!tokenBSelected) {
+      const tokensData = await this.getUniqueTokenList(this.state.tokensGData, [
+        this.state.tokenBData,
+      ]);
+      this.setState({ tokensData });
+    } else {
+      const tokensData = await this.getUniqueTokenList(this.state.tokensGData, [
+        this.state.tokenAData,
+      ]);
+      this.setState({ tokensData });
+    }
   };
 
   setMsg = (msgTxt: string) => {
@@ -533,12 +551,30 @@ class App extends Component<IProps, IApp> {
     setTimeout(() => this.setState({ msg: false }), 3000);
   };
 
-  getTokenData = async (tokenData: ITokenData) => {
-    this.setState({ tokenData, isOpen: !this.state.isOpen });
-    this.getTokenBalance(tokenData);
+  getTokenAData = async (tokenAData: ITokenData) => {
+    console.log('getTokenAData selected... ');
+    console.log(this.state.tokenBData);
+    this.setState({ tokenAData, isOpen: !this.state.isOpen });
+    this.getTokenBalance(tokenAData);
     if (this.child.current) {
       this.child.current.resetForms();
     }
+  };
+
+  getTokenBData = async (tokenBData: ITokenData) => {
+    console.log('getTokenBData selected... ');
+    this.setState({ tokenBData, isOpen: !this.state.isOpen });
+    this.getTokenBalance(tokenBData);
+    if (this.child.current) {
+      this.child.current.resetForms();
+    }
+  };
+
+  getUniqueTokenList = async (tokenAlist: any, tokenBlist: any) => {
+    const res = await tokenAlist.filter((obj: ITokenData) => {
+      return tokenBlist.indexOf(obj) == -1;
+    });
+    return res;
   };
 
   getLiquidityOwner = async (token1: ITokenData) => {
@@ -682,9 +718,12 @@ class App extends Component<IProps, IApp> {
           </div>
         </div>
         <Modal
-          getTokenData={this.getTokenData}
+          getTokenAData={this.getTokenAData}
+          getTokenBData={this.getTokenBData}
+          tokenBSelected={this.state.tokenBSelected}
           isOpen={this.state.isOpen}
           toggleTokenListModal={this.toggleTokenListModal}
+          tokensData={this.state.tokensData}
         />
       </>
     );
