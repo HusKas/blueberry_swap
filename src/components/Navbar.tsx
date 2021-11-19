@@ -18,7 +18,7 @@ interface IState {}
 class Navbar extends Component<IProps, IState> {
   render() {
     return (
-      <nav className="navbar navbar-dark bg-dark">
+      <nav className="navbar navbar-dark ">
         <div className="container-fluid">
           <a className="navbar-brand" href="#">
             <img alt="logo" src={logo} height="60" />

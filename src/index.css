@@ -5,9 +5,29 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-image: url('https://miro.medium.com/focal/1200/1200/52/55/1*k76eTmTfhxheqmd0noPVOA.jpeg');
+  /* background-image: url('https://miro.medium.com/focal/1200/1200/52/55/1*k76eTmTfhxheqmd0noPVOA.jpeg'); */
+  background: rgb(88, 88, 88);
+  background: linear-gradient(
+    90deg,
+    rgba(88, 88, 88, 1) 10%,
+    rgba(23, 138, 163, 1) 64%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  height: 100vh !important;
   background-size: cover;
   background-repeat: no-repeat;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 code {
