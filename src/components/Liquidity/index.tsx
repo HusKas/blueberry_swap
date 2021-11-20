@@ -12,8 +12,10 @@ require('dotenv').config();
 const { REACT_APP_WETH_ADDRESS }: ProcessEnv = process.env;
 
 const Container = styled.div`
-  border: 0.5px solid skyblue;
   margin-bottom: 20px;
+  border-radius: 25px;
+  border: 2px solid #73ad21;
+  background: white;
 `;
 
 const LiquidityItems = styled.div`
@@ -123,11 +125,11 @@ export class AddLiquidity extends Component<any, IState> {
     let outputAmount: any;
     let outputAmountInWei: any;
 
-    if (e.target.value !== '') {
+    if (e.target.value !== '' && this.isNumeric(e.target.value)) {
       outputAmount = e.target.value;
       outputAmountInWei = this.context.toWei(outputAmount).toString();
 
-      if (outputAmountInWei > 0 && outputAmountInWei !== '') {
+      if (outputAmountInWei !== '') {
         console.log(outputAmountInWei);
         inputAmountInWei = await this.context.getTokenAAmount(
           outputAmountInWei
@@ -165,6 +167,10 @@ export class AddLiquidity extends Component<any, IState> {
     }
   };
 
+  isNumeric(n: any) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+  }
+
   handleOnChangeTokenBAmount = async (e: any) => {
     console.log('changing');
     let inputAmount: any;
@@ -172,10 +178,10 @@ export class AddLiquidity extends Component<any, IState> {
     let outputAmount: any;
     let outputAmountInWei: any;
 
-    if (e.target.value !== '') {
+    if (e.target.value !== '' && this.isNumeric(e.target.value)) {
       inputAmount = e.target.value;
       inputAmountInWei = this.context.toWei(inputAmount).toString();
-      if (inputAmountInWei > 0 && inputAmountInWei !== '') {
+      if (inputAmountInWei !== '') {
         outputAmountInWei = await this.context.getTokenBAmount(
           inputAmountInWei
         );
@@ -251,9 +257,7 @@ export class AddLiquidity extends Component<any, IState> {
             <div className="input-group mb-4">
               <input
                 id="tokenA"
-                type="number"
-                min="0"
-                step="0.000000000000000001"
+                type="text"
                 autoComplete="off"
                 placeholder="0.0"
                 value={this.state.inputAmount || ''}
@@ -292,16 +296,14 @@ export class AddLiquidity extends Component<any, IState> {
             <div className="input-group mb-2">
               <input
                 id="tokenB"
-                type="number"
-                min="0"
-                step="0.000000000000000001"
+                type="text"
                 autoComplete="off"
                 placeholder="0.0"
                 value={this.state.outputAmount || ''}
-                className="form-control form-control-lg"
                 onChange={(event: any) => {
                   this.handleOnChangeTokenAAmount(event);
                 }}
+                className="form-control form-control-lg"
                 required
               />
 
@@ -345,7 +347,6 @@ export class AddLiquidity extends Component<any, IState> {
 
       {this.state.calc > 0 ? (
         <Container>
-          <Title>Provided Liquidity</Title>
           <LiquidityItems>
             <ColumnContainer>
               <Row>

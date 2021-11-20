@@ -2,6 +2,9 @@
   text-align: center;
 }
 
+.form-control-lg {
+  font-size: 1.1em !important;
+}
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -56,29 +59,4 @@ nav2 {
   color: #fff;
   background-color: #585858 !important;
   border-color: #585858 !important;
-}
-
-.animate {
-  background: rgb(9, 110, 121);
-  background: linear-gradient(
-    90deg,
-    rgba(9, 110, 121, 1) 32%,
-    rgba(9, 54, 121, 1) 54%,
-    rgba(0, 212, 255, 1) 78%,
-    rgba(164, 0, 255, 1) 94%
-  );
-  animation: gradient 40s ease infinite;
-  background-size: 800% 800%;
-}
-
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 90%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
 }

@@ -34,6 +34,7 @@ export interface IApp {
   getExchangeAddress(token1: any, token2: any): any;
   getExchange(exchange: any): any;
   getLiquidityOwner(token1: ITokenData): void;
+  getPriceImpact(input: string): any;
   fromWei(value: any): string;
   toWei(value: any): BigNumber;
   isOpen: boolean;
@@ -51,9 +52,9 @@ export interface IApp {
   tokenAExpected: any;
   tokenBExpected: any;
   lpPairBalanceAccount: string;
-  priceImpact: string;
   lpShareAccountviaInput: string;
   lpAccountShare: number;
+  priceImpact: string;
   tokenAShare: number;
   tokenBShare: number;
   tokenBSelected: boolean;

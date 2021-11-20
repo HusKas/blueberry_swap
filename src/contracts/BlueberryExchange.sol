@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import './CustomERC20.sol';
+import './BlueberryERC20.sol';
 import './libraries/Math.sol';
 import './interfaces/IExchange.sol';
 import './interfaces/IERC20.sol';
@@ -11,7 +11,7 @@ import './libraries/SafeMath.sol';
 
 import 'hardhat/console.sol';
 
-contract Exchange is CustomERC20 {
+contract BlueberryExchange is BlueberryERC20 {
     using SafeMath for uint256;
    
     uint public constant MINIMUM_LIQUIDITY = 10**3;

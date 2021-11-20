@@ -3,9 +3,9 @@ import './App.css';
 import Navbar from './Navbar';
 import BuySellMain from './BuySellMain';
 import Web3 from 'web3';
-import Exchange from '../abi/src/contracts/Exchange.sol/Exchange.json';
-import Factory from '../abi/src/contracts/Factory.sol/Factory.json';
-import Router from '../abi/src/contracts/Router.sol/Router.json';
+import Exchange from '../abi/src/contracts/BlueberryExchange.sol/BlueberryExchange.json';
+import Factory from '../abi/src/contracts/BlueberryFactory.sol/BlueberryFactory.json';
+import Router from '../abi/src/contracts/BlueberryRouter.sol/BlueberryRouter.json';
 import WETH from '../abi/src/contracts/WETH.sol/WETH.json';
 import Token from '../abi/src/contracts/Token1.sol/Token1.json';
 import { BigNumber, ethers } from 'ethers';
@@ -87,6 +87,7 @@ class App extends Component<IProps, IApp> {
       getExchangeAddress: this.getExchangeAddress,
       getExchange: this.getExchange,
       getLiquidityOwner: this.getLiquidityOwner,
+      getPriceImpact: this.getPriceImpact,
       fromWei: this.fromWei,
       toWei: this.toWei,
       isOpen: false,
@@ -462,32 +463,59 @@ class App extends Component<IProps, IApp> {
     const _minTokens = BigNumber.from(tokenBAmount).mul(90).div(100);
 
     console.log(`Token pair - buyTokens: ${exchangeAddress}`);
-    if (
-      exchangeAddress !== REACT_APP_ZERO_ADDRESS &&
-      this.state.tokenAData.address === REACT_APP_WETH_ADDRESS
-    ) {
-      try {
-        const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
-        const tx =
-          await this.state.router.swapExactETHForTokensSupportingFeeOnTransferTokens(
-            _minTokens,
-            [this.state.weth.address, this.state.tokenBData.address],
-            this.state.account,
-            deadline,
-            {
-              value: tokenAAmount,
-              from: this.state.account,
-            }
-          );
-        tx.wait(1);
+    if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
+      if (this.state.tokenAData.address === REACT_APP_WETH_ADDRESS) {
+        try {
+          const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+          const tx =
+            await this.state.router.swapExactETHForTokensSupportingFeeOnTransferTokens(
+              _minTokens,
+              [this.state.weth.address, this.state.tokenBData.address],
+              this.state.account,
+              deadline,
+              {
+                value: tokenAAmount,
+                from: this.state.account,
+              }
+            );
+          tx.wait(1);
 
-        this.setState({ loading: false, tx: tx.hash });
-        setTimeout(() => {
-          this.setState({ tx: null });
-        }, 3000);
-      } catch (err) {
-        console.log(err);
-        this.setState({ loading: false });
+          this.setState({ loading: false, tx: tx.hash });
+          setTimeout(() => {
+            this.setState({ tx: null });
+          }, 3000);
+        } catch (err) {
+          console.log(
+            `swapExactETHForTokensSupportingFeeOnTransferTokens failed ${err}`
+          );
+          this.setState({ loading: false });
+        }
+      } else {
+        try {
+          const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+          const tx =
+            await this.state.router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+              this.state.tokenAData.address,
+              _minTokens,
+              [this.state.tokenAData.address, this.state.tokenBData.address],
+              this.state.account,
+              deadline,
+              {
+                from: this.state.account,
+              }
+            );
+          tx.wait(1);
+
+          this.setState({ loading: false, tx: tx.hash });
+          setTimeout(() => {
+            this.setState({ tx: null });
+          }, 3000);
+        } catch (err) {
+          console.log(
+            `swapExactTokensForTokensSupportingFeeOnTransferTokens failed ${err}`
+          );
+          this.setState({ loading: false });
+        }
       }
     } else {
       console.log('No token pair');
@@ -497,7 +525,10 @@ class App extends Component<IProps, IApp> {
   getTokenAAmount = async (tokenAmount: string) => {
     try {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
-      if (Object.keys(this.state.tokenBData).length > 0) {
+      if (
+        this.state.tokenBData &&
+        Object.keys(this.state.tokenBData).length > 0
+      ) {
         const exchangeAddress = await this.getExchangeAddress(
           this.state.tokenAData.address,
           this.state.tokenBData.address
@@ -535,7 +566,10 @@ class App extends Component<IProps, IApp> {
   getTokenBAmount = async (tokenAmount: string) => {
     try {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
-      if (Object.keys(this.state.tokenBData).length > 0) {
+      if (
+        this.state.tokenBData &&
+        Object.keys(this.state.tokenBData).length > 0
+      ) {
         const exchangeAddress = await this.getExchangeAddress(
           this.state.tokenAData.address,
           this.state.tokenBData.address
@@ -642,6 +676,37 @@ class App extends Component<IProps, IApp> {
       return tokenBlist.indexOf(obj) === -1;
     });
     return res;
+  };
+
+  getPriceImpact = async (input: any) => {
+    if (input) {
+      const pairAddress = await this.state.factory.getPair(
+        REACT_APP_WETH_ADDRESS,
+        this.state.tokenBData.address
+      );
+
+      const Pair = new ethers.Contract(
+        pairAddress,
+        Exchange.abi,
+        this.state.signer
+      );
+      const token_B_LP_Balance = await this.state.weth.balanceOf(Pair.address);
+
+      console.log(input, token_B_LP_Balance.toString());
+      const priceImp = BigNumber.from(input)
+        .mul(100)
+        .div(BigNumber.from(token_B_LP_Balance));
+
+      const priceImpact = Number.parseFloat(priceImp.toString()).toFixed(2);
+      console.log(priceImpact);
+      this.setState({
+        priceImpact,
+      });
+    } else {
+      this.setState({
+        priceImpact: '0',
+      });
+    }
   };
 
   getLiquidityOwner = async (token1: ITokenData) => {
@@ -772,8 +837,8 @@ class App extends Component<IProps, IApp> {
           <div className="row">
             <main
               role="main"
-              className="col-lg-12 ml-auto mr-auto"
-              style={{ maxWidth: '600px' }}
+              className="col-lg-12 ml-auto mr-auto main"
+              style={{ maxWidth: '550px' }}
             >
               <div className="content justify-content-center">{content}</div>
             </main>

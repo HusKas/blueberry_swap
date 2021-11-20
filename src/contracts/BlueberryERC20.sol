@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import 'hardhat/console.sol';
 
-contract CustomERC20  {
+contract BlueberryERC20  {
     string public constant name = 'BlueberrySwap V2';
     string public constant symbol = 'BlueberrySwap-V2';
     uint8 public constant decimals = 18;
@@ -43,10 +43,6 @@ contract CustomERC20  {
 
     function _burn(address from, uint value) internal {
         balanceOf[from] = balanceOf[from] - value;
-        console.log('-------------');
-        console.log(totalSupply, value);
-        console.log('-------------');
-        
         totalSupply = totalSupply - value;
         emit Transfer(from, address(0), value);
     }

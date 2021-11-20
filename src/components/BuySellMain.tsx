@@ -20,7 +20,7 @@ class BuySellMain extends Component<any, IState> {
 
   render() {
     return this.state.switch ? (
-      <div id="content">{<BuyForm switchForms={this.switchForms} />}</div>
+      <div>{<BuyForm switchForms={this.switchForms} />}</div>
     ) : (
       <div id="content">
         <div className="card mb-4">

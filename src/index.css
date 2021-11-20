@@ -1,4 +1,8 @@
+html {
+  height: 100%;
+}
 body {
+  background: rgba(95, 158, 160) !important;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -6,17 +10,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /* background-image: url('https://miro.medium.com/focal/1200/1200/52/55/1*k76eTmTfhxheqmd0noPVOA.jpeg'); */
-  background: rgb(26, 162, 189);
-  background: linear-gradient(
-    307deg,
+  /* background: rgb(26, 162, 189); */
+  /* background: linear-gradient(
+    321deg,
     rgba(26, 162, 189, 1) 5%,
-    rgba(13, 82, 129, 1) 46%,
-    rgba(0, 97, 113, 1) 74%,
-    rgba(0, 97, 113, 1) 98%
-  );
-  height: 100vh !important;
-  background-size: cover;
-  background-repeat: no-repeat;
+    rgba(0, 97, 113, 1) 53%,
+    rgba(95, 158, 160)
+  ); */
 }
 
 @keyframes gradient {

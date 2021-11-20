@@ -3,7 +3,57 @@ import styled from 'styled-components';
 import Context from './Context';
 import { FaAngleDown } from 'react-icons/fa';
 
-require('dotenv').config();
+const Container = styled.div`
+  margin-bottom: 20px;
+  border-radius: 25px;
+  border: 2px solid #73ad21;
+  background: white;
+`;
+
+const Items = styled.div`
+  margin: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+`;
+
+const Row = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: center;
+  margin: 10px 0 10px 0;
+`;
+
+const Column = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+
+  justify-content: left;
+`;
+
+const ColumnGreen = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  color: green;
+  justify-content: left;
+`;
+
+const ColumnRed = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  color: red;
+  justify-content: left;
+`;
+
+const ColumnContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 75%;
+`;
 
 const Image = styled.img`
   width: 32px;
@@ -65,11 +115,11 @@ class BuyForm extends Component<IProps, IState> {
     let outputAmount: any;
     let outputAmountInWei: any;
 
-    if (e.target.value !== '') {
+    if (e.target.value !== '' && this.isNumeric(e.target.value)) {
       outputAmount = e.target.value;
       outputAmountInWei = this.context.toWei(outputAmount).toString();
 
-      if (outputAmountInWei > 0 && outputAmountInWei !== '') {
+      if (outputAmountInWei !== '') {
         console.log(outputAmountInWei);
         inputAmountInWei = await this.context.getTokenAAmount(
           outputAmountInWei
@@ -103,21 +153,23 @@ class BuyForm extends Component<IProps, IState> {
       this.setState({
         inputAmount: '',
         outputAmount: '',
+        outputAmountInWei: '',
       });
     }
   };
 
   handleOnChangeTokenBAmount = async (e: any) => {
     console.log('changing');
+
     let inputAmount: any;
     let inputAmountInWei: any;
     let outputAmount: any;
     let outputAmountInWei: any;
 
-    if (e.target.value !== '') {
+    if (e.target.value !== '' && this.isNumeric(e.target.value)) {
       inputAmount = e.target.value;
       inputAmountInWei = this.context.toWei(inputAmount).toString();
-      if (inputAmountInWei > 0 && inputAmountInWei !== '') {
+      if (inputAmountInWei !== '') {
         outputAmountInWei = await this.context.getTokenBAmount(
           inputAmountInWei
         );
@@ -130,6 +182,7 @@ class BuyForm extends Component<IProps, IState> {
 
           outputAmount = this.context.fromWei(outputAmountInWei[1]);
           outputAmountInWei = outputAmountInWei[1].toString();
+          this.context.getPriceImpact(inputAmountInWei);
 
           this.setState({
             calc: inputAmount / outputAmount,
@@ -147,9 +200,11 @@ class BuyForm extends Component<IProps, IState> {
         }
       }
     } else {
+      this.context.getPriceImpact(null);
       this.setState({
         inputAmount: '',
         outputAmount: '',
+        outputAmountInWei: '',
       });
     }
   };
@@ -168,6 +223,10 @@ class BuyForm extends Component<IProps, IState> {
       outputAmount: null,
     });
   };
+
+  isNumeric(n: any) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+  }
 
   main = () => (
     <div id="content">
@@ -193,9 +252,7 @@ class BuyForm extends Component<IProps, IState> {
             <div className="input-group mb-4">
               <input
                 id="tokenA"
-                type="number"
-                min="0"
-                step="0.000000000000000001"
+                type="text"
                 autoComplete="off"
                 placeholder="0.0"
                 value={this.state.inputAmount || ''}
@@ -240,16 +297,14 @@ class BuyForm extends Component<IProps, IState> {
             <div className="input-group mb-2">
               <input
                 id="tokenB"
-                type="number"
-                min="0"
-                step="0.000000000000000001"
+                type="text"
                 autoComplete="off"
                 placeholder="0.0"
                 value={this.state.outputAmount || ''}
-                className="form-control form-control-lg"
                 onChange={(event: any) => {
                   this.handleOnChangeTokenAAmount(event);
                 }}
+                className="form-control form-control-lg"
                 required
               />
 
@@ -290,6 +345,30 @@ class BuyForm extends Component<IProps, IState> {
           </form>
         </div>
       </div>
+      {this.state.calc > 0 ? (
+        <Container>
+          <Items>
+            <ColumnContainer>
+              <Column>Minimum received</Column>
+              <Column>
+                {this.state.outputAmountInWei
+                  ? Number.parseFloat(
+                      this.context.fromWei(this.state.outputAmountInWei)
+                    ).toFixed(2)
+                  : '0'}
+              </Column>
+            </ColumnContainer>
+            <ColumnContainer>
+              <Column>Price Impact</Column>
+              {this.context.priceImpact > 3 ? (
+                <ColumnRed>{this.context.priceImpact} %</ColumnRed>
+              ) : (
+                <ColumnGreen>{this.context.priceImpact} %</ColumnGreen>
+              )}
+            </ColumnContainer>
+          </Items>
+        </Container>
+      ) : null}
     </div>
   );
   render() {

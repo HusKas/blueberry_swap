@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { BigNumber, constants } from 'ethers';
 
 const toWei = (value: any) => ethers.utils.parseEther(value.toString());
-import DEX from '../abi/src/contracts/Exchange.sol/Exchange.json';
+import DEX from '../abi/src/contracts/BlueberryExchange.sol/BlueberryExchange.json';
 
 const fromWei = (value: any) =>
   ethers.utils.formatEther(
@@ -42,7 +42,7 @@ before(async () => {
   weth = await WETH.deploy();
   await weth.deployed();
 
-  Exchange = await ethers.getContractFactory('Exchange');
+  Exchange = await ethers.getContractFactory('BlueberryExchange');
   exchange = await Exchange.deploy();
   await exchange.deployed();
 
@@ -50,11 +50,11 @@ before(async () => {
   exchangeLibrary = await ExchangeLibrary.deploy();
   await exchangeLibrary.deployed();
 
-  Factory = await ethers.getContractFactory('Factory');
+  Factory = await ethers.getContractFactory('BlueberryFactory');
   factory = await Factory.deploy();
   await factory.deployed();
 
-  Router = await ethers.getContractFactory('Router');
+  Router = await ethers.getContractFactory('BlueberryRouter');
   router = await Router.deploy(factory.address, weth.address);
   await router.deployed();
 

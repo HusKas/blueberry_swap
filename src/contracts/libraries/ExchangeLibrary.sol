@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity >=0.8.0;
-import '../Exchange.sol';
+import '../BlueberryExchange.sol';
 import './SafeMath.sol';
 
 library ExchangeLibrary {
@@ -14,7 +14,7 @@ using SafeMath for uint256;
 
   function getInitHash() public pure returns(bytes32 hash) {
       return keccak256(abi.encodePacked(
-                type(Exchange).creationCode
+                type(BlueberryExchange).creationCode
             ));
   }
     
@@ -24,7 +24,7 @@ using SafeMath for uint256;
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                hex'fecf72381aa84e982d87760ea4e3f69cc47a1b70bbda43c00ebd0030aa51b487' // init code hash
+                hex'776816f3183a924123199e393c66462a29fc47b4f38c6f55f594ed9c86adf398' // init code hash
             )))));
      
     }

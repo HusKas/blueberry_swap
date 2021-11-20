@@ -13,7 +13,7 @@ const UlComp = styled.ul`
 const LIComp = styled.li`
   padding: 10px;
   list-style: none;
-  background-color: ${(props: IProps) => (props.activ ? 'lightblue' : 'white')};
+  background-color: ${(props: IProps) => (props.activ ? '#e2f2f5' : 'white')};
   cursor: pointer;
   text-decoration: none;
   color: black;
