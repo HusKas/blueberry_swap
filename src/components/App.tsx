@@ -687,13 +687,13 @@ class App extends Component<IProps, IApp> {
             .mul(BigNumber.from(liquidity))
             .div(BigNumber.from(totalSupply));
 
-          console.log(
-            `LP Account: ${this.state.fromWei(lpPairBalanceAccount)}`
-          );
-          console.log(`LP Token Balance ${this.state.fromWei(tokenA)}`);
-          console.log(`LP WETH Balance ${this.state.fromWei(tokenB)}`);
-          console.log(`LP Total Supply: ${this.state.fromWei(totalSupply)}`);
-          console.log(`Price impact ${priceImpact}`);
+          // console.log(
+          //   `LP Account: ${this.state.fromWei(lpPairBalanceAccount)}`
+          // );
+          // console.log(`LP Token Balance ${this.state.fromWei(tokenA)}`);
+          // console.log(`LP WETH Balance ${this.state.fromWei(tokenB)}`);
+          // console.log(`LP Total Supply: ${this.state.fromWei(totalSupply)}`);
+          // console.log(`Price impact ${priceImpact}`);
 
           this.setState({
             liquidity,

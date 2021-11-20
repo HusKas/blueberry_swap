@@ -127,7 +127,6 @@ export class AddLiquidity extends Component<any, IState> {
       outputAmountInWei = this.context.toWei(outputAmount).toString();
 
       if (outputAmountInWei > 0 && outputAmountInWei !== '') {
-        console.log(outputAmountInWei);
         inputAmountInWei = await this.context.getTokenAAmount(
           outputAmountInWei
         );
@@ -141,6 +140,9 @@ export class AddLiquidity extends Component<any, IState> {
           inputAmount = this.context.fromWei(inputAmountInWei[1]);
           inputAmountInWei = inputAmountInWei[1].toString();
 
+          console.log('-------------------');
+          console.log(inputAmountInWei);
+          console.log('-------------------');
           this.setState({
             calc: inputAmount / outputAmount,
             inputAmount,
@@ -226,6 +228,24 @@ export class AddLiquidity extends Component<any, IState> {
     });
   };
 
+  validate(event: any) {
+    var theEvent = event || window.event;
+
+    // Handle paste
+    if (theEvent.type === 'paste') {
+      key = event.clipboardData.getData('text/plain');
+    } else {
+      // Handle key press
+      var key = theEvent.keyCode || theEvent.which;
+      key = String.fromCharCode(key);
+    }
+    var regex = /[0-9]|\./;
+    if (!regex.test(key)) {
+      theEvent.returnValue = false;
+      if (theEvent.preventDefault) theEvent.preventDefault();
+    }
+  }
+
   main = () => (
     <div id="content">
       <div className="card mb-4">
@@ -250,12 +270,12 @@ export class AddLiquidity extends Component<any, IState> {
             <div className="input-group mb-4">
               <input
                 id="tokenA"
-                type="number"
-                min="0"
+                type="text"
                 step="0.000000000000000001"
                 autoComplete="off"
                 placeholder="0.0"
-                defaultValue={this.state.inputAmount || ''}
+                value={this.state.inputAmount || ''}
+                onKeyPress={(event) => this.validate(event)}
                 onChange={(event: any) => {
                   this.handleOnChangeTokenBAmount(event);
                 }}
@@ -291,13 +311,13 @@ export class AddLiquidity extends Component<any, IState> {
             <div className="input-group mb-2">
               <input
                 id="tokenB"
-                type="number"
-                min="0"
+                type="text"
                 step="0.000000000000000001"
                 autoComplete="off"
                 placeholder="0.0"
                 value={this.state.outputAmount || ''}
                 className="form-control form-control-lg"
+                onKeyPress={(event) => this.validate(event)}
                 onChange={(event: any) => {
                   this.handleOnChangeTokenAAmount(event);
                 }}

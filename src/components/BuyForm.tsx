@@ -9,11 +9,12 @@ interface IProps {
 }
 
 interface IState {
-  input: string;
-  outputAmount: string;
-  outputAmountInWei: string;
-  calc: number;
-  inputActive: boolean;
+  calc: any;
+  inputAmount: any;
+  inputAmountInWei: any;
+  outputAmount: any;
+  outputAmountInWei: any;
+  loading: boolean;
 }
 
 const Image = styled.img`
@@ -27,20 +28,13 @@ class BuyForm extends Component<IProps, IState> {
   constructor(props: IProps) {
     super(props);
     this.state = {
-      input: '0',
-      outputAmount: '0',
-      outputAmountInWei: '0',
       calc: 0,
-      inputActive: false,
+      inputAmount: '',
+      inputAmountInWei: '',
+      outputAmount: '',
+      outputAmountInWei: '',
+      loading: false,
     };
-  }
-
-  async addLiqudity() {
-    let etherAmount: any, tokenAmount: any;
-    etherAmount = this.state.input.toString();
-    etherAmount = this.context.toWei('1');
-    tokenAmount = this.context.toWei('5000');
-    await this.context.addLiquidity(tokenAmount, etherAmount);
   }
 
   clickSwitchForm = (e: any) => {
@@ -102,15 +96,12 @@ class BuyForm extends Component<IProps, IState> {
                     calc: etherAmount.toString() / outputAmountInWei.toString(),
                     outputAmountInWei,
                     outputAmount,
-                    input: event.target.value,
-                    inputActive: true,
                   });
                 }
               } else {
                 this.setState({
                   outputAmount: '0',
                   calc: 0,
-                  inputActive: false,
                 });
               }
             }}
@@ -171,7 +162,7 @@ class BuyForm extends Component<IProps, IState> {
           </div>
         </div>
         <div className="mb-5">
-          {this.state.inputActive ? (
+          {/* {this.state.inputActive ? (
             <>
               <span className="float-left text-muted">Exchange Rate</span>
               <br />
@@ -181,7 +172,7 @@ class BuyForm extends Component<IProps, IState> {
                 ETH
               </span>
             </>
-          ) : null}
+          ) : null} */}
         </div>
         <button type="submit" className="btn btn-primary btn-block btn-lg">
           SWAP

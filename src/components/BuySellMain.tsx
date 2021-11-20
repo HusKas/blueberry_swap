@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-// import BuyForm from './BuyForm';
+import BuyForm from './BuyForm';
 // import SellForm from './SellForm';
 
 interface IProps {
@@ -28,10 +28,12 @@ class BuySellMain extends Component<IProps, IState> {
       <div id="content">
         <div className="card mb-4">
           <div className="card-body">
-            {/* <BuyForm
-              buyTokens={this.props.buyTokens}
-              switchForms={this.switchForms}
-            /> */}
+            {
+              // <BuyForm
+              //   buyTokens={this.props.buyTokens}
+              //   switchForms={this.switchForms}
+              // />
+            }
           </div>
         </div>
       </div>
