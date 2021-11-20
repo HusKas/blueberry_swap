@@ -6,12 +6,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /* background-image: url('https://miro.medium.com/focal/1200/1200/52/55/1*k76eTmTfhxheqmd0noPVOA.jpeg'); */
-  background: rgb(88, 88, 88);
+  background: rgb(26, 162, 189);
   background: linear-gradient(
-    90deg,
-    rgba(88, 88, 88, 1) 10%,
-    rgba(23, 138, 163, 1) 64%,
-    rgba(0, 0, 0, 1) 100%
+    307deg,
+    rgba(26, 162, 189, 1) 5%,
+    rgba(13, 82, 129, 1) 46%,
+    rgba(0, 97, 113, 1) 74%,
+    rgba(0, 97, 113, 1) 98%
   );
   height: 100vh !important;
   background-size: cover;

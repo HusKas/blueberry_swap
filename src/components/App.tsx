@@ -78,6 +78,7 @@ class App extends Component<IProps, IApp> {
       provider: {},
       signer: {},
       exchangeAddress: '',
+      buyTokens: this.buyTokens,
       addLiquidity: this.addLiquidity,
       removeLiquidity: this.removeLiquidity,
       getTokenAAmount: this.getTokenAAmount,
@@ -309,8 +310,6 @@ class App extends Component<IProps, IApp> {
           this.state.signer
         );
 
-        this.setState({ token1 });
-
         const tx = await token1.approve(
           this.state.router.address,
           tokenAmount,
@@ -339,7 +338,7 @@ class App extends Component<IProps, IApp> {
           }
         );
         await tx2.wait(1);
-        this.setState({ loading: false });
+        this.setState({ loading: false, token1 });
       } catch (err) {
         this.setState({ loading: false });
       }
@@ -386,7 +385,7 @@ class App extends Component<IProps, IApp> {
   };
 
   getExchange = async (exchangeAddress: string) => {
-    console.log(exchangeAddress);
+    console.log('getExchange...');
     try {
       if (
         Object.keys(this.state.signer).length > 0 &&
@@ -410,17 +409,12 @@ class App extends Component<IProps, IApp> {
     return tokenAmount;
   };
 
-  getExchangeAddress = async (
-    token1Address: string,
-    token2Address = this.state.weth.address
-  ) => {
+  getExchangeAddress = async (token1Address: string, token2Address: string) => {
     try {
-      console.log(token1Address, token2Address);
       const exchangeAddress = await this.state.factory.getPair(
         token1Address,
         token2Address
       );
-
       return exchangeAddress;
     } catch (err) {
       console.log(err);
@@ -452,33 +446,52 @@ class App extends Component<IProps, IApp> {
     //   });
   };
 
-  buyTokens = async (ethAmount: string, _minTokens: string) => {
-    // this.setState({ loading: true });
-    // const exchangeAddress = await this.getExchangeAddress(
-    //   REACT_APP_TOKEN_ADDRESS || ''
-    // );
-    // console.log(`Token pair - buyTokens: ${exchangeAddress}`);
-    // if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
-    //   const exchange = await this.getExchange(exchangeAddress);
-    //   try {
-    //     const tx = await exchange.ethToTokenSwap(_minTokens, {
-    //       value: ethAmount,
-    //       from: this.state.account,
-    //     });
-    //     tx.wait(1);
-    //     this.getEthBalance();
-    //     this.getTokenBalance();
-    //     this.setState({ loading: false, tx: tx.hash });
-    //     setTimeout(() => {
-    //       this.setState({ tx: null });
-    //     }, 3000);
-    //   } catch (err) {
-    //     console.log(err);
-    //     this.setState({ loading: false });
-    //   }
-    // } else {
-    //   console.log('No token pair');
-    // }
+  buyTokens = async (
+    tokenAAmount: string,
+    tokenBAmount: string,
+    isETH: boolean
+  ) => {
+    this.setState({ loading: true });
+
+    const exchangeAddress = await this.getExchangeAddress(
+      this.state.tokenAData.address,
+      this.state.tokenBData.address
+    );
+
+    //slippage
+    const _minTokens = BigNumber.from(tokenBAmount).mul(90).div(100);
+
+    console.log(`Token pair - buyTokens: ${exchangeAddress}`);
+    if (
+      exchangeAddress !== REACT_APP_ZERO_ADDRESS &&
+      this.state.tokenAData.address === REACT_APP_WETH_ADDRESS
+    ) {
+      try {
+        const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+        const tx =
+          await this.state.router.swapExactETHForTokensSupportingFeeOnTransferTokens(
+            _minTokens,
+            [this.state.weth.address, this.state.tokenBData.address],
+            this.state.account,
+            deadline,
+            {
+              value: tokenAAmount,
+              from: this.state.account,
+            }
+          );
+        tx.wait(1);
+
+        this.setState({ loading: false, tx: tx.hash });
+        setTimeout(() => {
+          this.setState({ tx: null });
+        }, 3000);
+      } catch (err) {
+        console.log(err);
+        this.setState({ loading: false });
+      }
+    } else {
+      console.log('No token pair');
+    }
   };
 
   getTokenAAmount = async (tokenAmount: string) => {
@@ -486,6 +499,7 @@ class App extends Component<IProps, IApp> {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
       if (Object.keys(this.state.tokenBData).length > 0) {
         const exchangeAddress = await this.getExchangeAddress(
+          this.state.tokenAData.address,
           this.state.tokenBData.address
         );
         console.log(`Exchange address - getTokenBAmount: ${exchangeAddress}`);
@@ -523,6 +537,7 @@ class App extends Component<IProps, IApp> {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
       if (Object.keys(this.state.tokenBData).length > 0) {
         const exchangeAddress = await this.getExchangeAddress(
+          this.state.tokenAData.address,
           this.state.tokenBData.address
         );
         console.log(`Exchange address - getTokenBAmount: ${exchangeAddress}`);
@@ -597,6 +612,7 @@ class App extends Component<IProps, IApp> {
   getTokenAData = async (tokenAData: ITokenData) => {
     console.log('getTokenAData selected... ');
     this.setState({ tokenAData, isOpen: !this.state.isOpen });
+    await this.getTokenABalance(tokenAData);
     if (this.child.current) {
       this.child.current.resetForms();
       if (tokenAData.address === REACT_APP_WETH_ADDRESS) {
@@ -610,7 +626,7 @@ class App extends Component<IProps, IApp> {
   getTokenBData = async (tokenBData: ITokenData) => {
     console.log('getTokenBData selected... ');
     this.setState({ tokenBData, isOpen: !this.state.isOpen });
-
+    await this.getTokenBBalance(tokenBData);
     if (this.child.current) {
       this.child.current.resetForms();
       if (tokenBData.address === REACT_APP_WETH_ADDRESS) {
@@ -743,12 +759,7 @@ class App extends Component<IProps, IApp> {
           {this.state.msg ? <Msg>{this.state.msgTxt}</Msg> : null}
           <Tabs
             clearStates={this.clearStates}
-            main={
-              <BuySellMain
-                buyTokens={this.buyTokens}
-                sellTokens={this.sellTokens}
-              />
-            }
+            main={<BuySellMain />}
             liquidity={<AddLiquidity ref={this.child} />}
           />
         </Context.Provider>

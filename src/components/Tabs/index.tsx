@@ -13,9 +13,10 @@ const UlComp = styled.ul`
 const LIComp = styled.li`
   padding: 10px;
   list-style: none;
-  background-color: ${(props: IProps) => (props.activ ? '#f0f0f0' : 'white')};
+  background-color: ${(props: IProps) => (props.activ ? 'lightblue' : 'white')};
   cursor: pointer;
   text-decoration: none;
+  color: black;
 `;
 
 interface IPropsTabs {

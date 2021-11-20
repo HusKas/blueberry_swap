@@ -2,17 +2,12 @@ import React, { Component } from 'react';
 import BuyForm from './BuyForm';
 // import SellForm from './SellForm';
 
-interface IProps {
-  buyTokens(ethAmount: string, _minTokens: string): any;
-  sellTokens(tokenAmount: string, _minEthAmount: string): any;
-}
-
 interface IState {
   switch: boolean;
 }
 
-class BuySellMain extends Component<IProps, IState> {
-  constructor(props: IProps) {
+class BuySellMain extends Component<any, IState> {
+  constructor(props: any) {
     super(props);
     this.state = {
       switch: true,
@@ -25,18 +20,7 @@ class BuySellMain extends Component<IProps, IState> {
 
   render() {
     return this.state.switch ? (
-      <div id="content">
-        <div className="card mb-4">
-          <div className="card-body">
-            {
-              // <BuyForm
-              //   buyTokens={this.props.buyTokens}
-              //   switchForms={this.switchForms}
-              // />
-            }
-          </div>
-        </div>
-      </div>
+      <div id="content">{<BuyForm switchForms={this.switchForms} />}</div>
     ) : (
       <div id="content">
         <div className="card mb-4">

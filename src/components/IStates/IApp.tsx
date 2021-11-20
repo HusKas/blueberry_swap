@@ -25,6 +25,7 @@ export interface IApp {
   provider: any;
   signer: any;
   exchangeAddress: string;
+  buyTokens(tokenAmount: string, _minTokens: string, isETH: boolean);
   addLiquidity(tokenAmount: string, ethAmount: string): void;
   removeLiquidity(liquidityAmount: string): void;
   getTokenAAmount(tokenAmount: string): any;
