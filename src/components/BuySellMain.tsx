@@ -7,8 +7,10 @@ interface IState {
 }
 
 class BuySellMain extends Component<any, IState> {
+  child: any;
   constructor(props: any) {
     super(props);
+    this.child = React.createRef() || '';
     this.state = {
       switch: true,
     };
@@ -20,7 +22,7 @@ class BuySellMain extends Component<any, IState> {
 
   render() {
     return this.state.switch ? (
-      <div>{<BuyForm switchForms={this.switchForms} />}</div>
+      <div>{<BuyForm switchForms={this.switchForms} ref={this.child} />}</div>
     ) : (
       <div id="content">
         <div className="card mb-4">

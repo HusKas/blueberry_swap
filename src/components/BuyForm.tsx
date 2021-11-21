@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import styled from 'styled-components';
 import Context from './Context';
 import { FaAngleDown } from 'react-icons/fa';
-
+import { AiOutlineQuestionCircle } from 'react-icons/ai';
 const Container = styled.div`
   margin-bottom: 20px;
   border-radius: 25px;
@@ -27,9 +27,10 @@ const Row = styled.div`
 
 const Column = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   flex-basis: 100%;
   justify-content: left;
+  font-size: 15px;
 `;
 
 const ColumnRight = styled.div`
@@ -38,7 +39,7 @@ const ColumnRight = styled.div`
   flex-basis: 100%;
   align-items: end;
   color: rgb(31, 199, 212);
-  font-weight: bold;
+  font-weight: 500;
   font-size: 16px;
 `;
 const ColumnTextOnly = styled.div`
@@ -52,7 +53,8 @@ const ColumnGreen = styled.div`
   display: flex;
   flex-direction: column;
   flex-basis: 100%;
-  color: green;
+  color: rgb(31, 199, 212);
+  font-weight: 500;
   justify-content: left;
 `;
 
@@ -111,12 +113,17 @@ class BuyForm extends Component<IProps, IState> {
   handleSubmit = async (event: any) => {
     console.log('submit..');
     event.preventDefault();
-    if (event.target.value !== '') {
+
+    if (event.target.value !== '' || this.context.outputAmountInWei > 0) {
       const inputAmountInWei = this.state.inputAmountInWei;
       const outputAmountInWei = this.state.outputAmountInWei;
       if (inputAmountInWei && outputAmountInWei) {
-        console.log(inputAmountInWei, outputAmountInWei);
         await this.context.buyTokens(inputAmountInWei, outputAmountInWei);
+      } else {
+        await this.context.buyTokens(
+          inputAmountInWei,
+          this.context.outputAmountInWei
+        );
       }
     } else {
       this.context.setMsg('No pairs exists');
@@ -315,7 +322,7 @@ class BuyForm extends Component<IProps, IState> {
                 type="text"
                 autoComplete="off"
                 placeholder="0.0"
-                value={this.state.outputAmount || ''}
+                value={this.state.outputAmount || this.context.outputAmount}
                 onChange={(event: any) => {
                   this.handleOnChangeTokenAAmount(event);
                 }}
@@ -369,7 +376,9 @@ class BuyForm extends Component<IProps, IState> {
           <Items>
             <ColumnContainer>
               <Row>
-                <Column>Minimum received</Column>
+                <Column>
+                  Minimum received <AiOutlineQuestionCircle className="icon" />
+                </Column>
                 <Column>
                   {this.state.outputAmountInWei
                     ? Number.parseFloat(
@@ -381,7 +390,10 @@ class BuyForm extends Component<IProps, IState> {
             </ColumnContainer>
             <ColumnContainer>
               <Row>
-                <Column>Price Impact</Column>
+                <Column>
+                  Price Impact
+                  <AiOutlineQuestionCircle className="icon" />
+                </Column>
                 {this.context.priceImpact > 3 ? (
                   <ColumnRed>{this.context.priceImpact} %</ColumnRed>
                 ) : (

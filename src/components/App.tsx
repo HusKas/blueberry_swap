@@ -112,6 +112,8 @@ class App extends Component<IProps, IApp> {
       tokenAShare: 0,
       tokenBShare: 0,
       tokenBSelected: false,
+      outputAmount: '',
+      outputAmountInWei: '',
     };
   }
 
@@ -649,7 +651,7 @@ class App extends Component<IProps, IApp> {
     this.setState({ tokenAData, isOpen: !this.state.isOpen });
     await this.getTokenABalance(tokenAData);
     if (this.child.current) {
-      this.child.current.resetForms();
+      // this.child.current.resetForms();
       if (tokenAData.address === REACT_APP_WETH_ADDRESS) {
         await this.getEthBalanceTokenA();
       } else {
@@ -662,12 +664,34 @@ class App extends Component<IProps, IApp> {
     console.log('getTokenBData selected... ');
     this.setState({ tokenBData, isOpen: !this.state.isOpen });
     await this.getTokenBBalance(tokenBData);
+    await this.getTokenAmountAfterSelectedBToken();
+
     if (this.child.current) {
-      this.child.current.resetForms();
+      // this.child.current.resetForms();
       if (tokenBData.address === REACT_APP_WETH_ADDRESS) {
         await this.getEthBalanceTokenB();
       } else {
         await this.getTokenBBalance(tokenBData);
+      }
+    }
+  };
+
+  getTokenAmountAfterSelectedBToken = async () => {
+    console.log('getTokenAmountAfterSelectedBToken..');
+    if (this.child.current) {
+      const inputAmountInWei =
+        this.child.current?.child.current?.state.inputAmountInWei;
+      if (inputAmountInWei) {
+        let outputAmountInWei = await this.getTokenBAmount(inputAmountInWei);
+
+        if (outputAmountInWei) {
+          const outputAmount = this.fromWei(outputAmountInWei[1]);
+          outputAmountInWei = outputAmountInWei[1].toString();
+          this.setState({
+            outputAmount,
+            outputAmountInWei,
+          });
+        }
       }
     }
   };
@@ -825,7 +849,7 @@ class App extends Component<IProps, IApp> {
           {this.state.msg ? <Msg>{this.state.msgTxt}</Msg> : null}
           <Tabs
             clearStates={this.clearStates}
-            main={<BuySellMain />}
+            main={<BuySellMain ref={this.child} />}
             liquidity={<AddLiquidity ref={this.child} />}
           />
           <div className="settings_slippage">
@@ -842,7 +866,7 @@ class App extends Component<IProps, IApp> {
             <main
               role="main"
               className="col-lg-12 ml-auto mr-auto main"
-              style={{ maxWidth: '550px' }}
+              style={{ maxWidth: '500px' }}
             >
               <div className="content justify-content-center">{content}</div>
             </main>

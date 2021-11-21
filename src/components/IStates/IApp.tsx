@@ -58,4 +58,6 @@ export interface IApp {
   tokenAShare: number;
   tokenBShare: number;
   tokenBSelected: boolean;
+  outputAmount: string;
+  outputAmountInWei: string;
 }
