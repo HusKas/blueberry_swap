@@ -17,6 +17,7 @@ class BuySellMain extends Component<any, IState> {
   }
 
   switchForms = async () => {
+    console.log('switchForms..');
     this.setState({ switch: !this.state.switch });
   };
 

@@ -62,6 +62,7 @@ class App extends Component<IProps, IApp> {
   constructor(props: IProps) {
     super(props);
     this.child = React.createRef() || '';
+
     this.state = {
       account: '',
       web3: new Web3(Web3.givenProvider),
@@ -678,21 +679,28 @@ class App extends Component<IProps, IApp> {
 
   getTokenAmountAfterSelectedBToken = async () => {
     console.log('getTokenAmountAfterSelectedBToken..');
-    if (this.child.current) {
-      const inputAmountInWei =
+    let inputAmountInWei: any = '';
+    let outputAmountInWei: any = '';
+
+    if (this.child.current?.child?.current) {
+      inputAmountInWei =
         this.child.current?.child.current?.state.inputAmountInWei;
       if (inputAmountInWei) {
-        let outputAmountInWei = await this.getTokenBAmount(inputAmountInWei);
-
-        if (outputAmountInWei) {
-          const outputAmount = this.fromWei(outputAmountInWei[1]);
-          outputAmountInWei = outputAmountInWei[1].toString();
-          this.setState({
-            outputAmount,
-            outputAmountInWei,
-          });
-        }
+        outputAmountInWei = await this.getTokenBAmount(inputAmountInWei);
       }
+    } else {
+      inputAmountInWei = this.child.current?.state.inputAmountInWei;
+      if (inputAmountInWei) {
+        outputAmountInWei = await this.getTokenBAmount(inputAmountInWei);
+      }
+    }
+    if (outputAmountInWei) {
+      const outputAmount = this.fromWei(outputAmountInWei[1]);
+      outputAmountInWei = outputAmountInWei[1].toString();
+      this.setState({
+        outputAmount,
+        outputAmountInWei,
+      });
     }
   };
 
