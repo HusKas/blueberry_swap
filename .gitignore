@@ -7,11 +7,18 @@
 
 # testing
 /coverage
+.test.tsx
 
 # production
 /build
 /cache
 /src/abi
+
+
+#Config
+tsconfig.json
+package.json
+
 
 # misc
 .DS_Store

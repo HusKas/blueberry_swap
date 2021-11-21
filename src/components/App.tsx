@@ -16,6 +16,7 @@ import styled from 'styled-components';
 import { Tabs } from './Tabs';
 import AddLiquidity from './Liquidity';
 import data from '../data.json';
+import { IoSettingsSharp } from 'react-icons/io5';
 
 export interface ProcessEnv {
   [key: string]: string | undefined;
@@ -698,7 +699,7 @@ class App extends Component<IProps, IApp> {
         .div(BigNumber.from(token_B_LP_Balance));
 
       const priceImpact = Number.parseFloat(priceImp.toString()).toFixed(2);
-      console.log(priceImpact);
+
       this.setState({
         priceImpact,
       });
@@ -827,6 +828,9 @@ class App extends Component<IProps, IApp> {
             main={<BuySellMain />}
             liquidity={<AddLiquidity ref={this.child} />}
           />
+          <div className="settings_slippage">
+            <IoSettingsSharp />
+          </div>
         </Context.Provider>
       );
     }

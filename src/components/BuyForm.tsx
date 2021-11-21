@@ -29,8 +29,23 @@ const Column = styled.div`
   display: flex;
   flex-direction: column;
   flex-basis: 100%;
-
   justify-content: left;
+`;
+
+const ColumnRight = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  align-items: end;
+  color: rgb(31, 199, 212);
+  font-weight: bold;
+  font-size: 16px;
+`;
+const ColumnTextOnly = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  color: blueviolet;
 `;
 
 const ColumnGreen = styled.div`
@@ -51,7 +66,7 @@ const ColumnRed = styled.div`
 
 const ColumnContainer = styled.div`
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   width: 75%;
 `;
 
@@ -326,15 +341,19 @@ class BuyForm extends Component<IProps, IState> {
               </div>
             </div>
             <div className="mb-5">
+              <Row>
+                <ColumnTextOnly>Slippage Tollerance</ColumnTextOnly>
+                <ColumnRight>1%</ColumnRight>
+              </Row>
               {this.state.calc > 0 ? (
                 <>
                   <span className="float-left text-muted">Exchange Rate</span>
                   <br />
                   <span className="float-right text-muted">
                     <i style={{ margin: '3px' }}>1</i>
-                    {this.context.tokenBData.symbol} =
-                    <i style={{ margin: '3px' }}>{this.state.calc}</i>
-                    BNB
+                    {this.context.tokenBData?.symbol} =
+                    <i style={{ margin: '3px' }}>{this.state?.calc}</i>
+                    {this.context.tokenAData?.symbol}
                   </span>
                 </>
               ) : null}
@@ -349,22 +368,26 @@ class BuyForm extends Component<IProps, IState> {
         <Container>
           <Items>
             <ColumnContainer>
-              <Column>Minimum received</Column>
-              <Column>
-                {this.state.outputAmountInWei
-                  ? Number.parseFloat(
-                      this.context.fromWei(this.state.outputAmountInWei)
-                    ).toFixed(2)
-                  : '0'}
-              </Column>
+              <Row>
+                <Column>Minimum received</Column>
+                <Column>
+                  {this.state.outputAmountInWei
+                    ? Number.parseFloat(
+                        this.context.fromWei(this.state.outputAmountInWei)
+                      ).toFixed(2)
+                    : '0'}
+                </Column>
+              </Row>
             </ColumnContainer>
             <ColumnContainer>
-              <Column>Price Impact</Column>
-              {this.context.priceImpact > 3 ? (
-                <ColumnRed>{this.context.priceImpact} %</ColumnRed>
-              ) : (
-                <ColumnGreen>{this.context.priceImpact} %</ColumnGreen>
-              )}
+              <Row>
+                <Column>Price Impact</Column>
+                {this.context.priceImpact > 3 ? (
+                  <ColumnRed>{this.context.priceImpact} %</ColumnRed>
+                ) : (
+                  <ColumnGreen>{this.context.priceImpact} %</ColumnGreen>
+                )}
+              </Row>
             </ColumnContainer>
           </Items>
         </Container>

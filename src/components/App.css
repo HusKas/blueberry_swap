@@ -36,6 +36,14 @@
 input {
   height: 65px !important;
 }
+.settings_slippage {
+  position: absolute;
+  top: 5px;
+  right: 50px;
+  color: whitesmoke;
+  font-size: 28px;
+  cursor: pointer;
+}
 
 @keyframes App-logo-spin {
   from {

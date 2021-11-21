@@ -47,10 +47,6 @@ const ColumnContainer = styled.div`
   width: 75%;
 `;
 
-const Title = styled.h4`
-  padding: 10px;
-`;
-
 const Image = styled.img`
   width: 32px;
   height: 32px;
