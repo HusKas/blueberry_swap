@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
 import { useEffect } from 'react';
+import { IoSettingsSharp } from 'react-icons/io5';
 
 const UlComp = styled.ul`
   display: flex;
@@ -69,6 +70,9 @@ export const Tabs = (props: IPropsTabs) => {
             Liquidity
           </LIComp>
         </Link>
+        <div className="settings_slippage">
+          <IoSettingsSharp />
+        </div>
       </UlComp>
       <Switch>
         <Route exact path="/">

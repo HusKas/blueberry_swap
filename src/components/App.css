@@ -63,8 +63,8 @@ select:focus {
 }
 .settings_slippage {
   position: absolute;
-  top: 5px;
-  right: 50px;
+
+  right: 45px;
   color: whitesmoke;
   font-size: 28px;
   cursor: pointer;

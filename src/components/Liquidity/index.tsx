@@ -293,7 +293,9 @@ export class AddLiquidity extends Component<any, IState> {
                 type="text"
                 autoComplete="off"
                 placeholder="0.0"
-                value={this.state.outputAmount || this.context.outputAmount}
+                value={
+                  this.state.outputAmount || this.context.outputAmount || ''
+                }
                 onChange={(event: any) => {
                   this.handleOnChangeTokenAAmount(event);
                 }}

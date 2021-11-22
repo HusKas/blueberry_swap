@@ -16,7 +16,6 @@ import styled from 'styled-components';
 import { Tabs } from './Tabs';
 import AddLiquidity from './Liquidity';
 import data from '../data.json';
-import { IoSettingsSharp } from 'react-icons/io5';
 
 export interface ProcessEnv {
   [key: string]: string | undefined;
@@ -51,7 +50,10 @@ const Link = styled.a`
 
 const Msg = styled.div`
   margin: 10px;
-  color: red;
+  padding: 10px;
+  color: white;
+  border: 1px solid white;
+  border-radius: 25px;
 `;
 
 interface IProps {}
@@ -844,6 +846,7 @@ class App extends Component<IProps, IApp> {
     } else {
       content = (
         <Context.Provider value={this.state}>
+          {this.state.msg ? <Msg>{this.state.msgTxt}</Msg> : null}
           {this.state.tx ? (
             <ContainerLink>
               <Link
@@ -854,15 +857,11 @@ class App extends Component<IProps, IApp> {
               </Link>
             </ContainerLink>
           ) : null}
-          {this.state.msg ? <Msg>{this.state.msgTxt}</Msg> : null}
           <Tabs
             clearStates={this.clearStates}
             main={<BuySellMain ref={this.child} />}
             liquidity={<AddLiquidity ref={this.child} />}
           />
-          <div className="settings_slippage">
-            <IoSettingsSharp />
-          </div>
         </Context.Provider>
       );
     }

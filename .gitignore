@@ -16,8 +16,8 @@
 
 
 #Config
-tsconfig.json
-package.json
+/package.json
+/hardhat.config.ts
 
 
 # misc
