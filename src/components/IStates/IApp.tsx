@@ -13,6 +13,7 @@ export interface IApp {
   web3: any;
   weth: any;
   token1: any;
+  token2: any;
   router: any;
   exchange: any;
   factory: any;
@@ -30,10 +31,9 @@ export interface IApp {
   removeLiquidity(liquidityAmount: string): void;
   getTokenAAmount(tokenAmount: string): any;
   getTokenBAmount(tokenAmount: string): any;
-  getTokenBOutAmount(ethAmount: string): any;
   getExchangeAddress(token1: any, token2: any): any;
   getExchange(exchange: any): any;
-  getLiquidityOwner(token1: ITokenData): void;
+  getLiquidityOwner(token1Data: ITokenData, token2Data: ITokenData): void;
   getPriceImpact(input: string): any;
   fromWei(value: any): string;
   toWei(value: any): BigNumber;
@@ -60,4 +60,6 @@ export interface IApp {
   tokenBSelected: boolean;
   outputAmount: string;
   outputAmountInWei: string;
+  inputAmount: string;
+  inputAmountInWei: string;
 }

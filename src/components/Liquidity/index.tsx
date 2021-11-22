@@ -7,10 +7,6 @@ export interface ProcessEnv {
   [key: string]: string | undefined;
 }
 
-require('dotenv').config();
-
-const { REACT_APP_WETH_ADDRESS }: ProcessEnv = process.env;
-
 const Container = styled.div`
   margin-bottom: 20px;
   border-radius: 25px;
@@ -60,11 +56,14 @@ interface IState {
   outputAmountInWei: any;
   loading: boolean;
 }
+interface IProps {
+  clearStates(): any;
+}
 
 export class AddLiquidity extends Component<any, IState> {
   static contextType = Context;
 
-  constructor(props: any) {
+  constructor(props: IProps) {
     super(props);
     this.removeLiquidity = this.removeLiquidity.bind(this);
     this.toggleModal = this.toggleModal.bind(this);
@@ -94,21 +93,18 @@ export class AddLiquidity extends Component<any, IState> {
       loading: true,
     });
 
-    const exchangeAddress = await this.context.getExchangeAddress(
-      this.context.tokenBData.address,
-      REACT_APP_WETH_ADDRESS
-    );
-
-    const exchange = await this.context.getExchange(exchangeAddress);
-
     const res = await this.context.removeLiquidity(lpPairBalanceAccount);
 
     if (res) {
-      await exchange.sync();
-      await this.context.getLiquidityOwner(this.context.tokenBData);
+      await this.context.getLiquidityOwner(
+        this.context.tokenAData,
+        this.context.tokenBData
+      );
       this.setState({
         loading: false,
       });
+    } else {
+      console.log('Could not remove liquidity');
     }
   };
 
@@ -122,9 +118,7 @@ export class AddLiquidity extends Component<any, IState> {
     if (e.target.value !== '' && this.isNumeric(e.target.value)) {
       outputAmount = e.target.value;
       outputAmountInWei = this.context.toWei(outputAmount).toString();
-
       if (outputAmountInWei !== '') {
-        console.log(outputAmountInWei);
         inputAmountInWei = await this.context.getTokenAAmount(
           outputAmountInWei
         );
@@ -135,8 +129,8 @@ export class AddLiquidity extends Component<any, IState> {
             inputAmountInWei[1].toString()
           );
 
-          inputAmount = this.context.fromWei(inputAmountInWei[1]);
-          inputAmountInWei = inputAmountInWei[1].toString();
+          inputAmount = this.context.fromWei(inputAmountInWei[0]);
+          inputAmountInWei = inputAmountInWei[0].toString();
 
           this.setState({
             calc: inputAmount / outputAmount,
@@ -145,7 +139,10 @@ export class AddLiquidity extends Component<any, IState> {
             outputAmount,
             outputAmountInWei,
           });
-          this.context.getLiquidityOwner(this.context.tokenBData);
+          this.context.getLiquidityOwner(
+            this.context.tokenAData,
+            this.context.tokenBData
+          );
         } else {
           this.setState({
             outputAmount,
@@ -154,6 +151,7 @@ export class AddLiquidity extends Component<any, IState> {
         }
       }
     } else {
+      this.props.clearStates();
       this.setState({
         inputAmount: '',
         outputAmount: '',
@@ -196,7 +194,10 @@ export class AddLiquidity extends Component<any, IState> {
             outputAmount,
             outputAmountInWei,
           });
-          this.context.getLiquidityOwner(this.context.tokenBData);
+          this.context.getLiquidityOwner(
+            this.context.tokenAData,
+            this.context.tokenBData
+          );
         } else {
           this.setState({
             inputAmount,
@@ -205,6 +206,7 @@ export class AddLiquidity extends Component<any, IState> {
         }
       }
     } else {
+      this.props.clearStates();
       this.setState({
         inputAmount: '',
         outputAmount: '',
@@ -254,7 +256,7 @@ export class AddLiquidity extends Component<any, IState> {
                 type="text"
                 autoComplete="off"
                 placeholder="0.0"
-                value={this.state.inputAmount || ''}
+                value={this.state.inputAmount}
                 onChange={(event: any) => {
                   this.handleOnChangeTokenBAmount(event);
                 }}
@@ -293,9 +295,7 @@ export class AddLiquidity extends Component<any, IState> {
                 type="text"
                 autoComplete="off"
                 placeholder="0.0"
-                value={
-                  this.state.outputAmount || this.context.outputAmount || ''
-                }
+                value={this.state.outputAmount || this.context.outputAmount}
                 onChange={(event: any) => {
                   this.handleOnChangeTokenAAmount(event);
                 }}
@@ -341,7 +341,7 @@ export class AddLiquidity extends Component<any, IState> {
         </div>
       </div>
 
-      {this.state.calc > 0 ? (
+      {this.context.lpAccountShare ? (
         <Container>
           <LiquidityItems>
             <ColumnContainer>
@@ -355,7 +355,7 @@ export class AddLiquidity extends Component<any, IState> {
                 </Column>
               </Row>
               <Row>
-                <Column>Owned LP tokens</Column>
+                <Column>Owned LP</Column>
                 <Column>{this.context.lpPairBalanceAccount}</Column>
               </Row>
               <Row>
