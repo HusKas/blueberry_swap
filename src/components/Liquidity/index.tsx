@@ -224,8 +224,10 @@ export class AddLiquidity extends Component<any, IState> {
 
   resetForms = () => {
     this.setState({
-      inputAmount: null,
-      outputAmount: null,
+      inputAmount: '',
+      outputAmount: '',
+      inputAmountInWei: '',
+      outputAmountInWei: '',
     });
   };
 
@@ -269,8 +271,8 @@ export class AddLiquidity extends Component<any, IState> {
               >
                 {this.context.tokenAData?.symbol ? (
                   <div className="input-group-text">
-                    <Image src={this.context.tokenAData.logoURI}></Image>
-                    &nbsp; {this.context.tokenAData.symbol} <FaAngleDown />
+                    <Image src={this.context.tokenAData?.logoURI}></Image>
+                    &nbsp; {this.context.tokenAData?.symbol} <FaAngleDown />
                   </div>
                 ) : (
                   <div className="input-group-text">
@@ -309,7 +311,7 @@ export class AddLiquidity extends Component<any, IState> {
               >
                 {this.context.tokenBData?.symbol ? (
                   <div className="input-group-text">
-                    <Image src={this.context.tokenBData.logoURI}></Image>
+                    <Image src={this.context.tokenBData?.logoURI}></Image>
                     &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
                   </div>
                 ) : (
@@ -327,9 +329,9 @@ export class AddLiquidity extends Component<any, IState> {
                   <br />
                   <span className="float-right text-muted">
                     <i style={{ margin: '3px' }}>1</i>
-                    {this.context.tokenBData.symbol} =
+                    {this.context.tokenBData?.symbol} =
                     <i style={{ margin: '3px' }}>{this.state.calc}</i>
-                    BNB
+                    {this.context.tokenAData?.symbol}
                   </span>
                 </>
               ) : null}
@@ -359,11 +361,11 @@ export class AddLiquidity extends Component<any, IState> {
                 <Column>{this.context.lpPairBalanceAccount}</Column>
               </Row>
               <Row>
-                <Column> {this.context.tokenBData.symbol}</Column>
+                <Column> {this.context.tokenAData?.symbol}</Column>
                 <Column>{this.context.tokenAShare}</Column>
               </Row>
               <Row>
-                <Column> BNB</Column>
+                <Column> {this.context.tokenBData?.symbol}</Column>
                 <Column>{this.context.tokenBShare}</Column>
               </Row>
             </ColumnContainer>

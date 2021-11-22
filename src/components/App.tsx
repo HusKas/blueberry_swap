@@ -126,6 +126,8 @@ class App extends Component<IProps, IApp> {
     this.setState({
       inputAmount: '',
       outputAmount: '',
+      outputAmountInWei: '',
+      inputAmountInWei: '',
     });
   };
   async componentWillMount() {
@@ -717,10 +719,13 @@ class App extends Component<IProps, IApp> {
     this.setState({ tokenAData, isOpen: !this.state.isOpen });
     await this.getTokenABalance(tokenAData);
     await this.getTokenAmountAfterSelectedBToken();
+
     if (tokenAData.address === this.state.tokenBData.address) {
       this.setState({ tokenBData: null, tokenBBalance: '0' });
     }
     if (this.child.current) {
+      this.child.current.resetForms();
+      this.clearStates();
       if (tokenAData.address === REACT_APP_WETH_ADDRESS) {
         await this.getEthBalanceTokenA();
       }
@@ -732,10 +737,12 @@ class App extends Component<IProps, IApp> {
     this.setState({ tokenBData, isOpen: !this.state.isOpen });
     await this.getTokenBBalance(tokenBData);
     await this.getTokenAmountAfterSelectedBToken();
-    if (tokenBData.address === this.state.tokenBData.address) {
+    if (tokenBData.address === this.state.tokenAData.address) {
       this.setState({ tokenAData: null, tokenABalance: '0' });
     }
     if (this.child.current) {
+      this.child.current.resetForms();
+      this.clearStates();
       if (tokenBData.address === REACT_APP_WETH_ADDRESS) {
         await this.getEthBalanceTokenB();
       }
