@@ -705,19 +705,6 @@ class App extends Component<IProps, IApp> {
 
   toggleTokenListModal = async (tokenBSelected: boolean) => {
     this.setState({ isOpen: !this.state.isOpen, tokenBSelected });
-
-    if (!tokenBSelected) {
-      const tokensData = await this.getUniqueTokenList(this.state.tokensGData, [
-        this.state.tokenBData,
-      ]);
-      this.setState({ tokensData });
-    } else {
-      const tokensData = await this.getUniqueTokenList(this.state.tokensGData, [
-        this.state.tokenAData,
-      ]);
-
-      this.setState({ tokensData });
-    }
   };
 
   setMsg = (msgTxt: string) => {
@@ -730,6 +717,9 @@ class App extends Component<IProps, IApp> {
     this.setState({ tokenAData, isOpen: !this.state.isOpen });
     await this.getTokenABalance(tokenAData);
     await this.getTokenAmountAfterSelectedBToken();
+    if (tokenAData.address === this.state.tokenBData.address) {
+      this.setState({ tokenBData: null, tokenBBalance: '0' });
+    }
     if (this.child.current) {
       if (tokenAData.address === REACT_APP_WETH_ADDRESS) {
         await this.getEthBalanceTokenA();
@@ -742,6 +732,9 @@ class App extends Component<IProps, IApp> {
     this.setState({ tokenBData, isOpen: !this.state.isOpen });
     await this.getTokenBBalance(tokenBData);
     await this.getTokenAmountAfterSelectedBToken();
+    if (tokenBData.address === this.state.tokenBData.address) {
+      this.setState({ tokenAData: null, tokenABalance: '0' });
+    }
     if (this.child.current) {
       if (tokenBData.address === REACT_APP_WETH_ADDRESS) {
         await this.getEthBalanceTokenB();
@@ -774,13 +767,6 @@ class App extends Component<IProps, IApp> {
         outputAmountInWei,
       });
     }
-  };
-
-  getUniqueTokenList = async (tokenAlist: any, tokenBlist: any) => {
-    const res = await tokenAlist.filter((obj: ITokenData) => {
-      return tokenBlist.indexOf(obj) === -1;
-    });
-    return res;
   };
 
   getPriceImpact = async (input: any) => {
