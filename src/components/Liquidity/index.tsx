@@ -82,8 +82,18 @@ export class AddLiquidity extends Component<any, IState> {
     if (event.target.value !== '') {
       const inputAmountInWei = this.state.inputAmountInWei;
       const outputAmountInWei = this.state.outputAmountInWei;
-      if (inputAmountInWei && outputAmountInWei) {
+      const inputAmount = this.state.inputAmount;
+      const outputAmount = this.state.outputAmount || this.context.outputAmount;
+
+      if (
+        inputAmountInWei &&
+        outputAmountInWei &&
+        inputAmount < this.context.tokenABalance &&
+        outputAmount < this.context.tokenBBalance
+      ) {
         await this.context.addLiquidity(inputAmountInWei, outputAmountInWei);
+      } else {
+        alert('Not enough balance');
       }
     }
   };
