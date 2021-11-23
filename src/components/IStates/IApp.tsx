@@ -37,7 +37,9 @@ export interface IApp {
   getPriceImpact(input: string): any;
   fromWei(value: any): string;
   toWei(value: any): BigNumber;
+  isOpenModalSlippage: boolean;
   isOpen: boolean;
+  toggleSlippageModal(): void;
   toggleTokenListModal(tokenBSelected: boolean): void;
   setMsg(value: string): any;
   tokensData: ITokenData[];

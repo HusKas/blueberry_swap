@@ -50,12 +50,12 @@ function _addLiquidity(
         } else {
             uint amountBOptimal = ExchangeLibrary.quote(amountADesired, reserveA, reserveB);
             if (amountBOptimal <= amountBDesired) {
-                //require(amountBOptimal >= amountBMin, '_addLiquidity1: INSUFFICIENT_B_AMOUNT');
+                require(amountBOptimal >= amountBMin, '_addLiquidity1: INSUFFICIENT_B_AMOUNT');
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
                 uint amountAOptimal = ExchangeLibrary.quote(amountBDesired, reserveB, reserveA);
                 assert(amountAOptimal <= amountADesired);
-                //require(amountAOptimal >= amountAMin, '_addLiquidity2: INSUFFICIENT_A_AMOUNT');
+                require(amountAOptimal >= amountAMin, '_addLiquidity2: INSUFFICIENT_A_AMOUNT');
                 (amountA, amountB) = (amountAOptimal, amountBDesired);
             }
         }

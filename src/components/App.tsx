@@ -16,6 +16,7 @@ import styled from 'styled-components';
 import { Tabs } from './Tabs';
 import AddLiquidity from './Liquidity';
 import data from '../data.json';
+import { ModalSlippage } from './ModalSlippage';
 
 export interface ProcessEnv {
   [key: string]: string | undefined;
@@ -95,6 +96,8 @@ class App extends Component<IProps, IApp> {
       fromWei: this.fromWei,
       toWei: this.toWei,
       isOpen: false,
+      isOpenModalSlippage: false,
+      toggleSlippageModal: this.toggleSlippageModal,
       toggleTokenListModal: this.toggleTokenListModal,
       tokensData: [] as ITokenData[],
       tokensGData: [] as ITokenData[],
@@ -708,6 +711,10 @@ class App extends Component<IProps, IApp> {
     this.setState({ isOpen: !this.state.isOpen, tokenBSelected });
   };
 
+  toggleSlippageModal = async () => {
+    this.setState({ isOpenModalSlippage: !this.state.isOpenModalSlippage });
+  };
+
   setMsg = (msgTxt: string) => {
     this.setState({ msg: true, msgTxt });
     setTimeout(() => this.setState({ msg: false }), 3000);
@@ -925,6 +932,7 @@ class App extends Component<IProps, IApp> {
             </ContainerLink>
           ) : null}
           <Tabs
+            toggleSlippageModal={this.toggleSlippageModal}
             clearStates={this.clearStates}
             main={<BuySellMain ref={this.child} />}
             liquidity={
@@ -948,6 +956,10 @@ class App extends Component<IProps, IApp> {
             </main>
           </div>
         </div>
+        <ModalSlippage
+          isOpen={this.state.isOpenModalSlippage}
+          toggleSlippageModal={this.toggleSlippageModal}
+        />
         <Modal
           getTokenAData={this.getTokenAData}
           getTokenBData={this.getTokenBData}

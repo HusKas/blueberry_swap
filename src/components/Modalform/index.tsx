@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FixedSizeList } from 'react-window';
-// import data from '../../data.json';
-
-require('dotenv').config();
 
 const Flex = styled.div`
   display: flex;

@@ -21,6 +21,7 @@ const LIComp = styled.li`
 `;
 
 interface IPropsTabs {
+  toggleSlippageModal(): any;
   main: {};
   liquidity: {};
   clearStates(): any;
@@ -70,7 +71,7 @@ export const Tabs = (props: IPropsTabs) => {
             Liquidity
           </LIComp>
         </Link>
-        <div className="settings_slippage">
+        <div className="settings_slippage" onClick={props.toggleSlippageModal}>
           <IoSettingsSharp />
         </div>
       </UlComp>
