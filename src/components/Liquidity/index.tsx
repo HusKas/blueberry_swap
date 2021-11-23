@@ -109,7 +109,7 @@ export class AddLiquidity extends Component<any, IState> {
   };
 
   handleOnChangeTokenAAmount = async (e: any) => {
-    console.log('changing');
+    console.log('handleOnChangeTokenAAmount..');
     let inputAmount: any;
     let inputAmountInWei: any;
     let outputAmount: any;
@@ -164,7 +164,7 @@ export class AddLiquidity extends Component<any, IState> {
   }
 
   handleOnChangeTokenBAmount = async (e: any) => {
-    console.log('changing');
+    console.log('handleOnChangeTokenBAmount..');
     let inputAmount: any;
     let inputAmountInWei: any;
     let outputAmount: any;
@@ -173,6 +173,7 @@ export class AddLiquidity extends Component<any, IState> {
     if (e.target.value !== '' && this.isNumeric(e.target.value)) {
       inputAmount = e.target.value;
       inputAmountInWei = this.context.toWei(inputAmount).toString();
+
       if (inputAmountInWei !== '') {
         outputAmountInWei = await this.context.getTokenBAmount(
           inputAmountInWei
@@ -312,7 +313,7 @@ export class AddLiquidity extends Component<any, IState> {
                 {this.context.tokenBData?.symbol ? (
                   <div className="input-group-text">
                     <Image src={this.context.tokenBData?.logoURI}></Image>
-                    &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
+                    &nbsp; {this.context.tokenBData?.symbol} <FaAngleDown />
                   </div>
                 ) : (
                   <div className="input-group-text">
@@ -343,7 +344,7 @@ export class AddLiquidity extends Component<any, IState> {
         </div>
       </div>
 
-      {this.context.lpAccountShare ? (
+      {this.context.lpAccountShare > 0 ? (
         <Container>
           <LiquidityItems>
             <ColumnContainer>

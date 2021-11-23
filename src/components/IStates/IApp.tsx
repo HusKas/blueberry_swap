@@ -26,7 +26,7 @@ export interface IApp {
   provider: any;
   signer: any;
   exchangeAddress: string;
-  buyTokens(tokenAmount: string, _minTokens: string, isETH: boolean);
+  buyTokens(tokenAmount: string, _minTokens: string, isETH: boolean): any;
   addLiquidity(tokenAmount: string, ethAmount: string): void;
   removeLiquidity(liquidityAmount: string): void;
   getTokenAAmount(tokenAmount: string): any;
@@ -58,8 +58,8 @@ export interface IApp {
   tokenAShare: number;
   tokenBShare: number;
   tokenBSelected: boolean;
-  outputAmount: string;
-  outputAmountInWei: string;
-  inputAmount: string;
-  inputAmountInWei: string;
+  outputAmount: any;
+  outputAmountInWei: any;
+  inputAmount: any;
+  inputAmountInWei: any;
 }

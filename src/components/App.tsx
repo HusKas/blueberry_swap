@@ -123,12 +123,12 @@ class App extends Component<IProps, IApp> {
   }
   // clear between switch tap or removing input
   clearStates = () => {
-    this.setState({
-      inputAmount: '',
-      outputAmount: '',
-      outputAmountInWei: '',
-      inputAmountInWei: '',
-    });
+    // this.setState({
+    //   inputAmount: '',
+    //   outputAmount: '',
+    //   outputAmountInWei: '',
+    //   inputAmountInWei: '',
+    // });
   };
   async componentWillMount() {
     this._isMounted = true;
@@ -143,7 +143,6 @@ class App extends Component<IProps, IApp> {
   }
 
   async componentDidUpdate(prevProps: any, prevState: any) {
-    // only update chart if the data has changed
     if (prevState.account !== this.state.account) {
       await this.getLiquidityOwner(
         this.state.tokenAData,
@@ -723,8 +722,8 @@ class App extends Component<IProps, IApp> {
     if (tokenAData.address === this.state.tokenBData.address) {
       this.setState({ tokenBData: null, tokenBBalance: '0' });
     }
+    this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
     if (this.child.current) {
-      this.child.current.resetForms();
       this.clearStates();
       if (tokenAData.address === REACT_APP_WETH_ADDRESS) {
         await this.getEthBalanceTokenA();
@@ -736,12 +735,13 @@ class App extends Component<IProps, IApp> {
     console.log('getTokenBData selected... ');
     this.setState({ tokenBData, isOpen: !this.state.isOpen });
     await this.getTokenBBalance(tokenBData);
-    await this.getTokenAmountAfterSelectedBToken();
+
     if (tokenBData.address === this.state.tokenAData.address) {
       this.setState({ tokenAData: null, tokenABalance: '0' });
     }
+    await this.getTokenAmountAfterSelectedBToken();
+    this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
     if (this.child.current) {
-      this.child.current.resetForms();
       this.clearStates();
       if (tokenBData.address === REACT_APP_WETH_ADDRESS) {
         await this.getEthBalanceTokenB();
@@ -751,12 +751,13 @@ class App extends Component<IProps, IApp> {
 
   getTokenAmountAfterSelectedBToken = async () => {
     console.log('getTokenAmountAfterSelectedBToken..');
-    let inputAmountInWei: any = '';
-    let outputAmountInWei: any = '';
-    this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
+    let inputAmountInWei: any;
+    let outputAmountInWei: any;
+
     if (this.child.current?.child?.current) {
       inputAmountInWei =
         this.child.current?.child.current?.state.inputAmountInWei;
+
       if (inputAmountInWei) {
         outputAmountInWei = await this.getTokenBAmount(inputAmountInWei);
       }
@@ -764,15 +765,18 @@ class App extends Component<IProps, IApp> {
       inputAmountInWei = this.child.current?.state.inputAmountInWei;
       if (inputAmountInWei) {
         outputAmountInWei = await this.getTokenBAmount(inputAmountInWei);
+
+        if (outputAmountInWei) {
+          const outputAmount = this.fromWei(outputAmountInWei[1]);
+          outputAmountInWei = outputAmountInWei[1].toString();
+          console.log(outputAmount);
+
+          this.setState({
+            outputAmount,
+            outputAmountInWei,
+          });
+        }
       }
-    }
-    if (outputAmountInWei) {
-      const outputAmount = this.fromWei(outputAmountInWei[1]);
-      outputAmountInWei = outputAmountInWei[1].toString();
-      this.setState({
-        outputAmount,
-        outputAmountInWei,
-      });
     }
   };
 
@@ -847,7 +851,7 @@ class App extends Component<IProps, IApp> {
           const priceImpact = priceImp.toString();
 
           const lpAccountShare = liquidity / totalSupply;
-
+          console.log(lpAccountShare);
           const tokenAShare =
             Number.parseFloat(this.state.fromWei(tokenA)) * lpAccountShare;
 
