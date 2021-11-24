@@ -313,7 +313,7 @@ class App extends Component<IProps, IApp> {
       this.setState({ tokenBBalance: '0' });
     }
   }
-  addLiquidity = async (tokenAAmount: string, tokenBAmount: string) => {
+  addLiquidity = async (tokenAAmount: any, tokenBAmount: any) => {
     this.setState({ loading: true });
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
     if (Object.keys(this.state.tokenBData).length > 0) {
@@ -326,8 +326,12 @@ class App extends Component<IProps, IApp> {
       console.log(`Token pair - àddLiquidity : ${exchangeAddress}`);
 
       //slippage 10%
-      const amountAMin = BigNumber.from(tokenAAmount).mul(70).div(100); // for ETH
-      const amountBMin = BigNumber.from(tokenBAmount).mul(70).div(100);
+      const slippageVal = 100 - this.state.slippage;
+
+      const amountAMin = (tokenAAmount * slippageVal) / 100; // for ETH
+      const amountBMin = (tokenBAmount * slippageVal) / 100;
+
+      console.log(tokenAAmount, tokenBAmount, amountAMin, amountBMin);
 
       if (this.state.tokenAData.address === REACT_APP_WETH_ADDRESS) {
         try {
@@ -526,11 +530,7 @@ class App extends Component<IProps, IApp> {
     //   });
   };
 
-  buyTokens = async (
-    tokenAAmount: string,
-    tokenBAmount: string,
-    isETH: boolean
-  ) => {
+  buyTokens = async (tokenAAmount: any, tokenBAmount: any, isETH: boolean) => {
     this.setState({ loading: true });
 
     const exchangeAddress = await this.getExchangeAddress(
@@ -539,7 +539,8 @@ class App extends Component<IProps, IApp> {
     );
 
     //slippage
-    const _minTokens = BigNumber.from(tokenBAmount).mul(90).div(100);
+    const slippageVal = 100 - this.state.slippage;
+    const _minTokens = (tokenBAmount * slippageVal) / 100;
 
     console.log(`Token pair - buyTokens: ${exchangeAddress}`);
     if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
@@ -806,7 +807,9 @@ class App extends Component<IProps, IApp> {
         Exchange.abi,
         this.state.signer
       );
-      const token_B_LP_Balance = await this.state.weth.balanceOf(Pair.address);
+      const token_B_LP_Balance = await this.state.token2.balanceOf(
+        Pair.address
+      );
 
       const priceImp = BigNumber.from(input)
         .mul(100)
