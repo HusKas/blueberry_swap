@@ -122,16 +122,25 @@ class App extends Component<IProps, IApp> {
       outputAmountInWei: '',
       inputAmount: '',
       inputAmountInWei: '',
+      setSlippage: this.setSlippage,
+      slippage: '0.1',
     };
   }
   // clear between switch tap or removing input
   clearStates = () => {
-    // this.setState({
-    //   inputAmount: '',
-    //   outputAmount: '',
-    //   outputAmountInWei: '',
-    //   inputAmountInWei: '',
-    // });
+    this.setState({
+      inputAmount: '',
+      outputAmount: '',
+      outputAmountInWei: '',
+      inputAmountInWei: '',
+    });
+  };
+
+  setSlippage = (slippage: string) => {
+    console.log(`setSlippage...${slippage}`);
+    this.setState({
+      slippage,
+    });
   };
   async componentWillMount() {
     this._isMounted = true;
@@ -731,7 +740,6 @@ class App extends Component<IProps, IApp> {
     }
     this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
     if (this.child.current) {
-      this.clearStates();
       if (tokenAData.address === REACT_APP_WETH_ADDRESS) {
         await this.getEthBalanceTokenA();
       }
@@ -749,7 +757,6 @@ class App extends Component<IProps, IApp> {
     await this.getTokenAmountAfterSelectedBToken();
     this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
     if (this.child.current) {
-      this.clearStates();
       if (tokenBData.address === REACT_APP_WETH_ADDRESS) {
         await this.getEthBalanceTokenB();
       }
@@ -956,10 +963,13 @@ class App extends Component<IProps, IApp> {
             </main>
           </div>
         </div>
-        <ModalSlippage
-          isOpen={this.state.isOpenModalSlippage}
-          toggleSlippageModal={this.toggleSlippageModal}
-        />
+        <Context.Provider value={this.state.slippage}>
+          <ModalSlippage
+            setSlippage={this.setSlippage}
+            isOpen={this.state.isOpenModalSlippage}
+            toggleSlippageModal={this.toggleSlippageModal}
+          />
+        </Context.Provider>
         <Modal
           getTokenAData={this.getTokenAData}
           getTokenBData={this.getTokenBData}

@@ -105,6 +105,7 @@ export const Modal = ({
     setTokens(tokensData);
     setSearchVals(tokensData);
   }, [tokensData]);
+
   const toggleItems = (event: any) => {
     event.preventDefault();
     toggleTokenListModal();

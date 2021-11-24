@@ -64,4 +64,6 @@ export interface IApp {
   outputAmountInWei: any;
   inputAmount: any;
   inputAmountInWei: any;
+  slippage: any;
+  setSlippage(slippage: string): any;
 }
