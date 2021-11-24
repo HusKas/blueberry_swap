@@ -452,18 +452,19 @@ class App extends Component<IProps, IApp> {
         this.state.token1.address,
         this.state.token2.address
       );
-      const tx2 = await this.state.router.removeLiquidityETH(
-        this.state.token2.address,
-        liquidityAmount,
-        this.state.tokenAExpected,
-        this.state.tokenBExpected,
-        this.state.account,
-        deadline,
-        {
-          from: this.state.account,
-          ...overrides,
-        }
-      );
+      const tx2 =
+        await this.state.router.removeLiquidityETHSupportingFeeOnTransferTokens(
+          this.state.token2.address,
+          liquidityAmount,
+          this.state.tokenAExpected,
+          this.state.tokenBExpected,
+          this.state.account,
+          deadline,
+          {
+            from: this.state.account,
+            ...overrides,
+          }
+        );
       await tx2.wait(1);
 
       return true;
