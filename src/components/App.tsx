@@ -17,6 +17,7 @@ import { Tabs } from './Tabs';
 import AddLiquidity from './Liquidity';
 import data from '../data.json';
 import { ModalSlippage } from './ModalSlippage';
+import { reverse } from 'dns';
 
 export interface ProcessEnv {
   [key: string]: string | undefined;
@@ -324,15 +325,6 @@ class App extends Component<IProps, IApp> {
         this.state.tokenBData.address
       );
       console.log(`Token pair - àddLiquidity : ${exchangeAddress}`);
-
-      //slippage 10%
-      const slippageVal = 100 - this.state.slippage;
-
-      const amountAMin = (tokenAAmount * slippageVal) / 100; // for ETH
-      const amountBMin = (tokenBAmount * slippageVal) / 100;
-
-      console.log(tokenAAmount, tokenBAmount, amountAMin, amountBMin);
-
       if (this.state.tokenAData.address === REACT_APP_WETH_ADDRESS) {
         try {
           console.log('Adding liquditiy ETH now ...');
@@ -356,8 +348,8 @@ class App extends Component<IProps, IApp> {
           const tx2 = await this.state.router.addLiquidityETH(
             this.state.tokenBData.address,
             tokenBAmount, //TokenB
-            amountBMin,
-            amountAMin,
+            0,
+            0,
             this.state.account,
             deadline,
             {
@@ -412,8 +404,8 @@ class App extends Component<IProps, IApp> {
             this.state.tokenBData.address,
             tokenAAmount,
             tokenBAmount,
-            amountAMin,
-            amountBMin,
+            0,
+            0,
             this.state.account,
             deadline,
             {
@@ -456,8 +448,8 @@ class App extends Component<IProps, IApp> {
         await this.state.router.removeLiquidityETHSupportingFeeOnTransferTokens(
           this.state.token2.address,
           liquidityAmount,
-          this.state.tokenAExpected,
-          this.state.tokenBExpected,
+          0,
+          0,
           this.state.account,
           deadline,
           {
@@ -541,7 +533,8 @@ class App extends Component<IProps, IApp> {
 
     //slippage
     const slippageVal = 100 - this.state.slippage;
-    const _minTokens = (tokenBAmount * slippageVal) / 100;
+    const _minTokensNum = (tokenBAmount * slippageVal) / 100;
+    const _minTokens = _minTokensNum;
 
     console.log(`Token pair - buyTokens: ${exchangeAddress}`);
     if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
@@ -737,7 +730,7 @@ class App extends Component<IProps, IApp> {
     await this.getTokenABalance(tokenAData);
     await this.getTokenAmountAfterSelectedBToken();
 
-    if (tokenAData.address === this.state.tokenBData.address) {
+    if (tokenAData?.address === this.state.tokenBData?.address) {
       this.setState({ tokenBData: null, tokenBBalance: '0' });
     }
     this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
@@ -752,8 +745,7 @@ class App extends Component<IProps, IApp> {
     console.log('getTokenBData selected... ');
     this.setState({ tokenBData, isOpen: !this.state.isOpen });
     await this.getTokenBBalance(tokenBData);
-
-    if (tokenBData.address === this.state.tokenAData.address) {
+    if (tokenBData?.address === this.state.tokenAData?.address) {
       this.setState({ tokenAData: null, tokenABalance: '0' });
     }
     await this.getTokenAmountAfterSelectedBToken();
@@ -869,7 +861,7 @@ class App extends Component<IProps, IApp> {
           const priceImpact = priceImp.toString();
 
           const lpAccountShare = liquidity / totalSupply;
-          console.log(lpAccountShare);
+
           const tokenAShare =
             Number.parseFloat(this.state.fromWei(tokenA)) * lpAccountShare;
 
@@ -878,6 +870,7 @@ class App extends Component<IProps, IApp> {
 
           const lpShareAccountviaInp =
             (this.child.current.state.inputAmountInWei * 100) / totalSupply;
+
           const lpShareAccountviaInput = lpShareAccountviaInp.toString();
 
           const tokenAExpected = BigNumber.from(token_A_LP_Balance)
