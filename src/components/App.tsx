@@ -17,7 +17,6 @@ import { Tabs } from './Tabs';
 import AddLiquidity from './Liquidity';
 import data from '../data.json';
 import { ModalSlippage } from './ModalSlippage';
-import { reverse } from 'dns';
 
 export interface ProcessEnv {
   [key: string]: string | undefined;
@@ -113,7 +112,7 @@ class App extends Component<IProps, IApp> {
       tokenAExpected: BigNumber,
       tokenBExpected: BigNumber,
       lpPairBalanceAccount: '',
-      priceImpact: '',
+      priceImpact: 0,
       lpShareAccountviaInput: '',
       lpAccountShare: 0,
       tokenAShare: 0,
@@ -523,7 +522,7 @@ class App extends Component<IProps, IApp> {
     //   });
   };
 
-  buyTokens = async (tokenAAmount: any, tokenBAmount: any, isETH: boolean) => {
+  buyTokens = async (tokenAAmount: any, tokenBAmount: any) => {
     this.setState({ loading: true });
 
     const exchangeAddress = await this.getExchangeAddress(
@@ -534,7 +533,9 @@ class App extends Component<IProps, IApp> {
     //slippage
     const slippageVal = 100 - this.state.slippage;
     const _minTokensNum = (tokenBAmount * slippageVal) / 100;
-    const _minTokens = _minTokensNum;
+    const _minTokens = _minTokensNum.toString();
+
+    console.log(_minTokens);
 
     console.log(`Token pair - buyTokens: ${exchangeAddress}`);
     if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
@@ -800,22 +801,21 @@ class App extends Component<IProps, IApp> {
         Exchange.abi,
         this.state.signer
       );
+
       const token_B_LP_Balance = await this.state.token2.balanceOf(
         Pair.address
       );
 
-      const priceImp = BigNumber.from(input)
-        .mul(100)
-        .div(BigNumber.from(token_B_LP_Balance));
+      const priceImp = (input / parseFloat(token_B_LP_Balance)) * 100;
 
-      const priceImpact = Number.parseFloat(priceImp.toString()).toFixed(2);
+      const priceImpact = Number.parseFloat(priceImp.toFixed(2));
 
       this.setState({
         priceImpact,
       });
     } else {
       this.setState({
-        priceImpact: '0',
+        priceImpact: 0,
       });
     }
   };
@@ -858,7 +858,7 @@ class App extends Component<IProps, IApp> {
 
           const priceImp =
             (this.child.current.state.inputAmountInWei * 100) / tokenB;
-          const priceImpact = priceImp.toString();
+          const priceImpact = priceImp;
 
           const lpAccountShare = liquidity / totalSupply;
 

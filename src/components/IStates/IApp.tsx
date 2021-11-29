@@ -56,7 +56,7 @@ export interface IApp {
   lpPairBalanceAccount: string;
   lpShareAccountviaInput: string;
   lpAccountShare: number;
-  priceImpact: string;
+  priceImpact: number;
   tokenAShare: number;
   tokenBShare: number;
   tokenBSelected: boolean;

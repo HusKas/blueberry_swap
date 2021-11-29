@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import Context from './Context';
 import { FaAngleDown } from 'react-icons/fa';
 import { AiOutlineQuestionCircle } from 'react-icons/ai';
+import { BigNumber } from 'ethers';
 const Container = styled.div`
   margin-bottom: 20px;
   border-radius: 25px;
@@ -92,6 +93,7 @@ interface IState {
   outputAmount: any;
   outputAmountInWei: any;
   loading: boolean;
+  minimumReceived: number;
 }
 
 class BuyForm extends Component<IProps, IState> {
@@ -107,6 +109,7 @@ class BuyForm extends Component<IProps, IState> {
       outputAmount: '',
       outputAmountInWei: '',
       loading: false,
+      minimumReceived: 0,
     };
   }
 
@@ -115,8 +118,9 @@ class BuyForm extends Component<IProps, IState> {
     event.preventDefault();
 
     if (event.target.value !== '' || this.context.outputAmountInWei > 0) {
-      const inputAmountInWei = this.state.inputAmountInWei;
-      const outputAmountInWei = this.state.outputAmountInWei;
+      const inputAmountInWei = BigNumber.from(this.state.inputAmountInWei);
+      const outputAmountInWei = BigNumber.from(this.state.outputAmountInWei);
+
       if (inputAmountInWei && outputAmountInWei) {
         await this.context.buyTokens(inputAmountInWei, outputAmountInWei);
       } else {
@@ -142,7 +146,6 @@ class BuyForm extends Component<IProps, IState> {
       outputAmountInWei = this.context.toWei(outputAmount).toString();
 
       if (outputAmountInWei !== '') {
-        console.log(outputAmountInWei);
         inputAmountInWei = await this.context.getTokenAAmount(
           outputAmountInWei
         );
@@ -204,7 +207,10 @@ class BuyForm extends Component<IProps, IState> {
 
           outputAmount = this.context.fromWei(outputAmountInWei[1]);
           outputAmountInWei = outputAmountInWei[1].toString();
-          this.context.getPriceImpact(inputAmountInWei);
+          this.context.getPriceImpact(outputAmountInWei);
+
+          const minimumReceived =
+            outputAmount - (outputAmount * this.context.slippage) / 100;
 
           this.setState({
             calc: inputAmount / outputAmount,
@@ -212,6 +218,7 @@ class BuyForm extends Component<IProps, IState> {
             inputAmountInWei,
             outputAmount,
             outputAmountInWei,
+            minimumReceived,
           });
           this.context.getLiquidityOwner(this.context.tokenBData);
         } else {
@@ -350,7 +357,7 @@ class BuyForm extends Component<IProps, IState> {
             <div className="mb-5">
               <Row>
                 <ColumnTextOnly>Slippage Tollerance</ColumnTextOnly>
-                <ColumnRight>1%</ColumnRight>
+                <ColumnRight>{this.context.slippage} %</ColumnRight>
               </Row>
               {this.state.calc > 0 ? (
                 <>
@@ -381,9 +388,7 @@ class BuyForm extends Component<IProps, IState> {
                 </Column>
                 <Column>
                   {this.state.outputAmountInWei
-                    ? Number.parseFloat(
-                        this.context.fromWei(this.state.outputAmountInWei)
-                      ).toFixed(2)
+                    ? this.state.minimumReceived
                     : '0'}
                 </Column>
               </Row>
