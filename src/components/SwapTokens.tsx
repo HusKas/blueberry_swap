@@ -21,7 +21,7 @@ const Items = styled.div`
 const Row = styled.div`
   display: flex;
   flex-direction: row;
-  width: 100%;
+  width: 22em;
   justify-content: center;
   margin: 10px 0 10px 0;
 `;
@@ -83,33 +83,37 @@ export interface ProcessEnv {
 }
 
 interface IProps {
-  switchForms(data: string): any;
+  switchForms(): any;
 }
 
 interface IState {
-  calc: any;
+  calcStandard: any;
+  calcAfterSwitch: any;
   inputAmount: any;
   inputAmountInWei: any;
   outputAmount: any;
   outputAmountInWei: any;
   loading: boolean;
   minimumReceived: number;
+  switched: boolean;
 }
 
-class BuyForm extends Component<IProps, IState> {
+class SwapTokens extends Component<IProps, IState> {
   static contextType = Context;
 
   constructor(props: IProps) {
     super(props);
     this.toggleModal = this.toggleModal.bind(this);
     this.state = {
-      calc: 0,
+      calcStandard: 0,
+      calcAfterSwitch: 0,
       inputAmount: '',
       inputAmountInWei: '',
       outputAmount: '',
       outputAmountInWei: '',
       loading: false,
       minimumReceived: 0,
+      switched: false,
     };
   }
 
@@ -122,9 +126,9 @@ class BuyForm extends Component<IProps, IState> {
       const outputAmountInWei = BigNumber.from(this.state.outputAmountInWei);
 
       if (inputAmountInWei && outputAmountInWei) {
-        await this.context.buyTokens(inputAmountInWei, outputAmountInWei);
+        await this.context.swapTokens(inputAmountInWei, outputAmountInWei);
       } else {
-        await this.context.buyTokens(
+        await this.context.swapTokens(
           inputAmountInWei,
           this.context.outputAmountInWei
         );
@@ -134,8 +138,18 @@ class BuyForm extends Component<IProps, IState> {
     }
   };
 
+  setIinputOutputVal = () => {
+    this.setState({
+      inputAmount: this.state.outputAmount,
+      outputAmount: this.state.inputAmount,
+      inputAmountInWei: this.state.inputAmountInWei,
+      outputAmountInWei: this.state.outputAmountInWei,
+    });
+  };
+
   handleOnChangeTokenAAmount = async (e: any) => {
-    console.log('changing');
+    console.log('handleOnChangeTokenAAmount..');
+    console.log(e);
     let inputAmount: any;
     let inputAmountInWei: any;
     let outputAmount: any;
@@ -156,15 +170,20 @@ class BuyForm extends Component<IProps, IState> {
             inputAmountInWei[1].toString()
           );
 
-          inputAmount = this.context.fromWei(inputAmountInWei[1]);
-          inputAmountInWei = inputAmountInWei[1].toString();
+          inputAmount = this.context.fromWei(inputAmountInWei[0]);
+          inputAmountInWei = inputAmountInWei[0].toString();
+
+          const minimumReceived =
+            inputAmount - (inputAmount * this.context.slippage) / 100;
 
           this.setState({
-            calc: inputAmount / outputAmount,
+            calcStandard: inputAmount / outputAmount,
+            calcAfterSwitch: outputAmount / inputAmount,
             inputAmount,
             inputAmountInWei,
             outputAmount,
             outputAmountInWei,
+            minimumReceived,
           });
           this.context.getLiquidityOwner(this.context.tokenBData);
         } else {
@@ -179,21 +198,26 @@ class BuyForm extends Component<IProps, IState> {
         inputAmount: '',
         outputAmount: '',
         outputAmountInWei: '',
+        calcStandard: '',
+        calcAfterSwitch: '',
       });
     }
   };
 
   handleOnChangeTokenBAmount = async (e: any) => {
-    console.log('changing');
+    console.log('handleOnChangeTokenBAmount..');
 
     let inputAmount: any;
     let inputAmountInWei: any;
     let outputAmount: any;
     let outputAmountInWei: any;
 
+    console.log(e.target.value);
+
     if (e.target.value !== '' && this.isNumeric(e.target.value)) {
       inputAmount = e.target.value;
       inputAmountInWei = this.context.toWei(inputAmount).toString();
+
       if (inputAmountInWei !== '') {
         outputAmountInWei = await this.context.getTokenBAmount(
           inputAmountInWei
@@ -213,14 +237,14 @@ class BuyForm extends Component<IProps, IState> {
             outputAmount - (outputAmount * this.context.slippage) / 100;
 
           this.setState({
-            calc: inputAmount / outputAmount,
+            calcStandard: inputAmount / outputAmount,
+            calcAfterSwitch: outputAmount / inputAmount,
             inputAmount,
             inputAmountInWei,
             outputAmount,
             outputAmountInWei,
             minimumReceived,
           });
-          this.context.getLiquidityOwner(this.context.tokenBData);
         } else {
           this.setState({
             inputAmount,
@@ -230,8 +254,10 @@ class BuyForm extends Component<IProps, IState> {
       }
     } else {
       this.context.getPriceImpact(null);
+      this.context.clearStates();
       this.setState({
         inputAmount: '',
+        inputAmountInWei: '',
         outputAmount: '',
         outputAmountInWei: '',
       });
@@ -243,7 +269,14 @@ class BuyForm extends Component<IProps, IState> {
   };
 
   clickSwitchForm = (e: any) => {
-    this.props.switchForms('buy');
+    this.props.switchForms();
+    const minimumReceived =
+      this.state.inputAmount -
+      (this.state.inputAmount * this.context.slippage) / 100;
+    this.setState({
+      switched: !this.state.switched,
+      minimumReceived,
+    });
   };
 
   resetForms = () => {
@@ -278,7 +311,7 @@ class BuyForm extends Component<IProps, IState> {
                 {this.context.tokenABalance}
               </span>
             </div>
-            <div className="input-group mb-4">
+            <div className="input-group mb-2">
               <input
                 id="tokenA"
                 type="text"
@@ -329,7 +362,9 @@ class BuyForm extends Component<IProps, IState> {
                 type="text"
                 autoComplete="off"
                 placeholder="0.0"
-                value={this.state.outputAmount || this.context.outputAmount}
+                value={
+                  this.state.outputAmount || this.context.outputAmount || ''
+                }
                 onChange={(event: any) => {
                   this.handleOnChangeTokenAAmount(event);
                 }}
@@ -359,16 +394,29 @@ class BuyForm extends Component<IProps, IState> {
                 <ColumnTextOnly>Slippage Tollerance</ColumnTextOnly>
                 <ColumnRight>{this.context.slippage} %</ColumnRight>
               </Row>
-              {this.state.calc > 0 ? (
+              {this.state.calcStandard > 0 ? (
                 <>
                   <span className="float-left text-muted">Exchange Rate</span>
                   <br />
-                  <span className="float-right text-muted">
-                    <i style={{ margin: '3px' }}>1</i>
-                    {this.context.tokenBData?.symbol} =
-                    <i style={{ margin: '3px' }}>{this.state?.calc}</i>
-                    {this.context.tokenAData?.symbol}
-                  </span>
+                  {this.state.switched ? (
+                    <span className="float-right text-muted">
+                      <i style={{ margin: '3px' }}>1</i>
+                      {this.context.tokenBData?.symbol} =
+                      <i style={{ margin: '3px' }}>
+                        {this.state?.calcAfterSwitch}
+                      </i>
+                      {this.context.tokenAData?.symbol}
+                    </span>
+                  ) : (
+                    <span className="float-right text-muted">
+                      <i style={{ margin: '3px' }}>1</i>
+                      {this.context.tokenAData?.symbol} =
+                      <i style={{ margin: '3px' }}>
+                        {this.state?.calcStandard}
+                      </i>
+                      {this.context.tokenBData?.symbol}
+                    </span>
+                  )}
                 </>
               ) : null}
             </div>
@@ -378,7 +426,7 @@ class BuyForm extends Component<IProps, IState> {
           </form>
         </div>
       </div>
-      {this.state.calc > 0 ? (
+      {this.state.calcStandard > 0 ? (
         <Container>
           <Items>
             <ColumnContainer>
@@ -415,4 +463,4 @@ class BuyForm extends Component<IProps, IState> {
     return this.main();
   }
 }
-export default BuyForm;
+export default SwapTokens;

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import Navbar from './Navbar';
-import BuySellMain from './BuySellMain';
+import SwapTokens from './SwapTokens';
 import Web3 from 'web3';
 import Exchange from '../abi/src/contracts/BlueberryExchange.sol/BlueberryExchange.json';
 import Factory from '../abi/src/contracts/BlueberryFactory.sol/BlueberryFactory.json';
@@ -23,7 +23,7 @@ export interface ProcessEnv {
 }
 
 const overrides = {
-  gasLimit: 9999999,
+  gasLimit: 6666666,
 };
 
 require('dotenv').config();
@@ -42,11 +42,12 @@ const ContainerLink = styled.div`
   align-items: center;
   height: 50px;
   margin: 10px;
-  border: 1px solid green;
+  border: 1px solid white;
   border-radius: 10px;
 `;
 const Link = styled.a`
   margin: 10px;
+  color: white;
 `;
 
 const Msg = styled.div`
@@ -84,7 +85,7 @@ class App extends Component<IProps, IApp> {
       provider: {},
       signer: {},
       exchangeAddress: '',
-      buyTokens: this.buyTokens,
+      swapTokens: this.swapTokens,
       addLiquidity: this.addLiquidity,
       removeLiquidity: this.removeLiquidity,
       getTokenAAmount: this.getTokenAAmount,
@@ -109,11 +110,11 @@ class App extends Component<IProps, IApp> {
       msgTxt: '',
       outputAddress: '',
       liquidity: BigNumber,
-      tokenAExpected: BigNumber,
-      tokenBExpected: BigNumber,
-      lpPairBalanceAccount: '',
+      tokenASelectedShare: '',
+      tokenBSelectedShare: '',
+      lpPairBalanceAccount: '0',
+      lpShareAccountviaInput: '0',
       priceImpact: 0,
-      lpShareAccountviaInput: '',
       lpAccountShare: 0,
       tokenAShare: 0,
       tokenBShare: 0,
@@ -124,6 +125,7 @@ class App extends Component<IProps, IApp> {
       inputAmountInWei: '',
       setSlippage: this.setSlippage,
       slippage: '0.1',
+      clearStates: this.clearStates,
     };
   }
   // clear between switch tap or removing input
@@ -162,6 +164,24 @@ class App extends Component<IProps, IApp> {
       );
     }
   }
+  switchForms = async () => {
+    console.log('switchForms..');
+    const tokenADataTmp = this.state.tokenAData;
+
+    this.setState({
+      tokenAData: this.state.tokenBData,
+      tokenBData: tokenADataTmp,
+    });
+
+    setTimeout(async () => {
+      await this.getTokenAData(this.state.tokenAData);
+      await this.getTokenBData(this.state.tokenBData);
+      if (this.child?.current) {
+        await this.child.current.setIinputOutputVal();
+      }
+    });
+  };
+
   connectToWeb3 = async () => {
     try {
       if (window.ethereum) {
@@ -362,6 +382,44 @@ class App extends Component<IProps, IApp> {
         } catch (err) {
           this.setState({ loading: false });
         }
+      } else if (this.state.tokenBData.address === REACT_APP_WETH_ADDRESS) {
+        try {
+          console.log('Adding liquditiy Token to ETH now ...');
+          //Router load
+          const token2 = new ethers.Contract(
+            this.state.tokenAData.address,
+            Token.abi,
+            this.state.signer
+          );
+
+          const tx = await token2.approve(
+            this.state.router.address,
+            tokenAAmount,
+            {
+              from: this.state.account,
+              ...overrides,
+            }
+          );
+          await tx.wait(1);
+
+          const tx2 = await this.state.router.addLiquidityETH(
+            this.state.tokenAData.address,
+            tokenAAmount, //TokenB
+            0,
+            0,
+            this.state.account,
+            deadline,
+            {
+              from: this.state.account,
+              value: tokenBAmount, //ETH
+              ...overrides,
+            }
+          );
+          await tx2.wait(1);
+          this.setState({ loading: false });
+        } catch (err) {
+          this.setState({ loading: false });
+        }
       } else {
         try {
           console.log('Adding liquditiy Token to Token now ...');
@@ -496,33 +554,8 @@ class App extends Component<IProps, IApp> {
       console.log(err);
     }
   };
-  sellTokens = async (tokenAmount: string, _minEthAmount: string) => {
-    this.setState({ loading: true });
 
-    // await this.state.token.methods
-    //   .approve('REACT_APP_EXCHANGE_ADDRESS', tokenAmount)
-    //   .send({ from: this.state.account });
-    // await this.state.exchange.methods
-    //   .tokenToEthSwap(tokenAmount, _minEthAmount)
-    //   .send({ from: this.state.account })
-    //   .on('transactionHash', (hash: any) => {
-    //     console.log(hash);
-    //   })
-    //   .on('receipt', (hash: any) => {
-    //     this.setState({ loading: false });
-    //     this.getEthBalance();
-    //     this.getTokenBalance();
-    //   })
-    //   .on('error', (error: any, receipt: any) => {
-    //     // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
-    //     console.log(error);
-    //     if (error.code === 4001) {
-    //       this.setState({ loading: false });
-    //     }
-    //   });
-  };
-
-  buyTokens = async (tokenAAmount: any, tokenBAmount: any) => {
+  swapTokens = async (tokenAAmount: any, tokenBAmount: any) => {
     this.setState({ loading: true });
 
     const exchangeAddress = await this.getExchangeAddress(
@@ -534,14 +567,15 @@ class App extends Component<IProps, IApp> {
     const slippageVal = 100 - this.state.slippage;
     const _minTokensNum = (tokenBAmount * slippageVal) / 100;
     const _minTokens = _minTokensNum.toString();
+    const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
 
-    console.log(_minTokens);
+    console.log(`Token pair - swapTokens..`);
 
-    console.log(`Token pair - buyTokens: ${exchangeAddress}`);
     if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
       if (this.state.tokenAData.address === REACT_APP_WETH_ADDRESS) {
+        console.log(`swapExactETHForTokensSupportingFeeOnTransferTokens..`);
+
         try {
-          const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
           const tx =
             await this.state.router.swapExactETHForTokensSupportingFeeOnTransferTokens(
               _minTokens,
@@ -565,18 +599,74 @@ class App extends Component<IProps, IApp> {
           );
           this.setState({ loading: false });
         }
-      } else {
+      } else if (this.state.tokenBData.address === REACT_APP_WETH_ADDRESS) {
+        console.log('swapExactTokensForETHSupportingFeeOnTransferTokens..');
+        const tx0 = await this.state.token1.approve(
+          this.state.router.address,
+          tokenAAmount,
+          {
+            from: this.state.account,
+            ...overrides,
+          }
+        );
+        await tx0.wait(1);
         try {
-          const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
           const tx =
-            await this.state.router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
-              this.state.tokenAData.address,
+            await this.state.router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+              tokenAAmount,
               _minTokens,
               [this.state.tokenAData.address, this.state.tokenBData.address],
               this.state.account,
               deadline,
               {
                 from: this.state.account,
+                ...overrides,
+              }
+            );
+          tx.wait(1);
+
+          this.setState({ loading: false, tx: tx.hash });
+          setTimeout(() => {
+            this.setState({ tx: null });
+          }, 3000);
+        } catch (err) {
+          console.log(
+            `swapExactTokensForETHSupportingFeeOnTransferTokens failed ${err}`
+          );
+          this.setState({ loading: false });
+        }
+      } else {
+        console.log('swapExactTokensForTokensSupportingFeeOnTransferTokens');
+
+        const tx0 = await this.state.token1.approve(
+          this.state.router.address,
+          tokenAAmount,
+          {
+            from: this.state.account,
+            ...overrides,
+          }
+        );
+        await tx0.wait(1);
+        const tx1 = await this.state.token2.approve(
+          this.state.router.address,
+          tokenAAmount,
+          {
+            from: this.state.account,
+            ...overrides,
+          }
+        );
+        await tx1.wait(1);
+        try {
+          const tx =
+            await this.state.router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+              tokenAAmount,
+              _minTokens,
+              [this.state.tokenAData.address, this.state.tokenBData.address],
+              this.state.account,
+              deadline,
+              {
+                from: this.state.account,
+                ...overrides,
               }
             );
           tx.wait(1);
@@ -615,7 +705,7 @@ class App extends Component<IProps, IApp> {
             this.state.tokenAData.address,
             this.state.tokenBData.address
           );
-          console.log(res[0].toString(), res[1].toString());
+
           setTimeout(() => {
             this.setState({ msg: null });
           }, 3000);
@@ -729,11 +819,10 @@ class App extends Component<IProps, IApp> {
     console.log('getTokenAData selected... ');
     this.setState({ tokenAData, isOpen: !this.state.isOpen });
     await this.getTokenABalance(tokenAData);
-    await this.getTokenAmountAfterSelectedBToken();
-
     if (tokenAData?.address === this.state.tokenBData?.address) {
       this.setState({ tokenBData: null, tokenBBalance: '0' });
     }
+    await this.getTokenAmountAfterSelectedBToken();
     this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
     if (this.child.current) {
       if (tokenAData.address === REACT_APP_WETH_ADDRESS) {
@@ -763,28 +852,20 @@ class App extends Component<IProps, IApp> {
     let inputAmountInWei: any;
     let outputAmountInWei: any;
 
-    if (this.child.current?.child?.current) {
-      inputAmountInWei =
-        this.child.current?.child.current?.state.inputAmountInWei;
+    if (this.child?.current) {
+      inputAmountInWei = this.child.current?.state.inputAmountInWei;
 
       if (inputAmountInWei) {
         outputAmountInWei = await this.getTokenBAmount(inputAmountInWei);
       }
-    } else {
-      inputAmountInWei = this.child.current?.state.inputAmountInWei;
-      if (inputAmountInWei) {
-        outputAmountInWei = await this.getTokenBAmount(inputAmountInWei);
 
-        if (outputAmountInWei) {
-          const outputAmount = this.fromWei(outputAmountInWei[1]);
-          outputAmountInWei = outputAmountInWei[1].toString();
-          console.log(outputAmount);
-
-          this.setState({
-            outputAmount,
-            outputAmountInWei,
-          });
-        }
+      if (outputAmountInWei) {
+        const outputAmount = this.fromWei(outputAmountInWei[1]);
+        outputAmountInWei = outputAmountInWei[1].toString();
+        this.setState({
+          outputAmount,
+          outputAmountInWei,
+        });
       }
     }
   };
@@ -802,9 +883,13 @@ class App extends Component<IProps, IApp> {
         this.state.signer
       );
 
-      const token_B_LP_Balance = await this.state.token2.balanceOf(
-        Pair.address
+      const token2 = new ethers.Contract(
+        this.state.tokenBData.address,
+        Token.abi,
+        this.state.signer
       );
+
+      const token_B_LP_Balance = await token2.balanceOf(Pair.address);
 
       const priceImp = (input / parseFloat(token_B_LP_Balance)) * 100;
 
@@ -856,10 +941,6 @@ class App extends Component<IProps, IApp> {
           const tokenB = token_B_LP_Balance.toString();
           const totalSupply = await Pair.totalSupply();
 
-          const priceImp =
-            (this.child.current.state.inputAmountInWei * 100) / tokenB;
-          const priceImpact = priceImp;
-
           const lpAccountShare = liquidity / totalSupply;
 
           const tokenAShare =
@@ -873,14 +954,8 @@ class App extends Component<IProps, IApp> {
 
           const lpShareAccountviaInput = lpShareAccountviaInp.toString();
 
-          const tokenAExpected = BigNumber.from(token_A_LP_Balance)
-            .mul(BigNumber.from(liquidity))
-            .div(BigNumber.from(totalSupply));
-
-          const tokenBExpected = BigNumber.from(token_B_LP_Balance)
-            .mul(BigNumber.from(liquidity))
-            .div(BigNumber.from(totalSupply));
-
+          const tokenASelectedShare = token1Data.symbol;
+          const tokenBSelectedShare = token2Data.symbol;
           // console.log(
           //   `LP Account: ${this.state.fromWei(lpPairBalanceAccount)}`
           // );
@@ -891,14 +966,25 @@ class App extends Component<IProps, IApp> {
 
           this.setState({
             liquidity,
-            tokenAExpected,
-            tokenBExpected,
             lpPairBalanceAccount,
-            priceImpact,
             lpShareAccountviaInput,
             lpAccountShare,
+            tokenASelectedShare,
+            tokenBSelectedShare,
             tokenAShare,
             tokenBShare,
+            Pair,
+          });
+        } else {
+          this.setState({
+            liquidity: 0,
+            tokenASelectedShare: '',
+            tokenBSelectedShare: '',
+            lpPairBalanceAccount: '0',
+            lpShareAccountviaInput: '0',
+            lpAccountShare: 0,
+            tokenAShare: 0,
+            tokenBShare: 0,
             Pair,
           });
         }
@@ -938,7 +1024,9 @@ class App extends Component<IProps, IApp> {
           <Tabs
             toggleSlippageModal={this.toggleSlippageModal}
             clearStates={this.clearStates}
-            main={<BuySellMain ref={this.child} />}
+            main={
+              <SwapTokens switchForms={this.switchForms} ref={this.child} />
+            }
             liquidity={
               <AddLiquidity ref={this.child} clearStates={this.clearStates} />
             }

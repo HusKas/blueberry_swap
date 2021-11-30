@@ -83,13 +83,10 @@ export class AddLiquidity extends Component<any, IState> {
       const inputAmountInWei = this.state.inputAmountInWei;
       const outputAmountInWei = this.state.outputAmountInWei;
       const inputAmount = this.state.inputAmount;
-      const outputAmount = this.state.outputAmount || this.context.outputAmount;
-
       if (
         inputAmountInWei &&
         outputAmountInWei &&
-        inputAmount < this.context.tokenABalance &&
-        outputAmount < this.context.tokenBBalance
+        inputAmount < this.context.tokenABalance
       ) {
         await this.context.addLiquidity(inputAmountInWei, outputAmountInWei);
       } else {
@@ -175,6 +172,7 @@ export class AddLiquidity extends Component<any, IState> {
 
   handleOnChangeTokenBAmount = async (e: any) => {
     console.log('handleOnChangeTokenBAmount..');
+
     let inputAmount: any;
     let inputAmountInWei: any;
     let outputAmount: any;
@@ -263,7 +261,7 @@ export class AddLiquidity extends Component<any, IState> {
                 {this.context.tokenABalance}
               </span>
             </div>
-            <div className="input-group mb-4">
+            <div className="input-group mb-2">
               <input
                 id="tokenA"
                 type="text"

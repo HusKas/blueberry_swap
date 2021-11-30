@@ -1,172 +1,418 @@
-import React, { Component, createRef } from 'react';
+import React, { Component } from 'react';
+import styled from 'styled-components';
 import Context from './Context';
-declare let window: any;
+import { FaAngleDown } from 'react-icons/fa';
+import { AiOutlineQuestionCircle } from 'react-icons/ai';
+import { BigNumber } from 'ethers';
+const Container = styled.div`
+  margin-bottom: 20px;
+  border-radius: 25px;
+  border: 2px solid #73ad21;
+  background: white;
+`;
+
+const Items = styled.div`
+  margin: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+`;
+
+const Row = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: center;
+  margin: 10px 0 10px 0;
+`;
+
+const Column = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-basis: 100%;
+  justify-content: left;
+  font-size: 15px;
+`;
+
+const ColumnRight = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  align-items: end;
+  color: rgb(31, 199, 212);
+  font-weight: 500;
+  font-size: 16px;
+`;
+const ColumnTextOnly = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  color: blueviolet;
+`;
+
+const ColumnGreen = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  color: rgb(31, 199, 212);
+  font-weight: 500;
+  justify-content: left;
+`;
+
+const ColumnRed = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  color: red;
+  justify-content: left;
+`;
+
+const ColumnContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 75%;
+`;
+
+const Image = styled.img`
+  width: 32px;
+  height: 32px;
+`;
+
+export interface ProcessEnv {
+  [key: string]: string | undefined;
+}
 
 interface IProps {
-  sellTokens(tokenAmount: string, _minEthAmount: string): any;
   switchForms(data: string): any;
 }
 
 interface IState {
-  input: string;
-  outputAmount: string;
-  calc: number;
+  calc: any;
+  inputAmount: any;
+  inputAmountInWei: any;
+  outputAmount: any;
+  outputAmountInWei: any;
+  loading: boolean;
+  minimumReceived: number;
 }
 
-class SellForm extends Component<IProps, IState> {
+class SellTokens extends Component<IProps, IState> {
   static contextType = Context;
-  private ref: any = createRef<HTMLInputElement>();
+
   constructor(props: IProps) {
     super(props);
+    this.toggleModal = this.toggleModal.bind(this);
     this.state = {
-      input: '0',
-      outputAmount: '0',
       calc: 0,
+      inputAmount: '',
+      inputAmountInWei: '',
+      outputAmount: '',
+      outputAmountInWei: '',
+      loading: false,
+      minimumReceived: 0,
     };
   }
 
-  async addLiqudity() {
-    let etherAmount: any, tokenAmount: any;
-    etherAmount = this.state.input.toString();
-    etherAmount = this.context.toWei('1');
-    tokenAmount = this.context.toWei('5000');
-    await this.context.addLiquidity(tokenAmount, etherAmount);
-  }
+  handleSubmit = async (event: any) => {
+    console.log('submit..');
+    event.preventDefault();
 
-  clickSwitchForm = () => {
-    this.props.switchForms('sell');
+    if (event.target.value !== '' || this.context.outputAmountInWei > 0) {
+      const inputAmountInWei = BigNumber.from(this.state.inputAmountInWei);
+      const outputAmountInWei = BigNumber.from(this.state.outputAmountInWei);
+
+      if (inputAmountInWei && outputAmountInWei) {
+        await this.context.swapTokens(inputAmountInWei, outputAmountInWei);
+      } else {
+        await this.context.swapTokens(
+          inputAmountInWei,
+          this.context.outputAmountInWei
+        );
+      }
+    } else {
+      this.context.setMsg('No pairs exists');
+    }
   };
 
-  render() {
-    return (
-      <form
-        className="mb-3"
-        onSubmit={(event) => {
-          event.preventDefault();
-          console.log('submit..');
-          let tokenAmount: any, minEthAmount: any;
-          tokenAmount = this.ref.current.value.toString();
-          tokenAmount = window.web3.utils.toWei(tokenAmount, 'ether');
-          minEthAmount = this.state.outputAmount;
-          this.props.sellTokens(tokenAmount, minEthAmount);
-        }}
-      >
-        <div>
-          <label className="float-left">
-            <b>Input</b>
-          </label>
-          <span className="float-right text-muted">
-            Balance:
-            {this.context.tokenBalance}
-          </span>
-        </div>
-        <div className="input-group mb-4">
-          <input
-            type="number"
-            min="0"
-            onChange={async (event) => {
-              console.log('chaning');
-              this.setState({ input: this.ref.current.value.toString() });
-              let tokenAmount: any;
-              tokenAmount = event.target.value;
-              if (tokenAmount !== '' && tokenAmount >= 1) {
-                tokenAmount = window.web3.utils.toWei(tokenAmount, 'ether');
-                let outputAmountInWei: any;
-                let outputAmount: any;
+  handleOnChangeTokenAAmount = async (e: any) => {
+    console.log('changing');
+    let inputAmount: any;
+    let inputAmountInWei: any;
+    let outputAmount: any;
+    let outputAmountInWei: any;
 
-                outputAmountInWei = await this.context.getEthAmount(
-                  tokenAmount
-                );
+    if (e.target.value !== '' && this.isNumeric(e.target.value)) {
+      outputAmount = e.target.value;
+      outputAmountInWei = this.context.toWei(outputAmount).toString();
 
-                outputAmount = this.context
-                  .fromWei(outputAmountInWei)
-                  .toString();
+      if (outputAmountInWei !== '') {
+        inputAmountInWei = await this.context.getTokenAAmount(
+          outputAmountInWei
+        );
 
-                this.setState({
-                  calc: tokenAmount.toString() / outputAmountInWei.toString(),
-                });
-                this.setState({ outputAmount });
-              } else {
-                this.setState({
-                  outputAmount: '0',
-                  calc: 0,
-                });
-              }
+        if (inputAmountInWei) {
+          console.log(
+            inputAmountInWei[0].toString(),
+            inputAmountInWei[1].toString()
+          );
+
+          inputAmount = this.context.fromWei(inputAmountInWei[0]);
+          inputAmountInWei = inputAmountInWei[0].toString();
+
+          this.setState({
+            calc: inputAmount / outputAmount,
+            inputAmount,
+            inputAmountInWei,
+            outputAmount,
+            outputAmountInWei,
+          });
+          this.context.getLiquidityOwner(this.context.tokenBData);
+        } else {
+          this.setState({
+            outputAmount,
+            outputAmountInWei,
+          });
+        }
+      }
+    } else {
+      this.setState({
+        inputAmount: '',
+        outputAmount: '',
+        outputAmountInWei: '',
+      });
+    }
+  };
+
+  handleOnChangeTokenBAmount = async (e: any) => {
+    console.log('changing');
+
+    let inputAmount: any;
+    let inputAmountInWei: any;
+    let outputAmount: any;
+    let outputAmountInWei: any;
+
+    if (e.target.value !== '' && this.isNumeric(e.target.value)) {
+      inputAmount = e.target.value;
+      inputAmountInWei = this.context.toWei(inputAmount).toString();
+
+      if (inputAmountInWei !== '') {
+        outputAmountInWei = await this.context.getTokenBAmount(
+          inputAmountInWei
+        );
+
+        if (outputAmountInWei) {
+          console.log(
+            outputAmountInWei[0].toString(),
+            outputAmountInWei[1].toString()
+          );
+
+          outputAmount = this.context.fromWei(outputAmountInWei[1]);
+          outputAmountInWei = outputAmountInWei[1].toString();
+          this.context.getPriceImpact(outputAmountInWei);
+
+          const minimumReceived =
+            outputAmount - (outputAmount * this.context.slippage) / 100;
+
+          this.setState({
+            calc: inputAmount / outputAmount,
+            inputAmount,
+            inputAmountInWei,
+            outputAmount,
+            outputAmountInWei,
+            minimumReceived,
+          });
+        } else {
+          this.setState({
+            inputAmount,
+            inputAmountInWei,
+          });
+        }
+      }
+    } else {
+      this.context.getPriceImpact(null);
+      this.setState({
+        inputAmount: '',
+        outputAmount: '',
+        outputAmountInWei: '',
+      });
+    }
+  };
+
+  toggleModal = (tokenBSelected: boolean) => {
+    this.context.toggleTokenListModal(tokenBSelected);
+  };
+
+  clickSwitchForm = (e: any) => {
+    this.props.switchForms('buy');
+  };
+
+  resetForms = () => {
+    this.setState({
+      inputAmount: null,
+      outputAmount: null,
+    });
+  };
+
+  isNumeric(n: any) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+  }
+
+  main = () => (
+    <div id="content">
+      <div className="card mb-4">
+        <div className="card-body">
+          <form
+            autoComplete="off"
+            className="mb-3"
+            onSubmit={async (event: any) => {
+              event.preventDefault();
+              this.handleSubmit(event);
             }}
-            ref={this.ref}
-            className="form-control form-control-lg"
-            placeholder="0"
-            required
-          />
-          <div className="input-group-append">
-            <div className="input-group-text">
-              <img
-                src={
-                  'https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png'
-                }
-                height="32"
-                alt=""
-              />
-              &nbsp;&nbsp;&nbsp; Melone
+          >
+            <div>
+              <label className="float-left">
+                <b>Input</b>
+              </label>
+              <span className="float-right text-muted">
+                Balance:
+                {this.context.tokenABalance}
+              </span>
             </div>
-          </div>
-        </div>
-        <div
-          className="d-flex justify-content-center  m-3"
-          onClick={this.clickSwitchForm}
-        >
-          <i className="fa fa-chevron-down"></i>
-        </div>
-        <div>
-          <label className="float-left">
-            <b>Output</b>
-          </label>
-          <span className="float-right text-muted">
-            Balance:
-            {this.context.ethBalance}
-          </span>
-        </div>
-        <div className="input-group mb-2">
-          <input
-            type="number"
-            min="0"
-            className="form-control form-control-lg"
-            placeholder="0"
-            value={this.state.outputAmount}
-            disabled
-          />
-          <div className="input-group-append">
-            <div className="input-group-text">
-              <img
-                src={
-                  'https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png'
-                }
-                height="32"
-                alt=""
+            <div className="input-group mb-2">
+              <input
+                id="tokenA"
+                type="text"
+                autoComplete="off"
+                placeholder="0.0"
+                value={this.state.inputAmount || ''}
+                onChange={(event: any) => {
+                  this.handleOnChangeTokenBAmount(event);
+                }}
+                className="form-control form-control-lg"
+                required
               />
-              &nbsp; ETH
+              <div
+                className="input-group-append"
+                onClick={() => this.toggleModal(false)}
+              >
+                {this.context.tokenAData?.symbol ? (
+                  <div className="input-group-text">
+                    <Image src={this.context.tokenAData.logoURI}></Image>
+                    &nbsp; {this.context.tokenAData.symbol} <FaAngleDown />
+                  </div>
+                ) : (
+                  <div className="input-group-text">
+                    Select
+                    <FaAngleDown />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+            <div
+              className="d-flex justify-content-center  m-3"
+              onClick={this.clickSwitchForm}
+            >
+              <i className="fa fa-chevron-down"></i>
+            </div>
+            <div>
+              <label className="float-left">
+                <b>Output</b>
+              </label>
+              <span className="float-right text-muted">
+                Balance:
+                {this.context.tokenBBalance}
+              </span>
+            </div>
+            <div className="input-group mb-2">
+              <input
+                id="tokenB"
+                type="text"
+                autoComplete="off"
+                placeholder="0.0"
+                value={this.state.outputAmount || this.context.outputAmount}
+                onChange={(event: any) => {
+                  this.handleOnChangeTokenAAmount(event);
+                }}
+                className="form-control form-control-lg"
+                required
+              />
+
+              <div
+                className="input-group-append"
+                onClick={() => this.toggleModal(true)}
+              >
+                {this.context.tokenBData?.symbol ? (
+                  <div className="input-group-text">
+                    <Image src={this.context.tokenBData.logoURI}></Image>
+                    &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
+                  </div>
+                ) : (
+                  <div className="input-group-text">
+                    Select
+                    <FaAngleDown />
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="mb-5">
+              <Row>
+                <ColumnTextOnly>Slippage Tollerance</ColumnTextOnly>
+                <ColumnRight>{this.context.slippage} %</ColumnRight>
+              </Row>
+              {this.state.calc > 0 ? (
+                <>
+                  <span className="float-left text-muted">Exchange Rate</span>
+                  <br />
+                  <span className="float-right text-muted">
+                    <i style={{ margin: '3px' }}>1</i>
+                    {this.context.tokenBData?.symbol} =
+                    <i style={{ margin: '3px' }}>{this.state?.calc}</i>
+                    {this.context.tokenAData?.symbol}
+                  </span>
+                </>
+              ) : null}
+            </div>
+            <button type="submit" className="btn btn-primary btn-block btn-lg">
+              Swap
+            </button>
+          </form>
         </div>
-        <div className="mb-5">
-          <span className="float-left text-muted">Exchange Rate</span>
-          <span className="float-right text-muted">
-            1 Melone ={this.state.calc} ETH
-          </span>
-        </div>
-        <button type="submit" className="btn btn-primary btn-block btn-lg">
-          SWAP
-        </button>
-        <button
-          onClick={this.addLiqudity.bind(this)}
-          type="submit"
-          className="btn btn-primary btn-block btn-lg"
-        >
-          AddLiquidity
-        </button>
-      </form>
-    );
+      </div>
+      {this.state.calc > 0 ? (
+        <Container>
+          <Items>
+            <ColumnContainer>
+              <Row>
+                <Column>
+                  Minimum received <AiOutlineQuestionCircle className="icon" />
+                </Column>
+                <Column>
+                  {this.state.outputAmountInWei
+                    ? this.state.minimumReceived
+                    : '0'}
+                </Column>
+              </Row>
+            </ColumnContainer>
+            <ColumnContainer>
+              <Row>
+                <Column>
+                  Price Impact
+                  <AiOutlineQuestionCircle className="icon" />
+                </Column>
+                {this.context.priceImpact > 3 ? (
+                  <ColumnRed>{this.context.priceImpact} %</ColumnRed>
+                ) : (
+                  <ColumnGreen>{this.context.priceImpact} %</ColumnGreen>
+                )}
+              </Row>
+            </ColumnContainer>
+          </Items>
+        </Container>
+      ) : null}
+    </div>
+  );
+  render() {
+    return this.main();
   }
 }
-
-export default SellForm;
+export default SellTokens;

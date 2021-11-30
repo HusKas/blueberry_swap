@@ -6,6 +6,7 @@ export interface ITokenData {
   decimals: number;
   logoURI: string;
   name: string;
+  symbol: string;
 }
 
 export interface IApp {
@@ -26,7 +27,7 @@ export interface IApp {
   provider: any;
   signer: any;
   exchangeAddress: string;
-  buyTokens(tokenAmount: string, _minTokens: string, isETH: boolean): any;
+  swapTokens(tokenAmount: string, _minTokens: string): any;
   addLiquidity(tokenAmount: string, ethAmount: string): void;
   removeLiquidity(liquidityAmount: string): void;
   getTokenAAmount(tokenAmount: string): any;
@@ -51,14 +52,14 @@ export interface IApp {
   msgTxt: string;
   outputAddress: any;
   liquidity: any;
-  tokenAExpected: any;
-  tokenBExpected: any;
   lpPairBalanceAccount: string;
   lpShareAccountviaInput: string;
   lpAccountShare: number;
   priceImpact: number;
   tokenAShare: number;
   tokenBShare: number;
+  tokenASelectedShare: string;
+  tokenBSelectedShare: string;
   tokenBSelected: boolean;
   outputAmount: any;
   outputAmountInWei: any;
@@ -66,4 +67,5 @@ export interface IApp {
   inputAmountInWei: any;
   slippage: any;
   setSlippage(slippage: string): any;
+  clearStates(): void;
 }
