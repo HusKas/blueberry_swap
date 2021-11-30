@@ -21,7 +21,7 @@ const Items = styled.div`
 const Row = styled.div`
   display: flex;
   flex-direction: row;
-  width: 22em;
+
   justify-content: center;
   margin: 10px 0 10px 0;
 `;

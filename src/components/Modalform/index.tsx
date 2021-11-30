@@ -32,7 +32,6 @@ const ModalWrapper = styled.div`
 `;
 
 const Header = styled.div`
-  width: 100%;
   height: 70px;
   display: flex;
   justify-content: center;
@@ -40,14 +39,16 @@ const Header = styled.div`
 `;
 
 const SearchField = styled.input`
-  width: 80%;
   border-radius: 10px;
-  margin: 10px;
-  padding: 5px;
+  margin: 15px;
   outline: none;
   border: 0.1em solid gray;
 `;
 const CloseIcon = styled(Flex)`
+  position: relative;
+  top: 10;
+  top: 10px;
+  right: 10px;
   align-items: center;
   cursor: pointer;
 `;
@@ -59,8 +60,14 @@ const Container = styled.div`
   margin: 5px;
 `;
 
+const ContainerContent = styled.div`
+  margin: 15px;
+`;
+
 const ContainerRow = styled.div`
   display: flex;
+  width: 310px !important;
+  height: 100%;
   flex-direction: row;
   align-items: center;
   :hover {
@@ -68,7 +75,9 @@ const ContainerRow = styled.div`
   }
 `;
 
-const RowSymbol = styled.div``;
+const RowSymbol = styled.div`
+  width: 100%;
+`;
 
 const NameSymbolContainer = styled(Flex)`
   flex-direction: column;
@@ -129,7 +138,7 @@ export const Modal = ({
       {isOpen ? (
         <Background>
           <ModalWrapper>
-            <Container>
+            <Container className="Container">
               <Header>
                 <SearchField
                   onInput={handleInput}
@@ -138,30 +147,36 @@ export const Modal = ({
                 ></SearchField>
                 <CloseIcon onClick={toggleItems}>X</CloseIcon>
               </Header>
-              <FixedSizeList
-                height={300}
-                width={300}
-                itemSize={50}
-                itemCount={tokens.length}
-              >
-                {({ index, style }) => (
-                  <ContainerRow
-                    className="containerTokenlist"
-                    key={index}
-                    style={style}
-                    onClick={() =>
-                      tokenBSelected
-                        ? getTokenBData(tokens[index])
-                        : getTokenAData(tokens[index])
-                    }
-                  >
-                    <Image src={tokens[index].logoURI} key={index + 1}></Image>
-                    <NameSymbolContainer key={index + 2}>
-                      <RowSymbol>{tokens[index].symbol}</RowSymbol>
-                    </NameSymbolContainer>
-                  </ContainerRow>
-                )}
-              </FixedSizeList>
+              <ContainerContent>
+                <FixedSizeList
+                  height={300}
+                  width={350}
+                  itemSize={50}
+                  itemCount={tokens.length}
+                  className="FixedSizeList"
+                >
+                  {({ index, style }) => (
+                    <ContainerRow
+                      className="containerTokenlist"
+                      key={index}
+                      style={style}
+                      onClick={() =>
+                        tokenBSelected
+                          ? getTokenBData(tokens[index])
+                          : getTokenAData(tokens[index])
+                      }
+                    >
+                      <Image
+                        src={tokens[index].logoURI}
+                        key={index + 1}
+                      ></Image>
+                      <NameSymbolContainer key={index + 2}>
+                        <RowSymbol>{tokens[index].symbol}</RowSymbol>
+                      </NameSymbolContainer>
+                    </ContainerRow>
+                  )}
+                </FixedSizeList>
+              </ContainerContent>
             </Container>
           </ModalWrapper>
         </Background>

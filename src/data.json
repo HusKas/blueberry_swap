@@ -1,7 +1,7 @@
 [
   {
     "name": "BNB",
-    "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "address": "0xae13d989dac2f0debff460ac112a837c89baa7cd",
     "symbol": "BNB",
     "decimals": 18,
     "chainId": 4,
@@ -11,24 +11,28 @@
     "name": "Blueberry",
     "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
     "symbol": "Blueberry",
-    "decimals": 18,
-    "chainId": 4,
+    "decimals": 9,
     "logoURI": "https://avatars.githubusercontent.com/u/94470848?v=4"
   },
   {
     "name": "Wrapped Ether",
-    "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "address": "0x793b6b742e1206c5d3dfaf2efd85d3919dba60eb",
     "symbol": "ETH",
     "decimals": 18,
-    "chainId": 5,
-    "logoURI": "https://avatars.githubusercontent.com/u/6250754?s=200&v=4"
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png"
   },
   {
     "name": "Dai Stablecoin",
-    "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "address": "0xf447a952635e8a82a5a4780c8b19d4cc33cda76e",
     "symbol": "DAI",
     "decimals": 18,
-    "chainId": 42,
     "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/4943.png"
+  },
+  {
+    "name": "USDT",
+    "address": "0xd20cc80e332c79f9d5dd90ffde30bdd14dce9153",
+    "symbol": "USDT",
+    "decimals": 18,
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/825.png"
   }
 ]

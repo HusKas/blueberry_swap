@@ -2,7 +2,6 @@ import { BigNumber, Contract } from 'ethers';
 
 export interface ITokenData {
   address: string;
-  chainId: number;
   decimals: number;
   logoURI: string;
   name: string;
