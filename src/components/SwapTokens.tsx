@@ -88,7 +88,6 @@ interface IProps {
 
 interface IState {
   calcStandard: any;
-  calcAfterSwitch: any;
   inputAmount: any;
   inputAmountInWei: any;
   outputAmount: any;
@@ -106,7 +105,6 @@ class SwapTokens extends Component<IProps, IState> {
     this.toggleModal = this.toggleModal.bind(this);
     this.state = {
       calcStandard: 0,
-      calcAfterSwitch: 0,
       inputAmount: '',
       inputAmountInWei: '',
       outputAmount: '',
@@ -149,7 +147,6 @@ class SwapTokens extends Component<IProps, IState> {
 
   handleOnChangeTokenAAmount = async (e: any) => {
     console.log('handleOnChangeTokenAAmount..');
-    console.log(e);
     let inputAmount: any;
     let inputAmountInWei: any;
     let outputAmount: any;
@@ -178,7 +175,6 @@ class SwapTokens extends Component<IProps, IState> {
 
           this.setState({
             calcStandard: inputAmount / outputAmount,
-            calcAfterSwitch: outputAmount / inputAmount,
             inputAmount,
             inputAmountInWei,
             outputAmount,
@@ -199,7 +195,6 @@ class SwapTokens extends Component<IProps, IState> {
         outputAmount: '',
         outputAmountInWei: '',
         calcStandard: '',
-        calcAfterSwitch: '',
       });
     }
   };
@@ -238,7 +233,6 @@ class SwapTokens extends Component<IProps, IState> {
 
           this.setState({
             calcStandard: inputAmount / outputAmount,
-            calcAfterSwitch: outputAmount / inputAmount,
             inputAmount,
             inputAmountInWei,
             outputAmount,
@@ -273,9 +267,14 @@ class SwapTokens extends Component<IProps, IState> {
     const minimumReceived =
       this.state.inputAmount -
       (this.state.inputAmount * this.context.slippage) / 100;
+
     this.setState({
       switched: !this.state.switched,
+      calcStandard: this.state.outputAmount / this.state.inputAmount,
       minimumReceived,
+    });
+    setTimeout(() => {
+      console.log(this.state.calcStandard);
     });
   };
 
@@ -394,6 +393,7 @@ class SwapTokens extends Component<IProps, IState> {
                 <ColumnTextOnly>Slippage Tollerance</ColumnTextOnly>
                 <ColumnRight>{this.context.slippage} %</ColumnRight>
               </Row>
+
               {this.state.calcStandard > 0 ? (
                 <>
                   <span className="float-left text-muted">Exchange Rate</span>
@@ -401,20 +401,20 @@ class SwapTokens extends Component<IProps, IState> {
                   {this.state.switched ? (
                     <span className="float-right text-muted">
                       <i style={{ margin: '3px' }}>1</i>
-                      {this.context.tokenBData?.symbol} =
-                      <i style={{ margin: '3px' }}>
-                        {this.state?.calcAfterSwitch}
-                      </i>
-                      {this.context.tokenAData?.symbol}
-                    </span>
-                  ) : (
-                    <span className="float-right text-muted">
-                      <i style={{ margin: '3px' }}>1</i>
                       {this.context.tokenAData?.symbol} =
                       <i style={{ margin: '3px' }}>
                         {this.state?.calcStandard}
                       </i>
                       {this.context.tokenBData?.symbol}
+                    </span>
+                  ) : (
+                    <span className="float-right text-muted">
+                      <i style={{ margin: '3px' }}>1</i>
+                      {this.context.tokenBData?.symbol} =
+                      <i style={{ margin: '3px' }}>
+                        {this.state?.calcStandard}
+                      </i>
+                      {this.context.tokenAData?.symbol}
                     </span>
                   )}
                 </>
