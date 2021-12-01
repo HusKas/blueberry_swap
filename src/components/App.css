@@ -16,6 +16,10 @@
   font-size: 24px;
 }
 
+.removeLpButton {
+  background-color: rgb(0, 157, 154) !important;
+}
+
 #loader {
   color: white;
 }

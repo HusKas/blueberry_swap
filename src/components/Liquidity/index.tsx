@@ -396,7 +396,7 @@ export class AddLiquidity extends Component<any, IState> {
                 onClick={() =>
                   this.removeLiquidity(this.context.lpPairBalanceAccount)
                 }
-                className="btn btn-success btn-block btn-lg"
+                className="btn btn-success btn-block btn-lg removeLpButton"
               >
                 <Row>
                   {this.state.loading ? <Column> Loading..</Column> : ''}

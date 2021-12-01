@@ -176,8 +176,8 @@ class App extends Component<IProps, IApp> {
     });
 
     setTimeout(async () => {
-      await this.getTokenAData(this.state.tokenAData);
-      await this.getTokenBData(this.state.tokenBData);
+      await this.getTokenADataSet(this.state.tokenAData);
+      await this.getTokenBDataSet(this.state.tokenBData);
       if (this.child?.current) {
         await this.child.current.setIinputOutputVal();
       }
@@ -835,6 +835,16 @@ class App extends Component<IProps, IApp> {
     setTimeout(() => this.setState({ msg: false }), 3000);
   };
 
+  getTokenADataSet = async (tokenAData: ITokenData) => {
+    console.log('getTokenAData selected... ');
+    this.setState({ tokenAData });
+  };
+
+  getTokenBDataSet = async (tokenBData: ITokenData) => {
+    console.log('getTokenBData selected... ');
+    this.setState({ tokenBData });
+  };
+
   getTokenAData = async (tokenAData: ITokenData) => {
     console.log('getTokenAData selected... ');
     this.setState({ tokenAData, isOpen: !this.state.isOpen });
@@ -861,7 +871,7 @@ class App extends Component<IProps, IApp> {
     await this.getTokenAmountAfterSelectedBToken();
     this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
     if (this.child.current) {
-      if (tokenBData.address === REACT_APP_WETH_ADDRESS) {
+      if (tokenBData?.address === REACT_APP_WETH_ADDRESS) {
         await this.getEthBalanceTokenB();
       }
     }
