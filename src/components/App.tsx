@@ -176,8 +176,8 @@ class App extends Component<IProps, IApp> {
     });
 
     setTimeout(async () => {
-      await this.getTokenADataSet(this.state.tokenAData);
-      await this.getTokenBDataSet(this.state.tokenBData);
+      await this.getTokenAData(this.state.tokenAData, false);
+      await this.getTokenBData(this.state.tokenBData, false);
       if (this.child?.current) {
         await this.child.current.setIinputOutputVal();
       }
@@ -835,19 +835,13 @@ class App extends Component<IProps, IApp> {
     setTimeout(() => this.setState({ msg: false }), 3000);
   };
 
-  getTokenADataSet = async (tokenAData: ITokenData) => {
+  getTokenAData = async (tokenAData: ITokenData, isModulActive: false) => {
     console.log('getTokenAData selected... ');
-    this.setState({ tokenAData });
-  };
-
-  getTokenBDataSet = async (tokenBData: ITokenData) => {
-    console.log('getTokenBData selected... ');
-    this.setState({ tokenBData });
-  };
-
-  getTokenAData = async (tokenAData: ITokenData) => {
-    console.log('getTokenAData selected... ');
-    this.setState({ tokenAData, isOpen: !this.state.isOpen });
+    if (isModulActive) {
+      this.setState({ tokenAData, isOpen: !this.state.isOpen });
+    } else {
+      this.setState({ tokenAData });
+    }
     await this.getTokenABalance(tokenAData);
     if (tokenAData?.address === this.state.tokenBData?.address) {
       this.setState({ tokenBData: null, tokenBBalance: '0' });
@@ -861,9 +855,13 @@ class App extends Component<IProps, IApp> {
     }
   };
 
-  getTokenBData = async (tokenBData: ITokenData) => {
+  getTokenBData = async (tokenBData: ITokenData, isModulActive: false) => {
     console.log('getTokenBData selected... ');
-    this.setState({ tokenBData, isOpen: !this.state.isOpen });
+    if (isModulActive) {
+      this.setState({ tokenBData, isOpen: !this.state.isOpen });
+    } else {
+      this.setState({ tokenBData });
+    }
     await this.getTokenBBalance(tokenBData);
     if (tokenBData?.address === this.state.tokenAData?.address) {
       this.setState({ tokenAData: null, tokenABalance: '0' });

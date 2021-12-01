@@ -21,12 +21,10 @@ module.exports = {
       url: 'http://127.0.0.1:8545',
       chainId: 31337,
     },
-    hardhat: {},
-    rinkeby: {
-      url: 'https://rinkeby.infura.io/v3/979cc13a2acf45fb8d615538c822c872',
-      accounts: [
-        '9636cf32a019e6fe5c45283122f7a47aa41e3438498c1d1e8b2042369fba523e',
-      ],
+    hardhat: {
+      forking: {
+        url: 'https://eth-mainnet.alchemyapi.io/v2/zymuUVvGMWvAjPYmEXYtobzG802M6X5k',
+      },
     },
   },
   solidity: {

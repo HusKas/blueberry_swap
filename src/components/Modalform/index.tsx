@@ -162,8 +162,8 @@ export const Modal = ({
                       style={style}
                       onClick={() =>
                         tokenBSelected
-                          ? getTokenBData(tokens[index])
-                          : getTokenAData(tokens[index])
+                          ? getTokenBData(tokens[index], true)
+                          : getTokenAData(tokens[index], true)
                       }
                     >
                       <Image
