@@ -2,9 +2,10 @@ import React, { Component } from 'react';
 import Identicon from 'identicon.js';
 import styled from 'styled-components';
 import logo from '../images/logo_blueberry.png';
+import Context from './Context';
 
 const WrongNetwork = styled.div`
-  border: 0.5px solid white;
+  border: 0.5px solid deeppink;
   padding: 5px;
   border-radius: 15px;
   color: white;
@@ -16,6 +17,7 @@ interface IProps {
 interface IState {}
 
 class Navbar extends Component<IProps, IState> {
+  static contextType = Context;
   render() {
     return (
       <nav className="navbar navbar-dark ">
@@ -25,6 +27,13 @@ class Navbar extends Component<IProps, IState> {
             blueberryswap.finance
           </a>
           <ul className="navbar-nav px-3 d-flex flex-row">
+            {this.context.networkName ? (
+              <li className="nav-item px-5 ">
+                <WrongNetwork>{this.context.networkName}</WrongNetwork>
+              </li>
+            ) : (
+              ''
+            )}
             {this.props.account ? (
               <>
                 <li className="nav-item text-nowrap px-3 ">
@@ -45,7 +54,7 @@ class Navbar extends Component<IProps, IState> {
               </>
             ) : (
               <li className="nav-item px-5 ">
-                <WrongNetwork>Wrong Network</WrongNetwork>
+                <WrongNetwork>Please Connect Metamask..</WrongNetwork>
               </li>
             )}
           </ul>

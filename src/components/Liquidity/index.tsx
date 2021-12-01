@@ -345,9 +345,22 @@ export class AddLiquidity extends Component<any, IState> {
                 </>
               ) : null}
             </div>
-            <button type="submit" className="btn btn-primary btn-block btn-lg">
-              AddLiquidity
-            </button>
+            {this.context.correctNetwork ? (
+              <button
+                type="submit"
+                className="btn btn-primary btn-block btn-lg"
+              >
+                AddLiquidity
+              </button>
+            ) : (
+              <button
+                type="submit"
+                className="btn btn-primary btn-block btn-lg"
+                disabled
+              >
+                AddLiquidity
+              </button>
+            )}
           </form>
         </div>
       </div>

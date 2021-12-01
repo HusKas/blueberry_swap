@@ -122,8 +122,13 @@ class SwapTokens extends Component<IProps, IState> {
     if (event.target.value !== '' || this.context.outputAmountInWei > 0) {
       const inputAmountInWei = BigNumber.from(this.state.inputAmountInWei);
       const outputAmountInWei = BigNumber.from(this.state.outputAmountInWei);
+      const inputAmount = this.state.inputAmount;
 
-      if (inputAmountInWei && outputAmountInWei) {
+      if (
+        inputAmountInWei &&
+        outputAmountInWei &&
+        inputAmount < this.context.tokenABalance
+      ) {
         await this.context.swapTokens(inputAmountInWei, outputAmountInWei);
       } else {
         await this.context.swapTokens(
@@ -420,9 +425,22 @@ class SwapTokens extends Component<IProps, IState> {
                 </>
               ) : null}
             </div>
-            <button type="submit" className="btn btn-primary btn-block btn-lg">
-              Swap
-            </button>
+            {this.context.correctNetwork ? (
+              <button
+                type="submit"
+                className="btn btn-primary btn-block btn-lg"
+              >
+                Swap
+              </button>
+            ) : (
+              <button
+                type="submit"
+                className="btn btn-primary btn-block btn-lg"
+                disabled
+              >
+                Swap
+              </button>
+            )}
           </form>
         </div>
       </div>

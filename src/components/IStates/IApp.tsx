@@ -67,4 +67,6 @@ export interface IApp {
   slippage: any;
   setSlippage(slippage: string): any;
   clearStates(): void;
+  networkName: string;
+  correctNetwork: boolean;
 }

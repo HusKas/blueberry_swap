@@ -126,6 +126,8 @@ class App extends Component<IProps, IApp> {
       setSlippage: this.setSlippage,
       slippage: '0.1',
       clearStates: this.clearStates,
+      networkName: '',
+      correctNetwork: false,
     };
   }
   // clear between switch tap or removing input
@@ -144,7 +146,7 @@ class App extends Component<IProps, IApp> {
       slippage,
     });
   };
-  async componentWillMount() {
+  async componentDidMount() {
     this._isMounted = true;
     this.setState({
       tokensData: data,
@@ -207,7 +209,11 @@ class App extends Component<IProps, IApp> {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner(0);
     const network = await provider.getNetwork();
-    if (network.name) {
+
+    let networkName: any, correctNetwork: any;
+    [networkName, correctNetwork] = await this.getNetworkName(network.name);
+
+    if (correctNetwork) {
       //WETH load
       const token1 = new ethers.Contract(
         REACT_APP_WETH_ADDRESS || '',
@@ -237,10 +243,14 @@ class App extends Component<IProps, IApp> {
         account: accounts[0],
         provider,
         signer,
+        networkName,
+        correctNetwork,
       });
     } else {
       console.log('Wrong network');
       this.setState({
+        account: accounts[0],
+        networkName,
         loading: false,
       });
     }
@@ -265,6 +275,16 @@ class App extends Component<IProps, IApp> {
     )
       await this.getEthBalanceTokenA();
   }
+
+  getNetworkName = async (network: string) => {
+    console.log(network);
+    switch (network) {
+      case 'bnb':
+        return ['Binance Smart Chain', true];
+      default:
+        return ['Wrong Network', false];
+    }
+  };
 
   toWei(value: any) {
     return ethers.utils.parseEther(value.toString());
@@ -708,7 +728,7 @@ class App extends Component<IProps, IApp> {
 
           setTimeout(() => {
             this.setState({ msg: null });
-          }, 3000);
+          }, 4000);
           return res;
         } else {
           console.log(
@@ -1036,7 +1056,9 @@ class App extends Component<IProps, IApp> {
     }
     return (
       <>
-        {<Navbar account={this.state.account} />}
+        <Context.Provider value={this.state}>
+          <Navbar account={this.state.account} />
+        </Context.Provider>
         <div className="container-fluid mt-5 background-img ">
           <div className="row">
             <main
