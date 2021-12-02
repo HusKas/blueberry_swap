@@ -11,9 +11,6 @@ export interface ITokenData {
 export interface IApp {
   account: string;
   web3: any;
-  weth: any;
-  token1: any;
-  token2: any;
   router: any;
   exchange: any;
   factory: any;

@@ -21,10 +21,12 @@ module.exports = {
       url: 'http://127.0.0.1:8545',
       chainId: 31337,
     },
-    hardhat: {
-      forking: {
-        url: 'https://eth-mainnet.alchemyapi.io/v2/zymuUVvGMWvAjPYmEXYtobzG802M6X5k',
-      },
+    testnet: {
+      url: 'https://data-seed-prebsc-2-s3.binance.org:8545',
+      chainId: 97,
+      accounts: [
+        '4b56d20997b96eab45bb006f679b661849c237804e483ccdcebc95fe1246b8d1',
+      ],
     },
   },
   solidity: {

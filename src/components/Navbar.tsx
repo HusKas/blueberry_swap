@@ -27,7 +27,7 @@ class Navbar extends Component<IProps, IState> {
             blueberryswap.finance
           </a>
           <ul className="navbar-nav px-3 d-flex flex-row">
-            {this.context.networkName ? (
+            {this.context.networkName && this.context.account ? (
               <li className="nav-item px-5 ">
                 <WrongNetwork>{this.context.networkName}</WrongNetwork>
               </li>

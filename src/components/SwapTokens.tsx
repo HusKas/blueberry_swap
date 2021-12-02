@@ -178,14 +178,18 @@ class SwapTokens extends Component<IProps, IState> {
           const minimumReceived =
             inputAmount - (inputAmount * this.context.slippage) / 100;
 
-          this.setState({
-            calcStandard: inputAmount / outputAmount,
-            inputAmount,
-            inputAmountInWei,
-            outputAmount,
-            outputAmountInWei,
-            minimumReceived,
-          });
+          this.setState(
+            {
+              calcStandard: inputAmount / outputAmount,
+              inputAmount,
+              inputAmountInWei,
+              outputAmount,
+              outputAmountInWei,
+              minimumReceived,
+            },
+            () => {}
+          );
+
           this.context.getLiquidityOwner(this.context.tokenBData);
         } else {
           this.setState({
@@ -236,14 +240,17 @@ class SwapTokens extends Component<IProps, IState> {
           const minimumReceived =
             outputAmount - (outputAmount * this.context.slippage) / 100;
 
-          this.setState({
-            calcStandard: inputAmount / outputAmount,
-            inputAmount,
-            inputAmountInWei,
-            outputAmount,
-            outputAmountInWei,
-            minimumReceived,
-          });
+          this.setState(
+            {
+              calcStandard: inputAmount / outputAmount,
+              inputAmount,
+              inputAmountInWei,
+              outputAmount,
+              outputAmountInWei,
+              minimumReceived,
+            },
+            () => {}
+          );
         } else {
           this.setState({
             inputAmount,
@@ -425,7 +432,7 @@ class SwapTokens extends Component<IProps, IState> {
                 </>
               ) : null}
             </div>
-            {this.context.correctNetwork ? (
+            {this.context.correctNetwork && this.context.account ? (
               <button
                 type="submit"
                 className="btn btn-primary btn-block btn-lg"

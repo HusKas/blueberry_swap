@@ -7,7 +7,7 @@ import Exchange from '../abi/src/contracts/BlueberryExchange.sol/BlueberryExchan
 import Factory from '../abi/src/contracts/BlueberryFactory.sol/BlueberryFactory.json';
 import Router from '../abi/src/contracts/BlueberryRouter.sol/BlueberryRouter.json';
 import WETH from '../abi/src/contracts/WETH.sol/WETH.json';
-import Token from '../abi/src/contracts/Token1.sol/Token1.json';
+import ERC20 from '../abi/src/contracts/BlueberryERC20.sol/BlueberryERC20.json';
 import { BigNumber, ethers } from 'ethers';
 import Context from './Context';
 import { Modal } from '../components/Modalform';
@@ -21,11 +21,6 @@ import { ModalSlippage } from './ModalSlippage';
 export interface ProcessEnv {
   [key: string]: string | undefined;
 }
-
-const overrides = {
-  gasLimit: 6666666,
-};
-
 require('dotenv').config();
 
 const {
@@ -51,8 +46,16 @@ const Link = styled.a`
 `;
 
 const Msg = styled.div`
-  margin: 10px;
-  padding: 10px;
+  height: 35px;
+  position: relative;
+  top: -50px;
+  color: white;
+  border-radius: 25px;
+  text-align: center;
+`;
+
+const MsgInner = styled.div`
+  padding: 15px;
   color: white;
   border: 1px solid white;
   border-radius: 25px;
@@ -63,6 +66,7 @@ interface IProps {}
 class App extends Component<IProps, IApp> {
   _isMounted = false;
   child: any;
+
   constructor(props: IProps) {
     super(props);
     this.child = React.createRef() || '';
@@ -70,9 +74,6 @@ class App extends Component<IProps, IApp> {
     this.state = {
       account: '',
       web3: new Web3(Web3.givenProvider),
-      weth: {},
-      token1: {},
-      token2: {},
       router: {},
       factory: {},
       exchange: {},
@@ -130,6 +131,10 @@ class App extends Component<IProps, IApp> {
       correctNetwork: false,
     };
   }
+
+  overrides = {
+    gasLimit: 6666666,
+  };
   // clear between switch tap or removing input
   clearStates = () => {
     this.setState({
@@ -214,13 +219,6 @@ class App extends Component<IProps, IApp> {
     [networkName, correctNetwork] = await this.getNetworkName(network.name);
 
     if (correctNetwork) {
-      //WETH load
-      const token1 = new ethers.Contract(
-        REACT_APP_WETH_ADDRESS || '',
-        WETH.abi,
-        signer
-      );
-
       //Router load
       const router = new ethers.Contract(
         REACT_APP_ROUTER_ADDRESS || '',
@@ -237,7 +235,6 @@ class App extends Component<IProps, IApp> {
 
       this.setState({
         loading: false,
-        token1,
         router,
         factory,
         account: accounts[0],
@@ -281,6 +278,10 @@ class App extends Component<IProps, IApp> {
     switch (network) {
       case 'bnb':
         return ['Binance Smart Chain', true];
+      case 'bnbt':
+        return ['Binance Smart Chain Test', true];
+      case 'unknown':
+        return ['Hardhat Test', true];
       default:
         return ['Wrong Network', false];
     }
@@ -322,14 +323,14 @@ class App extends Component<IProps, IApp> {
     try {
       const token1 = new ethers.Contract(
         tokenData.address,
-        Token.abi,
+        ERC20.abi,
         this.state.signer
       );
 
       let tokenABalance = await token1.balanceOf(this.state.account);
       tokenABalance = this.fromWei(tokenABalance).toString();
 
-      this.setState({ tokenABalance, token1 });
+      this.setState({ tokenABalance });
     } catch (err) {
       console.log(err);
       this.setState({ tokenABalance: '0' });
@@ -340,14 +341,14 @@ class App extends Component<IProps, IApp> {
     try {
       const token2 = new ethers.Contract(
         tokenData.address,
-        Token.abi,
+        ERC20.abi,
         this.state.signer
       );
 
       let tokenBalance = await token2.balanceOf(this.state.account);
       tokenBalance = this.fromWei(tokenBalance).toString();
 
-      this.setState({ tokenBBalance: tokenBalance, token2 });
+      this.setState({ tokenBBalance: tokenBalance });
     } catch (err) {
       console.log(err);
       this.setState({ tokenBBalance: '0' });
@@ -364,25 +365,31 @@ class App extends Component<IProps, IApp> {
         this.state.tokenBData.address
       );
       console.log(`Token pair - àddLiquidity : ${exchangeAddress}`);
+
+      const token1 = new ethers.Contract(
+        this.state.tokenAData.address,
+        ERC20.abi,
+        this.state.signer
+      );
+
+      const token2 = new ethers.Contract(
+        this.state.tokenBData.address,
+        ERC20.abi,
+        this.state.signer
+      );
       if (this.state.tokenAData.address === REACT_APP_WETH_ADDRESS) {
         try {
           console.log('Adding liquditiy ETH now ...');
           //Router load
-          const token2 = new ethers.Contract(
-            this.state.tokenBData.address,
-            Token.abi,
-            this.state.signer
-          );
 
           const tx = await token2.approve(
             this.state.router.address,
             tokenBAmount,
             {
               from: this.state.account,
-              ...overrides,
+              ...this.overrides,
             }
           );
-          await tx.wait(1);
 
           const tx2 = await this.state.router.addLiquidityETH(
             this.state.tokenBData.address,
@@ -394,30 +401,24 @@ class App extends Component<IProps, IApp> {
             {
               from: this.state.account,
               value: tokenAAmount, //ETH
-              ...overrides,
+              ...this.overrides,
             }
           );
-          await tx2.wait(1);
-          this.setState({ loading: false, token2 });
+
+          this.setState({ loading: false });
         } catch (err) {
           this.setState({ loading: false });
         }
       } else if (this.state.tokenBData.address === REACT_APP_WETH_ADDRESS) {
         try {
           console.log('Adding liquditiy Token to ETH now ...');
-          //Router load
-          const token2 = new ethers.Contract(
-            this.state.tokenAData.address,
-            Token.abi,
-            this.state.signer
-          );
 
-          const tx = await token2.approve(
+          const tx = await token1.approve(
             this.state.router.address,
             tokenAAmount,
             {
               from: this.state.account,
-              ...overrides,
+              ...this.overrides,
             }
           );
           await tx.wait(1);
@@ -432,7 +433,7 @@ class App extends Component<IProps, IApp> {
             {
               from: this.state.account,
               value: tokenBAmount, //ETH
-              ...overrides,
+              ...this.overrides,
             }
           );
           await tx2.wait(1);
@@ -443,25 +444,13 @@ class App extends Component<IProps, IApp> {
       } else {
         try {
           console.log('Adding liquditiy Token to Token now ...');
-          //Router load
-          const token1 = new ethers.Contract(
-            this.state.tokenAData.address,
-            Token.abi,
-            this.state.signer
-          );
-
-          const token2 = new ethers.Contract(
-            this.state.tokenBData.address,
-            Token.abi,
-            this.state.signer
-          );
 
           const tx0 = await token1.approve(
             this.state.router.address,
             tokenAAmount,
             {
               from: this.state.account,
-              ...overrides,
+              ...this.overrides,
             }
           );
           await tx0.wait(1);
@@ -471,7 +460,7 @@ class App extends Component<IProps, IApp> {
             tokenBAmount,
             {
               from: this.state.account,
-              ...overrides,
+              ...this.overrides,
             }
           );
           await tx1.wait(1);
@@ -487,11 +476,11 @@ class App extends Component<IProps, IApp> {
             deadline,
             {
               from: this.state.account,
-              ...overrides,
+              ...this.overrides,
             }
           );
           await tx2.wait(1);
-          this.setState({ loading: false, token1, token2 });
+          this.setState({ loading: false });
         } catch (err) {
           this.setState({ loading: false });
         }
@@ -512,18 +501,14 @@ class App extends Component<IProps, IApp> {
         liquidityAmount,
         {
           from: this.state.account,
-          ...overrides,
+          ...this.overrides,
         }
       );
       await tx1.wait(1);
-      console.log(
-        liquidityAmount,
-        this.state.token1.address,
-        this.state.token2.address
-      );
+
       const tx2 =
         await this.state.router.removeLiquidityETHSupportingFeeOnTransferTokens(
-          this.state.token2.address,
+          this.state.tokenBData.address,
           liquidityAmount,
           0,
           0,
@@ -531,7 +516,7 @@ class App extends Component<IProps, IApp> {
           deadline,
           {
             from: this.state.account,
-            ...overrides,
+            ...this.overrides,
           }
         );
       await tx2.wait(1);
@@ -591,6 +576,18 @@ class App extends Component<IProps, IApp> {
 
     console.log(`Token pair - swapTokens..`);
 
+    const token1 = new ethers.Contract(
+      this.state.tokenAData.address,
+      ERC20.abi,
+      this.state.signer
+    );
+
+    const token2 = new ethers.Contract(
+      this.state.tokenBData.address,
+      ERC20.abi,
+      this.state.signer
+    );
+
     if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
       if (this.state.tokenAData.address === REACT_APP_WETH_ADDRESS) {
         console.log(`swapExactETHForTokensSupportingFeeOnTransferTokens..`);
@@ -621,12 +618,12 @@ class App extends Component<IProps, IApp> {
         }
       } else if (this.state.tokenBData.address === REACT_APP_WETH_ADDRESS) {
         console.log('swapExactTokensForETHSupportingFeeOnTransferTokens..');
-        const tx0 = await this.state.token1.approve(
+        const tx0 = await token1.approve(
           this.state.router.address,
           tokenAAmount,
           {
             from: this.state.account,
-            ...overrides,
+            ...this.overrides,
           }
         );
         await tx0.wait(1);
@@ -640,7 +637,7 @@ class App extends Component<IProps, IApp> {
               deadline,
               {
                 from: this.state.account,
-                ...overrides,
+                ...this.overrides,
               }
             );
           tx.wait(1);
@@ -658,21 +655,21 @@ class App extends Component<IProps, IApp> {
       } else {
         console.log('swapExactTokensForTokensSupportingFeeOnTransferTokens');
 
-        const tx0 = await this.state.token1.approve(
+        const tx0 = await token1.approve(
           this.state.router.address,
           tokenAAmount,
           {
             from: this.state.account,
-            ...overrides,
+            ...this.overrides,
           }
         );
         await tx0.wait(1);
-        const tx1 = await this.state.token2.approve(
+        const tx1 = await token2.approve(
           this.state.router.address,
           tokenAAmount,
           {
             from: this.state.account,
-            ...overrides,
+            ...this.overrides,
           }
         );
         await tx1.wait(1);
@@ -686,7 +683,7 @@ class App extends Component<IProps, IApp> {
               deadline,
               {
                 from: this.state.account,
-                ...overrides,
+                ...this.overrides,
               }
             );
           tx.wait(1);
@@ -731,12 +728,8 @@ class App extends Component<IProps, IApp> {
           }, 4000);
           return res;
         } else {
-          console.log(
-            'No Pair exists.. You are the first provider.Please set the initial price'
-          );
-          this.setMsg(
-            'No Pair exists..You are the first provider. Please set the initial price'
-          );
+          console.log('No Pair exists.. Please set the initial price');
+          this.setMsg('No Pair exists.. Please set the initial price');
           return;
         }
       } else {
@@ -772,12 +765,8 @@ class App extends Component<IProps, IApp> {
           }, 3000);
           return res;
         } else {
-          console.log(
-            'No Pair exists.. You are the first provider.Please set the initial price'
-          );
-          this.setMsg(
-            'No Pair exists..You are the first provider. Please set the initial price'
-          );
+          console.log('No Pair exists.. Please set the initial price');
+          this.setMsg('No Pair exists.. Please set the initial price');
           return;
         }
       } else {
@@ -913,7 +902,7 @@ class App extends Component<IProps, IApp> {
 
       const token2 = new ethers.Contract(
         this.state.tokenBData.address,
-        Token.abi,
+        ERC20.abi,
         this.state.signer
       );
 
@@ -939,6 +928,18 @@ class App extends Component<IProps, IApp> {
   ) => {
     try {
       if (token1Data?.address && token2Data?.address) {
+        const token1 = new ethers.Contract(
+          this.state.tokenAData.address,
+          ERC20.abi,
+          this.state.signer
+        );
+
+        const token2 = new ethers.Contract(
+          this.state.tokenBData.address,
+          ERC20.abi,
+          this.state.signer
+        );
+
         const pairAddress = await this.state.factory.getPair(
           token1Data.address,
           token2Data.address
@@ -951,13 +952,9 @@ class App extends Component<IProps, IApp> {
         );
 
         if (Pair.address !== REACT_APP_ZERO_ADDRESS) {
-          const token_A_LP_Balance = await this.state.token1.balanceOf(
-            Pair.address
-          );
+          const token_A_LP_Balance = await token1.balanceOf(Pair.address);
 
-          const token_B_LP_Balance = await this.state.token2.balanceOf(
-            Pair.address
-          );
+          const token_B_LP_Balance = await token2.balanceOf(Pair.address);
 
           //Pair balance account
           const liquidity = await Pair.balanceOf(this.state.account);
@@ -1028,40 +1025,31 @@ class App extends Component<IProps, IApp> {
   }
 
   render() {
-    let content: any;
-    if (this.state.loading) {
-      content = (
-        <p id="loader" className="text-center">
-          Loading..
-        </p>
-      );
-    } else {
-      content = (
-        <Context.Provider value={this.state}>
-          {this.state.msg ? <Msg>{this.state.msgTxt}</Msg> : null}
-          {this.state.tx ? (
-            <ContainerLink>
-              <Link
-                href={`https://etherscan.io/tx/ ${this.state.tx}`}
-                target="_blank"
-              >
-                Etherscan Tx
-              </Link>
-            </ContainerLink>
-          ) : null}
-          <Tabs
-            toggleSlippageModal={this.toggleSlippageModal}
-            clearStates={this.clearStates}
-            main={
-              <SwapTokens switchForms={this.switchForms} ref={this.child} />
-            }
-            liquidity={
-              <AddLiquidity ref={this.child} clearStates={this.clearStates} />
-            }
-          />
-        </Context.Provider>
-      );
-    }
+    let content = (
+      <Context.Provider value={this.state}>
+        <Msg>
+          {this.state.msg ? <MsgInner>{this.state.msgTxt}</MsgInner> : null}
+        </Msg>
+        {this.state.tx ? (
+          <ContainerLink>
+            <Link
+              href={`https://etherscan.io/tx/ ${this.state.tx}`}
+              target="_blank"
+            >
+              Etherscan Tx
+            </Link>
+          </ContainerLink>
+        ) : null}
+        <Tabs
+          toggleSlippageModal={this.toggleSlippageModal}
+          clearStates={this.clearStates}
+          main={<SwapTokens switchForms={this.switchForms} ref={this.child} />}
+          liquidity={
+            <AddLiquidity ref={this.child} clearStates={this.clearStates} />
+          }
+        />
+      </Context.Provider>
+    );
     return (
       <>
         <Context.Provider value={this.state}>

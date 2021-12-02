@@ -1,7 +1,7 @@
 [
   {
     "name": "BNB",
-    "address": "0xae13d989dac2f0debff460ac112a837c89baa7cd",
+    "address": "0x982b6bd0Da82514f853c049549e4dBA86b1F409e",
     "symbol": "BNB",
     "decimals": 18,
     "chainId": 4,
@@ -9,30 +9,30 @@
   },
   {
     "name": "Blueberry",
-    "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "address": "0xC163840Dc9155890FB263f248bD20AfBEAD6e990",
     "symbol": "Blueberry",
     "decimals": 9,
     "logoURI": "https://avatars.githubusercontent.com/u/94470848?v=4"
   },
   {
-    "name": "Wrapped Ether",
-    "address": "0x793b6b742e1206c5d3dfaf2efd85d3919dba60eb",
-    "symbol": "ETH",
-    "decimals": 18,
-    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png"
-  },
-  {
-    "name": "Dai Stablecoin",
-    "address": "0xf447a952635e8a82a5a4780c8b19d4cc33cda76e",
-    "symbol": "DAI",
-    "decimals": 18,
-    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/4943.png"
-  },
-  {
     "name": "USDT",
-    "address": "0xd20cc80e332c79f9d5dd90ffde30bdd14dce9153",
+    "address": "0xd9710BE33D46625aa76F5CAcBE7cE4246eF9712c",
     "symbol": "USDT",
     "decimals": 18,
     "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/825.png"
+  },
+  {
+    "name": "Shiba",
+    "address": "0x273d0cdAAFC12281d17D74db960f7dC4f0d72136",
+    "symbol": "Shiba",
+    "decimals": 18,
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/5994.png"
+  },
+  {
+    "name": "ShibaX",
+    "address": "0x5F8498e70b19F583afBe3964293f2D10786fe26b",
+    "symbol": "ShibaX",
+    "decimals": 18,
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/5994.png"
   }
 ]

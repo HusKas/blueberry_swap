@@ -42,10 +42,6 @@ before(async () => {
   weth = await WETH.deploy();
   await weth.deployed();
 
-  Exchange = await ethers.getContractFactory('BlueberryExchange');
-  exchange = await Exchange.deploy();
-  await exchange.deployed();
-
   ExchangeLibrary = await ethers.getContractFactory('ExchangeLibrary');
   exchangeLibrary = await ExchangeLibrary.deploy();
   await exchangeLibrary.deployed();
@@ -58,7 +54,9 @@ before(async () => {
   router = await Router.deploy(factory.address, weth.address);
   await router.deployed();
 
-  console.log(`Token is deployed to: ${token1.address}`);
+  console.log(`Token1 is deployed to: ${token1.address}`);
+  console.log(`Token2 is deployed to: ${token2.address}`);
+  console.log(`ExchangeLibrary is deployed to: ${exchangeLibrary.address}`);
   console.log(`WETH is deployed to: ${weth.address}`);
   console.log(`Factory is deployed to: ${factory.address}`);
   console.log(`Router is deployed to: ${router.address}`);
