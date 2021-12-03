@@ -758,7 +758,7 @@ class App extends Component<IProps, IApp> {
     }
   };
 
-  getTokenAAmount = async (tokenAmount: string) => {
+  getTokenAAmount = async (tokenAmount: BigNumber) => {
     try {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
       if (
@@ -795,7 +795,7 @@ class App extends Component<IProps, IApp> {
     }
   };
 
-  getTokenBAmount = async (tokenAmount: string) => {
+  getTokenBAmount = async (tokenAmount: BigNumber) => {
     try {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
       if (
@@ -832,7 +832,11 @@ class App extends Component<IProps, IApp> {
     }
   };
 
-  _getTokenAmountOut = async (_amount: any, token0: string, token1: string) => {
+  _getTokenAmountOut = async (
+    _amount: BigNumber,
+    token0: string,
+    token1: string
+  ) => {
     const res = await this.state.router.getAmountsOut(_amount, [
       token0,
       token1,
@@ -851,7 +855,11 @@ class App extends Component<IProps, IApp> {
     }
   };
 
-  _getTokenAmountIn = async (_amount: any, token0: string, token1: string) => {
+  _getTokenAmountIn = async (
+    _amount: BigNumber,
+    token0: string,
+    token1: string
+  ) => {
     const res = await this.state.router.getAmountsIn(_amount, [token0, token1]);
     if (res === undefined) {
       console.log(
@@ -921,8 +929,8 @@ class App extends Component<IProps, IApp> {
 
   getTokenAmountAfterSelectedBToken = async () => {
     console.log('getTokenAmountAfterSelectedBToken..');
-    let inputAmountInWei: any;
-    let outputAmountInWei: any;
+    let inputAmountInWei: BigNumber;
+    let outputAmountInWei: BigNumber;
 
     if (this.child?.current) {
       inputAmountInWei = this.child.current?.state.inputAmountInWei;
@@ -942,7 +950,7 @@ class App extends Component<IProps, IApp> {
     }
   };
 
-  getPriceImpact = async (input: any) => {
+  getPriceImpact = async (input: number) => {
     if (input) {
       const pairAddress = await this.state.factory.getPair(
         this.state.tokenAData.address,
@@ -1029,8 +1037,11 @@ class App extends Component<IProps, IApp> {
           const tokenBShare =
             Number.parseFloat(this.state.fromWei(tokenB)) * lpAccountShare;
 
-          const lpShareAccountviaInp =
-            (this.child.current.state.inputAmountInWei * 100) / totalSupply;
+          const lpShareAccountviaInp: BigNumber = BigNumber.from(
+            this.child.current.state.inputAmountInWei
+          )
+            .mul(100)
+            .div(totalSupply);
 
           const lpShareAccountviaInput = lpShareAccountviaInp.toString();
 

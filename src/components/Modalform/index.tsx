@@ -137,7 +137,7 @@ export const Modal = ({
     <>
       {isOpen ? (
         <Background>
-          <ModalWrapper>
+          <ModalWrapper className="ModalWrapper">
             <Container className="Container">
               <Header>
                 <SearchField

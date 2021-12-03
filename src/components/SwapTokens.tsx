@@ -83,15 +83,15 @@ export interface ProcessEnv {
 }
 
 interface IProps {
-  switchForms(): any;
+  switchForms(): void;
 }
 
 interface IState {
-  calcStandard: any;
+  calcStandard: number;
   inputAmount: any;
-  inputAmountInWei: any;
   outputAmount: any;
-  outputAmountInWei: any;
+  inputAmountInWei: BigNumber;
+  outputAmountInWei: BigNumber;
   loading: boolean;
   minimumReceived: number;
   switched: boolean;
@@ -108,9 +108,9 @@ class SwapTokens extends Component<IProps, IState> {
     this.state = {
       calcStandard: 0,
       inputAmount: '',
-      inputAmountInWei: '',
+      inputAmountInWei: BigNumber.from(0),
+      outputAmountInWei: BigNumber.from(0),
       outputAmount: '',
-      outputAmountInWei: '',
       loading: false,
       minimumReceived: 0,
       switched: false,
@@ -120,7 +120,6 @@ class SwapTokens extends Component<IProps, IState> {
   handleSubmit = async (event: any) => {
     console.log('submit..');
     event.preventDefault();
-
     if (event.target.value !== '' || this.context.outputAmountInWei > 0) {
       const inputAmountInWei: BigNumber = BigNumber.from(
         this.state.inputAmountInWei
@@ -208,8 +207,8 @@ class SwapTokens extends Component<IProps, IState> {
       this.setState({
         inputAmount: '',
         outputAmount: '',
-        outputAmountInWei: '',
-        calcStandard: '',
+        outputAmountInWei: BigNumber.from(0),
+        calcStandard: 0,
       });
     }
   };
