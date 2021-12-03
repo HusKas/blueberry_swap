@@ -20,11 +20,12 @@ export interface IApp {
   tokenABalance: string;
   tokenBBalance: string;
   loading: boolean;
+  loadingRemoveLp: boolean;
   provider: any;
   signer: any;
   exchangeAddress: string;
-  swapTokens(tokenAmount: string, _minTokens: string): any;
-  addLiquidity(tokenAmount: string, ethAmount: string): void;
+  swapTokens(tokenAAmount: BigNumber, tokenBAmount: BigNumber): any;
+  addLiquidity(tokenAmount: BigNumber, tokenBAmount: BigNumber): void;
   removeLiquidity(liquidityAmount: string): void;
   getTokenAAmount(tokenAmount: string): any;
   getTokenBAmount(tokenAmount: string): any;

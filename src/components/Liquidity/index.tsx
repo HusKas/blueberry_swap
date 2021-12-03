@@ -1,7 +1,8 @@
-import { Component } from 'react';
+import React, { Component } from 'react';
 import styled from 'styled-components';
 import Context from '../Context';
 import { FaAngleDown } from 'react-icons/fa';
+import { BigNumber } from 'ethers';
 
 export interface ProcessEnv {
   [key: string]: string | undefined;
@@ -51,9 +52,9 @@ const Image = styled.img`
 interface IState {
   calc: any;
   inputAmount: any;
-  inputAmountInWei: any;
+  inputAmountInWei: BigNumber;
   outputAmount: any;
-  outputAmountInWei: any;
+  outputAmountInWei: BigNumber;
   loading: boolean;
 }
 interface IProps {
@@ -62,6 +63,8 @@ interface IProps {
 
 export class AddLiquidity extends Component<any, IState> {
   static contextType = Context;
+  inputAmountRef = React.createRef<HTMLInputElement>();
+  outputAmountRef = React.createRef<HTMLInputElement>();
 
   constructor(props: IProps) {
     super(props);
@@ -70,9 +73,9 @@ export class AddLiquidity extends Component<any, IState> {
     this.state = {
       calc: 0,
       inputAmount: '',
-      inputAmountInWei: '',
+      inputAmountInWei: BigNumber.from(0),
+      outputAmountInWei: BigNumber.from(0),
       outputAmount: '',
-      outputAmountInWei: '',
       loading: false,
     };
   }
@@ -80,8 +83,12 @@ export class AddLiquidity extends Component<any, IState> {
   handleSubmit = async (event: any) => {
     console.log('submit..');
     if (event.target.value !== '') {
-      const inputAmountInWei = this.state.inputAmountInWei;
-      const outputAmountInWei = this.state.outputAmountInWei;
+      const inputAmountInWei: BigNumber = BigNumber.from(
+        this.state.inputAmountInWei
+      );
+      const outputAmountInWei: BigNumber = BigNumber.from(
+        this.state.outputAmountInWei
+      );
       const inputAmount = this.state.inputAmount;
       if (
         inputAmountInWei &&
@@ -118,14 +125,14 @@ export class AddLiquidity extends Component<any, IState> {
   handleOnChangeTokenAAmount = async (e: any) => {
     console.log('handleOnChangeTokenAAmount..');
     let inputAmount: any;
-    let inputAmountInWei: any;
     let outputAmount: any;
-    let outputAmountInWei: any;
+    let inputAmountInWei: BigNumber = BigNumber.from(0);
+    let outputAmountInWei: BigNumber = BigNumber.from(0);
 
     if (e.target.value !== '' && this.isNumeric(e.target.value)) {
       outputAmount = e.target.value;
       outputAmountInWei = this.context.toWei(outputAmount).toString();
-      if (outputAmountInWei !== '') {
+      if (BigNumber.from(outputAmountInWei).gt(0)) {
         inputAmountInWei = await this.context.getTokenAAmount(
           outputAmountInWei
         );
@@ -138,6 +145,8 @@ export class AddLiquidity extends Component<any, IState> {
 
           inputAmount = this.context.fromWei(inputAmountInWei[0]);
           inputAmountInWei = inputAmountInWei[0].toString();
+
+          this.inputAmountRef.current.value = inputAmount;
 
           this.setState({
             calc: inputAmount / outputAmount,
@@ -174,15 +183,15 @@ export class AddLiquidity extends Component<any, IState> {
     console.log('handleOnChangeTokenBAmount..');
 
     let inputAmount: any;
-    let inputAmountInWei: any;
     let outputAmount: any;
-    let outputAmountInWei: any;
+    let inputAmountInWei: BigNumber = BigNumber.from(0);
+    let outputAmountInWei: BigNumber = BigNumber.from(0);
 
     if (e.target.value !== '' && this.isNumeric(e.target.value)) {
       inputAmount = e.target.value;
       inputAmountInWei = this.context.toWei(inputAmount).toString();
 
-      if (inputAmountInWei !== '') {
+      if (BigNumber.from(inputAmountInWei).gt(0)) {
         outputAmountInWei = await this.context.getTokenBAmount(
           inputAmountInWei
         );
@@ -195,6 +204,8 @@ export class AddLiquidity extends Component<any, IState> {
 
           outputAmount = this.context.fromWei(outputAmountInWei[1]);
           outputAmountInWei = outputAmountInWei[1].toString();
+
+          this.outputAmountRef.current.value = outputAmount;
 
           this.setState({
             calc: inputAmount / outputAmount,
@@ -235,8 +246,8 @@ export class AddLiquidity extends Component<any, IState> {
     this.setState({
       inputAmount: '',
       outputAmount: '',
-      inputAmountInWei: '',
-      outputAmountInWei: '',
+      inputAmountInWei: BigNumber.from(0),
+      outputAmountInWei: BigNumber.from(0),
     });
   };
 
@@ -267,7 +278,7 @@ export class AddLiquidity extends Component<any, IState> {
                 type="text"
                 autoComplete="off"
                 placeholder="0.0"
-                value={this.state.inputAmount}
+                ref={this.inputAmountRef}
                 onChange={(event: any) => {
                   this.handleOnChangeTokenBAmount(event);
                 }}
@@ -306,7 +317,7 @@ export class AddLiquidity extends Component<any, IState> {
                 type="text"
                 autoComplete="off"
                 placeholder="0.0"
-                value={this.state.outputAmount || this.context.outputAmount}
+                ref={this.outputAmountRef}
                 onChange={(event: any) => {
                   this.handleOnChangeTokenAAmount(event);
                 }}
@@ -345,19 +356,25 @@ export class AddLiquidity extends Component<any, IState> {
                 </>
               ) : null}
             </div>
-            {this.context.correctNetwork && this.context.account ? (
-              <button
-                type="submit"
-                className="btn btn-primary btn-block btn-lg"
-              >
-                AddLiquidity
-              </button>
+            {!this.context.loadingRemoveLp ? (
+              this.context.correctNetwork &&
+              this.context.account &&
+              !this.context.loading ? (
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-block btn-lg"
+                >
+                  AddLiquidity
+                </button>
+              ) : (
+                <button className="btn btn-primary btn-block btn-lg" disabled>
+                  <div className="spinner-border" role="status">
+                    <span className="sr-only">Loading...</span>
+                  </div>
+                </button>
+              )
             ) : (
-              <button
-                type="submit"
-                className="btn btn-primary btn-block btn-lg"
-                disabled
-              >
+              <button className="btn btn-primary btn-block btn-lg" disabled>
                 AddLiquidity
               </button>
             )}
@@ -391,20 +408,32 @@ export class AddLiquidity extends Component<any, IState> {
                 <Column>{this.context.tokenBShare}</Column>
               </Row>
             </ColumnContainer>
-            {this.context.lpAccountShare > 0 ? (
-              <button
-                onClick={() =>
-                  this.removeLiquidity(this.context.lpPairBalanceAccount)
-                }
-                className="btn btn-success btn-block btn-lg removeLpButton"
-              >
-                <Row>
-                  {this.state.loading ? <Column> Loading..</Column> : ''}
-                  <Column>RemoveLiquidity</Column>
-                </Row>
-              </button>
+            {!this.context.loading ? (
+              this.context.lpAccountShare > 0 &&
+              !this.context.loadingRemoveLp ? (
+                <button
+                  type="submit"
+                  className="btn  btn-block btn-lg removeLpButton"
+                  onClick={() =>
+                    this.removeLiquidity(this.context.lpPairBalanceAccount)
+                  }
+                >
+                  RemoveLiquidity
+                </button>
+              ) : (
+                <button
+                  className="btn btn-success btn-block btn-lg removeLpButton"
+                  disabled
+                >
+                  <div className="spinner-border" role="status">
+                    <span className="sr-only">Loading...</span>
+                  </div>
+                </button>
+              )
             ) : (
-              ''
+              <button className="btn  btn-block btn-lg removeLpButton" disabled>
+                RemoveLiquidity
+              </button>
             )}
           </LiquidityItems>
         </Container>

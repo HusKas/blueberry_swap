@@ -99,9 +99,11 @@ interface IState {
 
 class SwapTokens extends Component<IProps, IState> {
   static contextType = Context;
-
+  inputAmountRef = React.createRef<HTMLInputElement>();
+  outputAmountRef = React.createRef<HTMLInputElement>();
   constructor(props: IProps) {
     super(props);
+
     this.toggleModal = this.toggleModal.bind(this);
     this.state = {
       calcStandard: 0,
@@ -120,8 +122,12 @@ class SwapTokens extends Component<IProps, IState> {
     event.preventDefault();
 
     if (event.target.value !== '' || this.context.outputAmountInWei > 0) {
-      const inputAmountInWei = BigNumber.from(this.state.inputAmountInWei);
-      const outputAmountInWei = BigNumber.from(this.state.outputAmountInWei);
+      const inputAmountInWei: BigNumber = BigNumber.from(
+        this.state.inputAmountInWei
+      );
+      const outputAmountInWei: BigNumber = BigNumber.from(
+        this.state.outputAmountInWei
+      );
       const inputAmount = this.state.inputAmount;
 
       if (
@@ -130,12 +136,13 @@ class SwapTokens extends Component<IProps, IState> {
         inputAmount < this.context.tokenABalance
       ) {
         await this.context.swapTokens(inputAmountInWei, outputAmountInWei);
-      } else {
-        await this.context.swapTokens(
-          inputAmountInWei,
-          this.context.outputAmountInWei
-        );
       }
+      // else {
+      //   await this.context.swapTokens(
+      //     inputAmountInWei,
+      //     this.context.outputAmountInWei
+      //   );
+      // }
     } else {
       this.context.setMsg('No pairs exists');
     }
@@ -153,15 +160,15 @@ class SwapTokens extends Component<IProps, IState> {
   handleOnChangeTokenAAmount = async (e: any) => {
     console.log('handleOnChangeTokenAAmount..');
     let inputAmount: any;
-    let inputAmountInWei: any;
     let outputAmount: any;
-    let outputAmountInWei: any;
+    let inputAmountInWei: BigNumber = BigNumber.from(0);
+    let outputAmountInWei: BigNumber = BigNumber.from(0);
 
     if (e.target.value !== '' && this.isNumeric(e.target.value)) {
       outputAmount = e.target.value;
       outputAmountInWei = this.context.toWei(outputAmount).toString();
 
-      if (outputAmountInWei !== '') {
+      if (BigNumber.from(outputAmountInWei).gt(0)) {
         inputAmountInWei = await this.context.getTokenAAmount(
           outputAmountInWei
         );
@@ -178,17 +185,16 @@ class SwapTokens extends Component<IProps, IState> {
           const minimumReceived =
             inputAmount - (inputAmount * this.context.slippage) / 100;
 
-          this.setState(
-            {
-              calcStandard: inputAmount / outputAmount,
-              inputAmount,
-              inputAmountInWei,
-              outputAmount,
-              outputAmountInWei,
-              minimumReceived,
-            },
-            () => {}
-          );
+          this.inputAmountRef.current.value = inputAmount;
+
+          this.setState({
+            calcStandard: inputAmount / outputAmount,
+            inputAmount,
+            inputAmountInWei,
+            outputAmount,
+            outputAmountInWei,
+            minimumReceived,
+          });
 
           this.context.getLiquidityOwner(this.context.tokenBData);
         } else {
@@ -212,17 +218,15 @@ class SwapTokens extends Component<IProps, IState> {
     console.log('handleOnChangeTokenBAmount..');
 
     let inputAmount: any;
-    let inputAmountInWei: any;
     let outputAmount: any;
-    let outputAmountInWei: any;
-
-    console.log(e.target.value);
+    let inputAmountInWei: BigNumber = BigNumber.from(0);
+    let outputAmountInWei: BigNumber = BigNumber.from(0);
 
     if (e.target.value !== '' && this.isNumeric(e.target.value)) {
       inputAmount = e.target.value;
       inputAmountInWei = this.context.toWei(inputAmount).toString();
 
-      if (inputAmountInWei !== '') {
+      if (BigNumber.from(inputAmountInWei).gt(0)) {
         outputAmountInWei = await this.context.getTokenBAmount(
           inputAmountInWei
         );
@@ -240,20 +244,18 @@ class SwapTokens extends Component<IProps, IState> {
           const minimumReceived =
             outputAmount - (outputAmount * this.context.slippage) / 100;
 
-          this.setState(
-            {
-              calcStandard: inputAmount / outputAmount,
-              inputAmount,
-              inputAmountInWei,
-              outputAmount,
-              outputAmountInWei,
-              minimumReceived,
-            },
-            () => {}
-          );
+          this.outputAmountRef.current.value = outputAmount;
+
+          this.setState({
+            calcStandard: inputAmount / outputAmount,
+
+            inputAmountInWei,
+            outputAmount,
+            outputAmountInWei,
+            minimumReceived,
+          });
         } else {
           this.setState({
-            inputAmount,
             inputAmountInWei,
           });
         }
@@ -263,9 +265,9 @@ class SwapTokens extends Component<IProps, IState> {
       this.context.clearStates();
       this.setState({
         inputAmount: '',
-        inputAmountInWei: '',
+        inputAmountInWei: BigNumber.from(0),
+        outputAmountInWei: BigNumber.from(0),
         outputAmount: '',
-        outputAmountInWei: '',
       });
     }
   };
@@ -328,7 +330,7 @@ class SwapTokens extends Component<IProps, IState> {
                 type="text"
                 autoComplete="off"
                 placeholder="0.0"
-                value={this.state.inputAmount || ''}
+                ref={this.inputAmountRef}
                 onChange={(event: any) => {
                   this.handleOnChangeTokenBAmount(event);
                 }}
@@ -373,9 +375,7 @@ class SwapTokens extends Component<IProps, IState> {
                 type="text"
                 autoComplete="off"
                 placeholder="0.0"
-                value={
-                  this.state.outputAmount || this.context.outputAmount || ''
-                }
+                ref={this.outputAmountRef}
                 onChange={(event: any) => {
                   this.handleOnChangeTokenAAmount(event);
                 }}
@@ -432,7 +432,10 @@ class SwapTokens extends Component<IProps, IState> {
                 </>
               ) : null}
             </div>
-            {this.context.correctNetwork && this.context.account ? (
+
+            {this.context.correctNetwork &&
+            this.context.account &&
+            !this.context.loading ? (
               <button
                 type="submit"
                 className="btn btn-primary btn-block btn-lg"
@@ -445,7 +448,9 @@ class SwapTokens extends Component<IProps, IState> {
                 className="btn btn-primary btn-block btn-lg"
                 disabled
               >
-                Swap
+                <div className="spinner-border" role="status">
+                  <span className="sr-only">Loading...</span>
+                </div>
               </button>
             )}
           </form>

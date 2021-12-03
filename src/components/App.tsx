@@ -82,7 +82,8 @@ class App extends Component<IProps, IApp> {
       ethBalanceTokenB: '0',
       tokenABalance: '0',
       tokenBBalance: '0',
-      loading: true,
+      loading: false,
+      loadingRemoveLp: false,
       provider: {},
       signer: {},
       exchangeAddress: '',
@@ -133,7 +134,7 @@ class App extends Component<IProps, IApp> {
   }
 
   overrides = {
-    gasLimit: 6666666,
+    gasLimit: 9966666,
   };
   // clear between switch tap or removing input
   clearStates = () => {
@@ -234,7 +235,6 @@ class App extends Component<IProps, IApp> {
       );
 
       this.setState({
-        loading: false,
         router,
         factory,
         account: accounts[0],
@@ -354,12 +354,13 @@ class App extends Component<IProps, IApp> {
       this.setState({ tokenBBalance: '0' });
     }
   }
-  addLiquidity = async (tokenAAmount: any, tokenBAmount: any) => {
+  addLiquidity = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
     this.setState({ loading: true });
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
     if (Object.keys(this.state.tokenBData).length > 0) {
       let exchangeAddress: any;
 
+      console.log(tokenAAmount, tokenBAmount);
       exchangeAddress = await this.getExchangeAddress(
         this.state.tokenAData.address,
         this.state.tokenBData.address
@@ -391,11 +392,19 @@ class App extends Component<IProps, IApp> {
             }
           );
 
+          await tx.wait(1);
+
+          console.log(
+            this.state.tokenBData.address,
+            tokenBAmount,
+            tokenAAmount,
+            this.state.account
+          );
           const tx2 = await this.state.router.addLiquidityETH(
             this.state.tokenBData.address,
             tokenBAmount, //TokenB
-            0,
-            0,
+            tokenBAmount,
+            tokenAAmount,
             this.state.account,
             deadline,
             {
@@ -404,8 +413,9 @@ class App extends Component<IProps, IApp> {
               ...this.overrides,
             }
           );
+          await tx2.wait(1);
 
-          this.setState({ loading: false });
+          this.setState({ loading: false, tx: tx2.hash });
         } catch (err) {
           this.setState({ loading: false });
         }
@@ -421,7 +431,8 @@ class App extends Component<IProps, IApp> {
               ...this.overrides,
             }
           );
-          await tx.wait(1);
+
+          await tx.wait();
 
           const tx2 = await this.state.router.addLiquidityETH(
             this.state.tokenAData.address,
@@ -436,8 +447,9 @@ class App extends Component<IProps, IApp> {
               ...this.overrides,
             }
           );
-          await tx2.wait(1);
-          this.setState({ loading: false });
+          await tx2.wait();
+
+          this.setState({ loading: false, tx: tx2.hash });
         } catch (err) {
           this.setState({ loading: false });
         }
@@ -453,7 +465,7 @@ class App extends Component<IProps, IApp> {
               ...this.overrides,
             }
           );
-          await tx0.wait(1);
+          await tx0.wait();
 
           const tx1 = await token2.approve(
             this.state.router.address,
@@ -463,7 +475,8 @@ class App extends Component<IProps, IApp> {
               ...this.overrides,
             }
           );
-          await tx1.wait(1);
+
+          await tx1.wait();
 
           const tx2 = await this.state.router.addLiquidity(
             this.state.tokenAData.address,
@@ -479,8 +492,9 @@ class App extends Component<IProps, IApp> {
               ...this.overrides,
             }
           );
-          await tx2.wait(1);
-          this.setState({ loading: false });
+          await tx2.wait();
+
+          this.setState({ loading: false, tx: tx2.hash });
         } catch (err) {
           this.setState({ loading: false });
         }
@@ -493,7 +507,41 @@ class App extends Component<IProps, IApp> {
   };
 
   removeLiquidity = async (liquidityAmount: any) => {
+    this.setState({ loadingRemoveLp: true });
+
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+
+    const weth = new ethers.Contract(
+      REACT_APP_WETH_ADDRESS || '',
+      WETH.abi,
+      this.state.signer
+    );
+
+    const token = new ethers.Contract(
+      this.state.tokenBData.address,
+      ERC20.abi,
+      this.state.signer
+    );
+
+    const pairAddress = await this.state.factory.getPair(
+      this.state.tokenAData.address,
+      this.state.tokenBData.address
+    );
+
+    const Pair = new ethers.Contract(
+      pairAddress,
+      Exchange.abi,
+      this.state.signer
+    );
+
+    const TokenInPair = await token.balanceOf(Pair.address);
+    const WETHInPair = await weth.balanceOf(Pair.address);
+    const liquidity = await Pair.balanceOf(this.state.account);
+    const totalSupply = await Pair.totalSupply();
+    const TokenExpected = TokenInPair.mul(liquidity).div(totalSupply);
+    const WETHExpected = WETHInPair.mul(liquidity).div(totalSupply);
+
+    console.log(TokenExpected.toString(), WETHExpected.toString());
 
     try {
       const tx1 = await this.state.Pair.approve(
@@ -510,8 +558,8 @@ class App extends Component<IProps, IApp> {
         await this.state.router.removeLiquidityETHSupportingFeeOnTransferTokens(
           this.state.tokenBData.address,
           liquidityAmount,
-          0,
-          0,
+          TokenExpected,
+          WETHExpected,
           this.state.account,
           deadline,
           {
@@ -520,11 +568,16 @@ class App extends Component<IProps, IApp> {
           }
         );
       await tx2.wait(1);
-
+      this.setState({
+        loadingRemoveLp: false,
+      });
       return true;
     } catch (e: any) {
       console.log(e);
       console.log('Could not remove liquidity');
+      this.setState({
+        loadingRemoveLp: false,
+      });
     }
   };
 
@@ -560,7 +613,7 @@ class App extends Component<IProps, IApp> {
     }
   };
 
-  swapTokens = async (tokenAAmount: any, tokenBAmount: any) => {
+  swapTokens = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
     this.setState({ loading: true });
 
     const exchangeAddress = await this.getExchangeAddress(
@@ -569,9 +622,10 @@ class App extends Component<IProps, IApp> {
     );
 
     //slippage
-    const slippageVal = 100 - this.state.slippage;
-    const _minTokensNum = (tokenBAmount * slippageVal) / 100;
-    const _minTokens = _minTokensNum.toString();
+    const slippage = 1000 - (this.state.slippage * 1000) / 100;
+
+    const _minTokens = BigNumber.from(tokenBAmount).mul(slippage).div(1000);
+
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
 
     console.log(`Token pair - swapTokens..`);
@@ -602,9 +656,9 @@ class App extends Component<IProps, IApp> {
               {
                 value: tokenAAmount,
                 from: this.state.account,
+                ...this.overrides,
               }
             );
-          tx.wait(1);
 
           this.setState({ loading: false, tx: tx.hash });
           setTimeout(() => {
@@ -626,7 +680,7 @@ class App extends Component<IProps, IApp> {
             ...this.overrides,
           }
         );
-        await tx0.wait(1);
+        await tx0.wait();
         try {
           const tx =
             await this.state.router.swapExactTokensForETHSupportingFeeOnTransferTokens(
@@ -640,7 +694,7 @@ class App extends Component<IProps, IApp> {
                 ...this.overrides,
               }
             );
-          tx.wait(1);
+          tx.wait();
 
           this.setState({ loading: false, tx: tx.hash });
           setTimeout(() => {
@@ -686,7 +740,7 @@ class App extends Component<IProps, IApp> {
                 ...this.overrides,
               }
             );
-          tx.wait(1);
+          tx.wait();
 
           this.setState({ loading: false, tx: tx.hash });
           setTimeout(() => {
@@ -783,6 +837,7 @@ class App extends Component<IProps, IApp> {
       token0,
       token1,
     ]);
+    console.log(res);
     if (res === undefined) {
       console.log(
         'No Pair exists.. You are the first provider.Please set the initial price'

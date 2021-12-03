@@ -18,6 +18,7 @@
 
 .removeLpButton {
   background-color: rgb(0, 157, 154) !important;
+  color: white !important;
 }
 
 #loader {
