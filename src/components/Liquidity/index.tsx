@@ -128,9 +128,10 @@ export class AddLiquidity extends Component<any, IState> {
     let outputAmount: any;
     let inputAmountInWei: BigNumber = BigNumber.from(0);
     let outputAmountInWei: BigNumber = BigNumber.from(0);
+    const input = this.outputAmountRef.current.value;
 
-    if (e.target.value !== '' && this.isNumeric(e.target.value)) {
-      outputAmount = e.target.value;
+    if (input !== '' && this.isNumeric(input)) {
+      outputAmount = input;
       outputAmountInWei = this.context.toWei(outputAmount).toString();
       if (BigNumber.from(outputAmountInWei).gt(0)) {
         inputAmountInWei = await this.context.getTokenAAmount(
@@ -186,9 +187,9 @@ export class AddLiquidity extends Component<any, IState> {
     let outputAmount: any;
     let inputAmountInWei: BigNumber = BigNumber.from(0);
     let outputAmountInWei: BigNumber = BigNumber.from(0);
-
-    if (e.target.value !== '' && this.isNumeric(e.target.value)) {
-      inputAmount = e.target.value;
+    const input = this.inputAmountRef.current.value;
+    if (input !== '' && this.isNumeric(input)) {
+      inputAmount = input;
       inputAmountInWei = this.context.toWei(inputAmount).toString();
 
       if (BigNumber.from(inputAmountInWei).gt(0)) {
