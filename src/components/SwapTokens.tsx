@@ -148,16 +148,6 @@ class SwapTokens extends Component<IProps, IState> {
   setInputOutputVal = async () => {
     this.inputAmountRef.current.value = this.state.outputAmount;
     this.outputAmountRef.current.value = this.state.inputAmount;
-    const tmpABalance = this.context.tokenABalance;
-    this.context.tokenABalance = this.context.tokenBBalance;
-    this.context.tokenBBalance = tmpABalance;
-
-    this.setState({
-      inputAmount: this.state.outputAmount,
-      outputAmount: this.state.inputAmount,
-      inputAmountInWei: this.state.outputAmountInWei,
-      outputAmountInWei: this.state.inputAmountInWei,
-    });
   };
 
   handleOnChangeTokenAAmount = async (e: any) => {
@@ -184,7 +174,6 @@ class SwapTokens extends Component<IProps, IState> {
           );
 
           inputAmount = this.context.fromWei(inputAmountInWei[0]);
-          inputAmountInWei = inputAmountInWei[0].toString();
 
           this.context.getPriceImpact(inputAmountInWei);
           const minimumReceived =
@@ -246,7 +235,7 @@ class SwapTokens extends Component<IProps, IState> {
           );
 
           outputAmount = this.context.fromWei(outputAmountInWei[1]);
-          outputAmountInWei = outputAmountInWei[1].toString();
+          // outputAmountInWei = outputAmountInWei[1].toString();
           this.context.getPriceImpact(outputAmountInWei);
 
           const minimumReceived =
@@ -293,7 +282,6 @@ class SwapTokens extends Component<IProps, IState> {
       this.state.inputAmount -
       (this.state.inputAmount * this.context.slippage) / 100;
 
-    console.log(this.state.switched);
     this.setState({
       switched: !this.state.switched,
       calcStandard: this.state.outputAmount / this.state.inputAmount,
@@ -332,39 +320,77 @@ class SwapTokens extends Component<IProps, IState> {
               </label>
               <span className="float-right text-muted">
                 Balance:
-                {this.context.tokenABalance}
+                {!this.state.switched ? (
+                  <p>{this.context.tokenABalance}</p>
+                ) : (
+                  <p> {this.context.tokenBBalance}</p>
+                )}
               </span>
             </div>
-            <div className="input-group mb-2">
-              <input
-                id="tokenA"
-                type="text"
-                autoComplete="off"
-                placeholder="0.0"
-                ref={this.inputAmountRef}
-                onChange={(event: any) => {
-                  this.handleOnChangeTokenBAmount(event);
-                }}
-                className="form-control form-control-lg"
-                required
-              />
-              <div
-                className="input-group-append"
-                onClick={() => this.toggleModal(false)}
-              >
-                {this.context.tokenAData?.symbol ? (
-                  <div className="input-group-text">
-                    <Image src={this.context.tokenAData.logoURI}></Image>
-                    &nbsp; {this.context.tokenAData.symbol} <FaAngleDown />
-                  </div>
-                ) : (
-                  <div className="input-group-text">
-                    Select
-                    <FaAngleDown />
-                  </div>
-                )}
+            {!this.state.switched ? (
+              <div className="input-group mb-2">
+                <input
+                  id="tokenA"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="0.0"
+                  ref={this.inputAmountRef}
+                  onChange={(event: any) => {
+                    this.handleOnChangeTokenBAmount(event);
+                  }}
+                  className="form-control form-control-lg"
+                  required
+                />
+                <div
+                  className="input-group-append"
+                  onClick={() => this.toggleModal(false)}
+                >
+                  {this.context.tokenAData?.symbol ? (
+                    <div className="input-group-text">
+                      <Image src={this.context.tokenAData.logoURI}></Image>
+                      &nbsp; {this.context.tokenAData.symbol} <FaAngleDown />
+                    </div>
+                  ) : (
+                    <div className="input-group-text">
+                      Select
+                      <FaAngleDown />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="input-group mb-2">
+                <input
+                  id="tokenB"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="0.0"
+                  ref={this.outputAmountRef}
+                  onChange={(event: any) => {
+                    this.handleOnChangeTokenAAmount(event);
+                  }}
+                  className="form-control form-control-lg"
+                  required
+                />
+
+                <div
+                  className="input-group-append"
+                  onClick={() => this.toggleModal(true)}
+                >
+                  {this.context.tokenBData?.symbol ? (
+                    <div className="input-group-text">
+                      <Image src={this.context.tokenBData.logoURI}></Image>
+                      &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
+                    </div>
+                  ) : (
+                    <div className="input-group-text">
+                      Select
+                      <FaAngleDown />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             <div
               className="d-flex justify-content-center  m-3"
               onClick={this.clickSwitchForm}
@@ -376,41 +402,77 @@ class SwapTokens extends Component<IProps, IState> {
                 <b>Output</b>
               </label>
               <span className="float-right text-muted">
-                Balance:
-                {this.context.tokenBBalance}
+                {!this.state.switched ? (
+                  <p>{this.context.tokenBBalance}</p>
+                ) : (
+                  <p> {this.context.tokenABalance}</p>
+                )}
               </span>
             </div>
-            <div className="input-group mb-2">
-              <input
-                id="tokenB"
-                type="text"
-                autoComplete="off"
-                placeholder="0.0"
-                ref={this.outputAmountRef}
-                onChange={(event: any) => {
-                  this.handleOnChangeTokenAAmount(event);
-                }}
-                className="form-control form-control-lg"
-                required
-              />
+            {!this.state.switched ? (
+              <div className="input-group mb-2">
+                <input
+                  id="tokenB"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="0.0"
+                  ref={this.outputAmountRef}
+                  onChange={(event: any) => {
+                    this.handleOnChangeTokenAAmount(event);
+                  }}
+                  className="form-control form-control-lg"
+                  required
+                />
 
-              <div
-                className="input-group-append"
-                onClick={() => this.toggleModal(true)}
-              >
-                {this.context.tokenBData?.symbol ? (
-                  <div className="input-group-text">
-                    <Image src={this.context.tokenBData.logoURI}></Image>
-                    &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
-                  </div>
-                ) : (
-                  <div className="input-group-text">
-                    Select
-                    <FaAngleDown />
-                  </div>
-                )}
+                <div
+                  className="input-group-append"
+                  onClick={() => this.toggleModal(true)}
+                >
+                  {this.context.tokenBData?.symbol ? (
+                    <div className="input-group-text">
+                      <Image src={this.context.tokenBData.logoURI}></Image>
+                      &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
+                    </div>
+                  ) : (
+                    <div className="input-group-text">
+                      Select
+                      <FaAngleDown />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="input-group mb-2">
+                <input
+                  id="tokenA"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="0.0"
+                  ref={this.inputAmountRef}
+                  onChange={(event: any) => {
+                    this.handleOnChangeTokenBAmount(event);
+                  }}
+                  className="form-control form-control-lg"
+                  required
+                />
+                <div
+                  className="input-group-append"
+                  onClick={() => this.toggleModal(false)}
+                >
+                  {this.context.tokenAData?.symbol ? (
+                    <div className="input-group-text">
+                      <Image src={this.context.tokenAData.logoURI}></Image>
+                      &nbsp; {this.context.tokenAData.symbol} <FaAngleDown />
+                    </div>
+                  ) : (
+                    <div className="input-group-text">
+                      Select
+                      <FaAngleDown />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="mb-5">
               <Row>
                 <ColumnTextOnly>Slippage Tollerance</ColumnTextOnly>

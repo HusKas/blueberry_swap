@@ -174,18 +174,9 @@ class App extends Component<IProps, IApp> {
   }
   switchForms = async () => {
     console.log('switchForms..');
-    const tokenADataTmp = this.state.tokenAData;
-
-    this.setState({
-      tokenAData: this.state.tokenBData,
-      tokenBData: tokenADataTmp,
-    });
-
-    setTimeout(async () => {
-      if (this.child?.current) {
-        await this.child.current.setInputOutputVal();
-      }
-    });
+    if (this.child?.current) {
+      await this.child.current.setInputOutputVal();
+    }
   };
 
   connectToWeb3 = async () => {
