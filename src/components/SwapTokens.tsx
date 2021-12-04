@@ -105,12 +105,13 @@ class SwapTokens extends Component<IProps, IState> {
     super(props);
 
     this.toggleModal = this.toggleModal.bind(this);
+
     this.state = {
       calcStandard: 0,
       inputAmount: '',
+      outputAmount: '',
       inputAmountInWei: BigNumber.from(0),
       outputAmountInWei: BigNumber.from(0),
-      outputAmount: '',
       loading: false,
       minimumReceived: 0,
       switched: false,
@@ -120,7 +121,10 @@ class SwapTokens extends Component<IProps, IState> {
   handleSubmit = async (event: any) => {
     console.log('submit..');
     event.preventDefault();
-    if (event.target.value !== '' || this.context.outputAmountInWei > 0) {
+    if (
+      event.target.value !== '' ||
+      BigNumber.from(this.context.outputAmountInWei).gt(0)
+    ) {
       const inputAmountInWei: BigNumber = BigNumber.from(
         this.state.inputAmountInWei
       );
@@ -136,23 +140,23 @@ class SwapTokens extends Component<IProps, IState> {
       ) {
         await this.context.swapTokens(inputAmountInWei, outputAmountInWei);
       }
-      // else {
-      //   await this.context.swapTokens(
-      //     inputAmountInWei,
-      //     this.context.outputAmountInWei
-      //   );
-      // }
     } else {
       this.context.setMsg('No pairs exists');
     }
   };
 
-  setIinputOutputVal = () => {
+  setInputOutputVal = async () => {
+    this.inputAmountRef.current.value = this.state.outputAmount;
+    this.outputAmountRef.current.value = this.state.inputAmount;
+    const tmpABalance = this.context.tokenABalance;
+    this.context.tokenABalance = this.context.tokenBBalance;
+    this.context.tokenBBalance = tmpABalance;
+
     this.setState({
       inputAmount: this.state.outputAmount,
       outputAmount: this.state.inputAmount,
-      inputAmountInWei: this.state.inputAmountInWei,
-      outputAmountInWei: this.state.outputAmountInWei,
+      inputAmountInWei: this.state.outputAmountInWei,
+      outputAmountInWei: this.state.inputAmountInWei,
     });
   };
 
@@ -163,9 +167,10 @@ class SwapTokens extends Component<IProps, IState> {
     let inputAmountInWei: BigNumber = BigNumber.from(0);
     let outputAmountInWei: BigNumber = BigNumber.from(0);
 
-    if (e.target.value !== '' && this.isNumeric(e.target.value)) {
-      outputAmount = e.target.value;
-      outputAmountInWei = this.context.toWei(outputAmount).toString();
+    const input = this.outputAmountRef.current.value;
+    if (input !== '' && this.isNumeric(input)) {
+      outputAmount = input;
+      outputAmountInWei = this.context.toWei(outputAmount);
 
       if (BigNumber.from(outputAmountInWei).gt(0)) {
         inputAmountInWei = await this.context.getTokenAAmount(
@@ -181,6 +186,7 @@ class SwapTokens extends Component<IProps, IState> {
           inputAmount = this.context.fromWei(inputAmountInWei[0]);
           inputAmountInWei = inputAmountInWei[0].toString();
 
+          this.context.getPriceImpact(inputAmountInWei);
           const minimumReceived =
             inputAmount - (inputAmount * this.context.slippage) / 100;
 
@@ -189,14 +195,15 @@ class SwapTokens extends Component<IProps, IState> {
           this.setState({
             calcStandard: inputAmount / outputAmount,
             inputAmount,
-            inputAmountInWei,
             outputAmount,
+            inputAmountInWei,
             outputAmountInWei,
             minimumReceived,
           });
 
           this.context.getLiquidityOwner(this.context.tokenBData);
         } else {
+          this.inputAmountRef.current.value = '';
           this.setState({
             outputAmount,
             outputAmountInWei,
@@ -204,6 +211,7 @@ class SwapTokens extends Component<IProps, IState> {
         }
       }
     } else {
+      this.inputAmountRef.current.value = '';
       this.setState({
         inputAmount: '',
         outputAmount: '',
@@ -221,9 +229,10 @@ class SwapTokens extends Component<IProps, IState> {
     let inputAmountInWei: BigNumber = BigNumber.from(0);
     let outputAmountInWei: BigNumber = BigNumber.from(0);
 
-    if (e.target.value !== '' && this.isNumeric(e.target.value)) {
-      inputAmount = e.target.value;
-      inputAmountInWei = this.context.toWei(inputAmount).toString();
+    const input = this.inputAmountRef.current.value;
+    if (input !== '' && this.isNumeric(input)) {
+      inputAmount = input;
+      inputAmountInWei = this.context.toWei(inputAmount);
 
       if (BigNumber.from(inputAmountInWei).gt(0)) {
         outputAmountInWei = await this.context.getTokenBAmount(
@@ -247,26 +256,29 @@ class SwapTokens extends Component<IProps, IState> {
 
           this.setState({
             calcStandard: inputAmount / outputAmount,
-
-            inputAmountInWei,
+            inputAmount,
             outputAmount,
+            inputAmountInWei,
             outputAmountInWei,
             minimumReceived,
           });
         } else {
+          this.outputAmountRef.current.value = '';
           this.setState({
+            inputAmount,
             inputAmountInWei,
           });
         }
       }
     } else {
+      this.outputAmountRef.current.value = '';
       this.context.getPriceImpact(null);
       this.context.clearStates();
       this.setState({
         inputAmount: '',
+        outputAmount: '',
         inputAmountInWei: BigNumber.from(0),
         outputAmountInWei: BigNumber.from(0),
-        outputAmount: '',
       });
     }
   };
@@ -281,13 +293,11 @@ class SwapTokens extends Component<IProps, IState> {
       this.state.inputAmount -
       (this.state.inputAmount * this.context.slippage) / 100;
 
+    console.log(this.state.switched);
     this.setState({
       switched: !this.state.switched,
       calcStandard: this.state.outputAmount / this.state.inputAmount,
       minimumReceived,
-    });
-    setTimeout(() => {
-      console.log(this.state.calcStandard);
     });
   };
 
@@ -295,6 +305,8 @@ class SwapTokens extends Component<IProps, IState> {
     this.setState({
       inputAmount: null,
       outputAmount: null,
+      inputAmountInWei: null,
+      outputAmountInWei: null,
     });
   };
 

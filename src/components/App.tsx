@@ -182,10 +182,8 @@ class App extends Component<IProps, IApp> {
     });
 
     setTimeout(async () => {
-      await this.getTokenAData(this.state.tokenAData, false);
-      await this.getTokenBData(this.state.tokenBData, false);
       if (this.child?.current) {
-        await this.child.current.setIinputOutputVal();
+        await this.child.current.setInputOutputVal();
       }
     });
   };
@@ -360,7 +358,6 @@ class App extends Component<IProps, IApp> {
     if (Object.keys(this.state.tokenBData).length > 0) {
       let exchangeAddress: any;
 
-      console.log(tokenAAmount, tokenBAmount);
       exchangeAddress = await this.getExchangeAddress(
         this.state.tokenAData.address,
         this.state.tokenBData.address
@@ -394,12 +391,6 @@ class App extends Component<IProps, IApp> {
 
           await tx.wait(1);
 
-          console.log(
-            this.state.tokenBData.address,
-            tokenBAmount,
-            tokenAAmount,
-            this.state.account
-          );
           const tx2 = await this.state.router.addLiquidityETH(
             this.state.tokenBData.address,
             tokenBAmount, //TokenB
@@ -541,8 +532,6 @@ class App extends Component<IProps, IApp> {
     const TokenExpected = TokenInPair.mul(liquidity).div(totalSupply);
     const WETHExpected = WETHInPair.mul(liquidity).div(totalSupply);
 
-    console.log(TokenExpected.toString(), WETHExpected.toString());
-
     try {
       const tx1 = await this.state.Pair.approve(
         this.state.router.address,
@@ -601,12 +590,13 @@ class App extends Component<IProps, IApp> {
     }
   };
 
-  getExchangeAddress = async (token1Address: string, token2Address: string) => {
+  getExchangeAddress = async (token1Address: any, token2Address: any) => {
     try {
       const exchangeAddress = await this.state.factory.getPair(
         token1Address,
         token2Address
       );
+
       return exchangeAddress;
     } catch (err) {
       console.log(err);
@@ -659,7 +649,7 @@ class App extends Component<IProps, IApp> {
                 ...this.overrides,
               }
             );
-
+          await tx.wait(1);
           this.setState({ loading: false, tx: tx.hash });
           setTimeout(() => {
             this.setState({ tx: null });
@@ -680,7 +670,7 @@ class App extends Component<IProps, IApp> {
             ...this.overrides,
           }
         );
-        await tx0.wait();
+        await tx0.wait(1);
         try {
           const tx =
             await this.state.router.swapExactTokensForETHSupportingFeeOnTransferTokens(
@@ -694,7 +684,7 @@ class App extends Component<IProps, IApp> {
                 ...this.overrides,
               }
             );
-          tx.wait();
+          tx.wait(1);
 
           this.setState({ loading: false, tx: tx.hash });
           setTimeout(() => {
@@ -771,16 +761,20 @@ class App extends Component<IProps, IApp> {
         );
         console.log(`Exchange address - getTokenAAmount: ${exchangeAddress}`);
         if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
-          const res = await this._getTokenAmountIn(
-            tokenAmount,
-            this.state.tokenAData.address,
-            this.state.tokenBData.address
-          );
+          if (BigNumber.from(tokenAmount).gt(0)) {
+            const res = await this._getTokenAmountIn(
+              tokenAmount,
+              this.state.tokenAData.address,
+              this.state.tokenBData.address
+            );
 
-          setTimeout(() => {
-            this.setState({ msg: null });
-          }, 4000);
-          return res;
+            setTimeout(() => {
+              this.setState({ msg: null });
+            }, 4000);
+            return res;
+          } else {
+            console.log('TokenAmount is undefined..');
+          }
         } else {
           console.log('No Pair exists.. Please set the initial price');
           this.setMsg('No Pair exists.. Please set the initial price');
@@ -807,17 +801,22 @@ class App extends Component<IProps, IApp> {
           this.state.tokenBData.address
         );
         console.log(`Exchange address - getTokenBAmount: ${exchangeAddress}`);
-        if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
-          const res = await this._getTokenAmountOut(
-            tokenAmount,
-            this.state.tokenAData.address,
-            this.state.tokenBData.address
-          );
 
-          setTimeout(() => {
-            this.setState({ msg: null });
-          }, 3000);
-          return res;
+        if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
+          if (BigNumber.from(tokenAmount).gt(0)) {
+            const res = await this._getTokenAmountOut(
+              tokenAmount,
+              this.state.tokenAData.address,
+              this.state.tokenBData.address
+            );
+
+            setTimeout(() => {
+              this.setState({ msg: null });
+            }, 3000);
+            return res;
+          } else {
+            console.log('TokenAmount is undefined..');
+          }
         } else {
           console.log('No Pair exists.. Please set the initial price');
           this.setMsg('No Pair exists.. Please set the initial price');
@@ -841,7 +840,7 @@ class App extends Component<IProps, IApp> {
       token0,
       token1,
     ]);
-    console.log(res);
+
     if (res === undefined) {
       console.log(
         'No Pair exists.. You are the first provider.Please set the initial price'
@@ -860,6 +859,7 @@ class App extends Component<IProps, IApp> {
     token0: string,
     token1: string
   ) => {
+    console.log('_getTokenAmountIn..');
     const res = await this.state.router.getAmountsIn(_amount, [token0, token1]);
     if (res === undefined) {
       console.log(
@@ -918,7 +918,7 @@ class App extends Component<IProps, IApp> {
     if (tokenBData?.address === this.state.tokenAData?.address) {
       this.setState({ tokenAData: null, tokenABalance: '0' });
     }
-    await this.getTokenAmountAfterSelectedBToken();
+    await this.getTokenAmountAfterSelectedAToken();
     this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
     if (this.child.current) {
       if (tokenBData?.address === REACT_APP_WETH_ADDRESS) {
@@ -927,26 +927,18 @@ class App extends Component<IProps, IApp> {
     }
   };
 
+  getTokenAmountAfterSelectedAToken = async () => {
+    console.log('getTokenAmountAfterSelectedBToken..');
+    if (this.child?.current) {
+      await this.child.current.handleOnChangeTokenBAmount();
+    }
+  };
+
   getTokenAmountAfterSelectedBToken = async () => {
     console.log('getTokenAmountAfterSelectedBToken..');
-    let inputAmountInWei: BigNumber;
-    let outputAmountInWei: BigNumber;
 
     if (this.child?.current) {
-      inputAmountInWei = this.child.current?.state.inputAmountInWei;
-
-      if (inputAmountInWei) {
-        outputAmountInWei = await this.getTokenBAmount(inputAmountInWei);
-      }
-
-      if (outputAmountInWei) {
-        const outputAmount = this.fromWei(outputAmountInWei[1]);
-        outputAmountInWei = outputAmountInWei[1].toString();
-        this.setState({
-          outputAmount,
-          outputAmountInWei,
-        });
-      }
+      await this.child.current.handleOnChangeTokenAAmount();
     }
   };
 
@@ -1099,10 +1091,10 @@ class App extends Component<IProps, IApp> {
         {this.state.tx ? (
           <ContainerLink>
             <Link
-              href={`https://etherscan.io/tx/ ${this.state.tx}`}
+              href={`https://testnet.bscscan.com/tx/ ${this.state.tx}`}
               target="_blank"
             >
-              Etherscan Tx
+              BSC Tx
             </Link>
           </ContainerLink>
         ) : null}
