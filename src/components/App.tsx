@@ -174,7 +174,14 @@ class App extends Component<IProps, IApp> {
   }
   switchForms = async () => {
     console.log('switchForms..');
+
     if (this.child?.current) {
+      const tokenADataTmp = this.state.tokenAData;
+
+      this.setState({
+        tokenAData: this.state.tokenBData,
+        tokenBData: tokenADataTmp,
+      });
       await this.child.current.setInputOutputVal();
     }
   };
@@ -623,6 +630,7 @@ class App extends Component<IProps, IApp> {
       this.state.signer
     );
 
+    console.log(this.state.tokenAData, this.state.tokenBData);
     if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
       if (this.state.tokenAData.address === REACT_APP_WETH_ADDRESS) {
         console.log(`swapExactETHForTokensSupportingFeeOnTransferTokens..`);
