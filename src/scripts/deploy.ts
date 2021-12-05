@@ -1,5 +1,4 @@
 import { run, ethers, network } from 'hardhat';
-import { any } from 'hardhat/internal/core/params/argumentTypes';
 
 network.provider.send('hardhat_reset');
 async function main() {

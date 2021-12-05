@@ -357,26 +357,30 @@ export class AddLiquidity extends Component<any, IState> {
                 </>
               ) : null}
             </div>
-            {!this.context.loadingRemoveLp ? (
-              this.context.correctNetwork &&
-              this.context.account &&
-              !this.context.loading ? (
-                <button
-                  type="submit"
-                  className="btn btn-primary btn-block btn-lg"
-                >
-                  AddLiquidity
-                </button>
+            {this.context.correctNetwork && this.context.account ? (
+              !this.context.loadingRemoveLp ? (
+                !this.context.loading ? (
+                  <button
+                    type="submit"
+                    className="btn btn-primary btn-block btn-lg"
+                  >
+                    AddLiquidity
+                  </button>
+                ) : (
+                  <button className="btn btn-primary btn-block btn-lg" disabled>
+                    <div className="spinner-border" role="status">
+                      <span className="sr-only">Loading...</span>
+                    </div>
+                  </button>
+                )
               ) : (
                 <button className="btn btn-primary btn-block btn-lg" disabled>
-                  <div className="spinner-border" role="status">
-                    <span className="sr-only">Loading...</span>
-                  </div>
+                  AddLiquidity
                 </button>
               )
             ) : (
               <button className="btn btn-primary btn-block btn-lg" disabled>
-                AddLiquidity
+                Check your network
               </button>
             )}
           </form>

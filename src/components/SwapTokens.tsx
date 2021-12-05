@@ -121,33 +121,40 @@ class SwapTokens extends Component<IProps, IState> {
   handleSubmit = async (event: any) => {
     console.log('submit..');
     event.preventDefault();
-    if (
-      event.target.value !== '' ||
-      BigNumber.from(this.context.outputAmountInWei).gt(0)
-    ) {
-      console.log('SSSSSSSSSSSS......');
-      console.log(
-        this.state.inputAmountInWei.toString(),
-        this.state.outputAmountInWei.toString()
-      );
-      console.log('SSSSSSSSSSSS......');
-      const inputAmountInWei: BigNumber = BigNumber.from(
-        this.state.inputAmountInWei
-      );
-      const outputAmountInWei: BigNumber = BigNumber.from(
-        this.state.outputAmountInWei
-      );
-      const inputAmount = this.state.inputAmount;
-
+    this.setState({
+      loading: true,
+    });
+    try {
       if (
-        inputAmountInWei &&
-        outputAmountInWei &&
-        inputAmount < this.context.tokenABalance
+        event.target.value !== '' ||
+        BigNumber.from(this.context.outputAmountInWei).gt(0)
       ) {
-        await this.context.swapTokens(inputAmountInWei, outputAmountInWei);
+        const inputAmountInWei: BigNumber = BigNumber.from(
+          this.state.inputAmountInWei
+        );
+        const outputAmountInWei: BigNumber = BigNumber.from(
+          this.state.outputAmountInWei
+        );
+        const inputAmount = this.state.inputAmount;
+
+        if (
+          inputAmountInWei &&
+          outputAmountInWei &&
+          inputAmount < this.context.tokenABalance
+        ) {
+          await this.context.swapTokens(inputAmountInWei, outputAmountInWei);
+          this.setState({
+            loading: false,
+          });
+        }
+      } else {
+        this.context.setMsg('No pairs exists');
       }
-    } else {
-      this.context.setMsg('No pairs exists');
+    } catch (e: any) {
+      console.log(`SwapTokens:handleSubmit ${e.error}`);
+      this.setState({
+        loading: false,
+      });
     }
   };
 
@@ -162,6 +169,7 @@ class SwapTokens extends Component<IProps, IState> {
 
   handleOnChangeTokenAAmount = async (e: any) => {
     console.log('handleOnChangeTokenAAmount..');
+
     let inputAmount: any;
     let outputAmount: any;
     let inputAmountInWei: BigNumber = BigNumber.from(0);
@@ -191,6 +199,7 @@ class SwapTokens extends Component<IProps, IState> {
             inputAmount - (inputAmount * this.context.slippage) / 100;
 
           this.inputAmountRef.current.value = inputAmount;
+          this.context.getLiquidityOwner(this.context.tokenBData);
 
           this.setState({
             calcStandard: inputAmount / outputAmount,
@@ -200,8 +209,6 @@ class SwapTokens extends Component<IProps, IState> {
             outputAmountInWei,
             minimumReceived,
           });
-
-          this.context.getLiquidityOwner(this.context.tokenBData);
         } else {
           this.inputAmountRef.current.value = '';
           this.setState({
@@ -480,25 +487,28 @@ class SwapTokens extends Component<IProps, IState> {
                 </>
               ) : null}
             </div>
-
-            {this.context.correctNetwork &&
-            this.context.account &&
-            !this.context.loading ? (
-              <button
-                type="submit"
-                className="btn btn-primary btn-block btn-lg"
-              >
-                Swap
-              </button>
+            {this.context.correctNetwork && this.context.account ? (
+              !this.state.loading ? (
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-block btn-lg"
+                >
+                  Swap
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-block btn-lg"
+                  disabled
+                >
+                  <div className="spinner-border" role="status">
+                    <span className="sr-only">Loading...</span>
+                  </div>
+                </button>
+              )
             ) : (
-              <button
-                type="submit"
-                className="btn btn-primary btn-block btn-lg"
-                disabled
-              >
-                <div className="spinner-border" role="status">
-                  <span className="sr-only">Loading...</span>
-                </div>
+              <button className="btn btn-primary btn-block btn-lg" disabled>
+                Check your network
               </button>
             )}
           </form>
