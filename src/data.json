@@ -1,7 +1,7 @@
 [
   {
     "name": "BNB",
-    "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+    "address": "0xcbaA8c4302C69422C82c4321bB316176B32E3978",
     "symbol": "BNB",
     "decimals": 18,
     "chainId": 4,
@@ -9,29 +9,22 @@
   },
   {
     "name": "Blueberry",
-    "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "address": "0x623C71550a28A7B07f4514930451125BfaB1c6F6",
     "symbol": "Blueberry",
     "decimals": 9,
     "logoURI": "https://avatars.githubusercontent.com/u/94470848?v=4"
   },
   {
     "name": "USDT",
-    "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "address": "0x2020B78D0F0e04b8B6c63899BD789f277027eE70",
     "symbol": "USDT",
     "decimals": 18,
     "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/825.png"
   },
   {
     "name": "Shiba",
-    "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "address": "0x6BDDbB6ea12a52F05822F77A22668A4FB73f511A",
     "symbol": "Shiba",
-    "decimals": 18,
-    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/5994.png"
-  },
-  {
-    "name": "ShibaX",
-    "address": "0xe5547DD5A836d6066499d66964D32bCd3f20f59D",
-    "symbol": "ShibaX",
     "decimals": 18,
     "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/5994.png"
   }

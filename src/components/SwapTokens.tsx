@@ -121,34 +121,18 @@ class SwapTokens extends Component<IProps, IState> {
   handleSubmit = async (event: any) => {
     console.log('submit..');
     event.preventDefault();
-    this.setState({
-      loading: true,
-    });
+    this.setState({ loading: true });
     try {
-      if (
-        event.target.value !== '' ||
-        BigNumber.from(this.context.outputAmountInWei).gt(0)
-      ) {
-        const inputAmountInWei: BigNumber = BigNumber.from(
-          this.state.inputAmountInWei
-        );
-        const outputAmountInWei: BigNumber = BigNumber.from(
-          this.state.outputAmountInWei
-        );
-        const inputAmount = this.state.inputAmount;
+      const inputAmountInWei: BigNumber = BigNumber.from(
+        this.state.inputAmountInWei
+      );
+      const outputAmountInWei: BigNumber = BigNumber.from(
+        this.state.outputAmountInWei
+      );
 
-        if (
-          inputAmountInWei &&
-          outputAmountInWei &&
-          inputAmount < this.context.tokenABalance
-        ) {
-          await this.context.swapTokens(inputAmountInWei, outputAmountInWei);
-          this.setState({
-            loading: false,
-          });
-        }
-      } else {
-        this.context.setMsg('No pairs exists');
+      if (inputAmountInWei && outputAmountInWei) {
+        await this.context.swapTokens(inputAmountInWei, outputAmountInWei);
+        this.setState({ loading: false });
       }
     } catch (e: any) {
       console.log(`SwapTokens:handleSubmit ${e.error}`);
@@ -159,19 +143,8 @@ class SwapTokens extends Component<IProps, IState> {
   };
 
   setInputOutputVal = async () => {
-    let minimumReceived: any;
     this.inputAmountRef.current.value = this.state.outputAmount;
     this.outputAmountRef.current.value = this.state.inputAmount;
-
-    // if (this.state.switched) {
-    //   minimumReceived =
-    //     this.state.inputAmount -
-    //     (this.state.inputAmount * this.context.slippage) / 100;
-    // } else {
-    //   minimumReceived =
-    //     this.state.outputAmount -
-    //     (this.state.outputAmount * this.context.slippage) / 100;
-    // }
 
     this.setState({
       calcStandard: this.state.outputAmount / this.state.inputAmount,
@@ -266,6 +239,7 @@ class SwapTokens extends Component<IProps, IState> {
       inputAmount = input;
       inputAmountInWei = this.context.toWei(inputAmount);
 
+      console.log(inputAmountInWei.toString());
       if (BigNumber.from(inputAmountInWei).gt(0)) {
         outputAmountInWei = await this.context.getTokenBAmount(
           inputAmountInWei
@@ -442,6 +416,7 @@ class SwapTokens extends Component<IProps, IState> {
                 <b>Output</b>
               </label>
               <span className="float-right text-muted">
+                Balance:
                 {!this.state.switched ? (
                   <p>{this.context.tokenBBalance}</p>
                 ) : (

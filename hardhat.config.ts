@@ -5,7 +5,7 @@ task('accounts', 'Prints the list of accounts', async (args, hre) => {
   const accounts = await hre.ethers.getSigners();
 
   for (const account of accounts) {
-    console.log(await account.address);
+    console.log(account.address);
   }
 });
 
@@ -28,7 +28,7 @@ module.exports = {
       },
     },
     testnet: {
-      url: 'https://speedy-nodes-nyc.moralis.io/62f6c5db40c169f0b46820cc/bsc/testnet',
+      url: 'https://speedy-nodes-nyc.moralis.io/2b47989c2a753a2cee72aa2f/bsc/testnet',
       chainId: 97,
       accounts: [
         '4b56d20997b96eab45bb006f679b661849c237804e483ccdcebc95fe1246b8d1',

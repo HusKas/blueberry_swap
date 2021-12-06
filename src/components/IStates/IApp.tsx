@@ -15,10 +15,10 @@ export interface IApp {
   exchange: any;
   factory: any;
   Pair: any;
-  ethBalanceTokenA: string;
-  ethBalanceTokenB: string;
   tokenABalance: string;
   tokenBBalance: string;
+  tokenABalanceInWei: BigNumber;
+  tokenBBalanceInWei: BigNumber;
   loading: boolean;
   loadingRemoveLp: boolean;
   provider: any;
@@ -67,4 +67,5 @@ export interface IApp {
   clearStates(): void;
   networkName: string;
   correctNetwork: boolean;
+  switched: boolean;
 }

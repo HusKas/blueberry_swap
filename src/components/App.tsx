@@ -78,10 +78,10 @@ class App extends Component<IProps, IApp> {
       factory: {},
       exchange: {},
       Pair: {},
-      ethBalanceTokenA: '0',
-      ethBalanceTokenB: '0',
       tokenABalance: '0',
       tokenBBalance: '0',
+      tokenABalanceInWei: BigNumber.from(0),
+      tokenBBalanceInWei: BigNumber.from(0),
       loading: false,
       loadingRemoveLp: false,
       provider: {},
@@ -130,6 +130,7 @@ class App extends Component<IProps, IApp> {
       clearStates: this.clearStates,
       networkName: '',
       correctNetwork: false,
+      switched: false,
     };
   }
 
@@ -177,14 +178,19 @@ class App extends Component<IProps, IApp> {
     if (this.child?.current) {
       await this.child.current.setInputOutputVal();
     }
+    this.setState({
+      switched: !this.state.switched,
+    });
   };
 
   switchTokens = async () => {
-    const tokenADataTmp = this.state.tokenAData;
-    this.setState({
-      tokenAData: this.state.tokenBData,
-      tokenBData: tokenADataTmp,
-    });
+    if (this.state.switched) {
+      const tokenADataTmp = this.state.tokenAData;
+      this.setState({
+        tokenAData: this.state.tokenBData,
+        tokenBData: tokenADataTmp,
+      });
+    }
   };
 
   connectToWeb3 = async () => {
@@ -297,10 +303,16 @@ class App extends Component<IProps, IApp> {
 
   async getEthBalanceTokenA() {
     try {
-      let ethBalance: any;
-      ethBalance = await this.state.provider.getBalance(this.state.account);
-      ethBalance = this.fromWei(ethBalance).toString();
-      this.setState({ tokenABalance: ethBalance });
+      let ethBalance: any, ethBalanceInWei: BigNumber;
+      ethBalanceInWei = await this.state.provider.getBalance(
+        this.state.account
+      );
+      ethBalance = this.fromWei(ethBalanceInWei).toString();
+
+      this.setState({
+        tokenABalance: ethBalance,
+        tokenABalanceInWei: ethBalanceInWei,
+      });
     } catch (err) {
       console.log(err);
     }
@@ -308,10 +320,15 @@ class App extends Component<IProps, IApp> {
 
   async getEthBalanceTokenB() {
     try {
-      let ethBalance: any;
-      ethBalance = await this.state.provider.getBalance(this.state.account);
-      ethBalance = this.fromWei(ethBalance).toString();
-      this.setState({ tokenBBalance: ethBalance });
+      let ethBalance: any, ethBalanceInWei: BigNumber;
+      ethBalanceInWei = await this.state.provider.getBalance(
+        this.state.account
+      );
+      ethBalance = this.fromWei(ethBalanceInWei).toString();
+      this.setState({
+        tokenBBalance: ethBalance,
+        tokenBBalanceInWei: ethBalanceInWei,
+      });
     } catch (err) {
       console.log(err);
     }
@@ -325,10 +342,11 @@ class App extends Component<IProps, IApp> {
         this.state.signer
       );
 
-      let tokenABalance = await token1.balanceOf(this.state.account);
-      tokenABalance = this.fromWei(tokenABalance).toString();
+      let tokenABalance: any, tokenABalanceInWei: any;
+      tokenABalanceInWei = await token1.balanceOf(this.state.account);
+      tokenABalance = this.fromWei(tokenABalanceInWei).toString();
 
-      this.setState({ tokenABalance });
+      this.setState({ tokenABalance, tokenABalanceInWei });
     } catch (err) {
       console.log(err);
       this.setState({ tokenABalance: '0' });
@@ -343,19 +361,72 @@ class App extends Component<IProps, IApp> {
         this.state.signer
       );
 
-      let tokenBalance = await token2.balanceOf(this.state.account);
-      tokenBalance = this.fromWei(tokenBalance).toString();
+      let tokenBBalance: any, tokenBBalanceInWei: any;
+      tokenBBalanceInWei = await token2.balanceOf(this.state.account);
+      tokenBBalance = this.fromWei(tokenBBalanceInWei).toString();
 
-      this.setState({ tokenBBalance: tokenBalance });
+      this.setState({ tokenBBalance, tokenBBalanceInWei });
     } catch (err) {
       console.log(err);
       this.setState({ tokenBBalance: '0' });
     }
   }
+
+  checkIfBothTokeSelected = async () => {
+    if (
+      this.state.tokenAData &&
+      Object.keys(this.state.tokenAData).length > 0 &&
+      this.state.tokenBData &&
+      Object.keys(this.state.tokenBData).length > 0
+    ) {
+      return true;
+    } else {
+      console.log('Select a token..');
+      this.setMsg('Select a token..');
+      this.setState({
+        loading: false,
+      });
+    }
+  };
+
+  checkBalances = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
+    if (
+      this.state.tokenABalanceInWei.gt(tokenAAmount) &&
+      this.state.tokenBBalanceInWei.gt(tokenBAmount)
+    ) {
+      return true;
+    } else {
+      console.log('Not enough balance');
+      this.state.setMsg('Not enough balance..');
+      this.setState({
+        loading: false,
+      });
+    }
+  };
+
+  checkValueInputs = async (
+    tokenAAmount: BigNumber,
+    tokenBAmount: BigNumber
+  ) => {
+    if (tokenAAmount.gt(0) && tokenBAmount.gt(0)) {
+      return true;
+    } else {
+      console.log('Input fields must not be empty');
+      this.state.setMsg('Input fields must not be empty');
+      this.setState({
+        loading: false,
+      });
+    }
+  };
+
   addLiquidity = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
     this.setState({ loading: true });
-    const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
-    if (Object.keys(this.state.tokenBData).length > 0) {
+    if (
+      (await this.checkIfBothTokeSelected()) &&
+      (await this.checkBalances(tokenAAmount, tokenBAmount)) &&
+      (await this.checkValueInputs(tokenAAmount, tokenBAmount))
+    ) {
+      const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
       let exchangeAddress: any;
 
       exchangeAddress = await this.getExchangeAddress(
@@ -490,10 +561,6 @@ class App extends Component<IProps, IApp> {
           this.setState({ loading: false });
         }
       }
-    } else {
-      console.log('Select a token..');
-      this.setMsg('Select a token..');
-      this.setState({ loading: false });
     }
   };
 
@@ -605,158 +672,160 @@ class App extends Component<IProps, IApp> {
   };
 
   swapTokens = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
-    this.setState({ loading: true });
+    // this.setState({ loading: true });
+    if (
+      (await this.checkIfBothTokeSelected()) &&
+      (await this.checkBalances(tokenAAmount, tokenBAmount)) &&
+      (await this.checkValueInputs(tokenAAmount, tokenBAmount))
+    ) {
+      const exchangeAddress = await this.getExchangeAddress(
+        this.state.tokenAData.address,
+        this.state.tokenBData.address
+      );
 
-    const exchangeAddress = await this.getExchangeAddress(
-      this.state.tokenAData.address,
-      this.state.tokenBData.address
-    );
+      //slippage
+      const slippage = 1000 - (this.state.slippage * 1000) / 100;
 
-    //slippage
-    const slippage = 1000 - (this.state.slippage * 1000) / 100;
+      const _minTokens = BigNumber.from(tokenBAmount).mul(slippage).div(1000);
 
-    const _minTokens = BigNumber.from(tokenBAmount).mul(slippage).div(1000);
+      const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
 
-    const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+      console.log(`Token pair - swapTokens..`);
 
-    console.log(`Token pair - swapTokens..`);
+      const token1 = new ethers.Contract(
+        this.state.tokenAData.address,
+        ERC20.abi,
+        this.state.signer
+      );
 
-    const token1 = new ethers.Contract(
-      this.state.tokenAData.address,
-      ERC20.abi,
-      this.state.signer
-    );
+      const token2 = new ethers.Contract(
+        this.state.tokenBData.address,
+        ERC20.abi,
+        this.state.signer
+      );
+      await this.switchTokens();
 
-    const token2 = new ethers.Contract(
-      this.state.tokenBData.address,
-      ERC20.abi,
-      this.state.signer
-    );
-    await this.switchTokens();
-    console.log(this.state.tokenAData, this.state.tokenBData);
-    if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
-      if (this.state.tokenAData.address === REACT_APP_WETH_ADDRESS) {
-        console.log(`swapExactETHForTokensSupportingFeeOnTransferTokens..`);
+      if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
+        if (this.state.tokenAData.address === REACT_APP_WETH_ADDRESS) {
+          console.log(`swapExactETHForTokensSupportingFeeOnTransferTokens..`);
 
-        try {
-          const tx =
-            await this.state.router.swapExactETHForTokensSupportingFeeOnTransferTokens(
-              _minTokens,
-              [this.state.tokenAData.address, this.state.tokenBData.address],
-              this.state.account,
-              deadline,
-              {
-                value: tokenAAmount,
-                from: this.state.account,
-                ...this.overrides,
-              }
+          try {
+            const tx =
+              await this.state.router.swapExactETHForTokensSupportingFeeOnTransferTokens(
+                _minTokens,
+                [this.state.tokenAData.address, this.state.tokenBData.address],
+                this.state.account,
+                deadline,
+                {
+                  value: tokenAAmount,
+                  from: this.state.account,
+                  ...this.overrides,
+                }
+              );
+            await tx.wait(1);
+            this.setState({ loading: false, tx: tx.hash });
+            setTimeout(() => {
+              this.setState({ tx: null });
+            }, 3000);
+          } catch (err) {
+            console.log(
+              `swapExactETHForTokensSupportingFeeOnTransferTokens failed ${err}`
             );
-          await tx.wait(1);
-          this.setState({ loading: false, tx: tx.hash });
-          setTimeout(() => {
-            this.setState({ tx: null });
-          }, 3000);
-        } catch (err) {
-          console.log(
-            `swapExactETHForTokensSupportingFeeOnTransferTokens failed ${err}`
-          );
-          this.setState({ loading: false });
-        }
-      } else if (this.state.tokenBData.address === REACT_APP_WETH_ADDRESS) {
-        console.log('swapExactTokensForETHSupportingFeeOnTransferTokens..');
-        const tx0 = await token1.approve(
-          this.state.router.address,
-          tokenAAmount,
-          {
-            from: this.state.account,
-            ...this.overrides,
+            this.setState({ loading: false });
           }
-        );
-        await tx0.wait(1);
-        try {
-          const tx =
-            await this.state.router.swapExactTokensForETHSupportingFeeOnTransferTokens(
-              tokenAAmount,
-              _minTokens,
-              [this.state.tokenAData.address, this.state.tokenBData.address],
-              this.state.account,
-              deadline,
-              {
-                from: this.state.account,
-                ...this.overrides,
-              }
-            );
-          tx.wait(1);
-
-          this.setState({ loading: false, tx: tx.hash });
-          setTimeout(() => {
-            this.setState({ tx: null });
-          }, 3000);
-        } catch (err) {
-          console.log(
-            `swapExactTokensForETHSupportingFeeOnTransferTokens failed ${err}`
+        } else if (this.state.tokenBData.address === REACT_APP_WETH_ADDRESS) {
+          console.log('swapExactTokensForETHSupportingFeeOnTransferTokens..');
+          const tx0 = await token1.approve(
+            this.state.router.address,
+            tokenAAmount,
+            {
+              from: this.state.account,
+              ...this.overrides,
+            }
           );
-          this.setState({ loading: false });
+          await tx0.wait(1);
+          try {
+            const tx =
+              await this.state.router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                tokenAAmount,
+                _minTokens,
+                [this.state.tokenAData.address, this.state.tokenBData.address],
+                this.state.account,
+                deadline,
+                {
+                  from: this.state.account,
+                  ...this.overrides,
+                }
+              );
+            tx.wait(1);
+
+            this.setState({ loading: false, tx: tx.hash });
+            setTimeout(() => {
+              this.setState({ tx: null });
+            }, 3000);
+          } catch (err) {
+            console.log(
+              `swapExactTokensForETHSupportingFeeOnTransferTokens failed ${err}`
+            );
+            this.setState({ loading: false });
+          }
+        } else {
+          console.log('swapExactTokensForTokensSupportingFeeOnTransferTokens');
+
+          const tx0 = await token1.approve(
+            this.state.router.address,
+            tokenAAmount,
+            {
+              from: this.state.account,
+              ...this.overrides,
+            }
+          );
+          await tx0.wait(1);
+          const tx1 = await token2.approve(
+            this.state.router.address,
+            tokenAAmount,
+            {
+              from: this.state.account,
+              ...this.overrides,
+            }
+          );
+          await tx1.wait(1);
+          try {
+            const tx =
+              await this.state.router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+                tokenAAmount,
+                _minTokens,
+                [this.state.tokenAData.address, this.state.tokenBData.address],
+                this.state.account,
+                deadline,
+                {
+                  from: this.state.account,
+                  ...this.overrides,
+                }
+              );
+            tx.wait();
+
+            this.setState({ loading: false, tx: tx.hash });
+            setTimeout(() => {
+              this.setState({ tx: null });
+            }, 3000);
+          } catch (err) {
+            console.log(
+              `swapExactTokensForTokensSupportingFeeOnTransferTokens failed ${err}`
+            );
+            this.setState({ loading: false });
+          }
         }
       } else {
-        console.log('swapExactTokensForTokensSupportingFeeOnTransferTokens');
-
-        const tx0 = await token1.approve(
-          this.state.router.address,
-          tokenAAmount,
-          {
-            from: this.state.account,
-            ...this.overrides,
-          }
-        );
-        await tx0.wait(1);
-        const tx1 = await token2.approve(
-          this.state.router.address,
-          tokenAAmount,
-          {
-            from: this.state.account,
-            ...this.overrides,
-          }
-        );
-        await tx1.wait(1);
-        try {
-          const tx =
-            await this.state.router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
-              tokenAAmount,
-              _minTokens,
-              [this.state.tokenAData.address, this.state.tokenBData.address],
-              this.state.account,
-              deadline,
-              {
-                from: this.state.account,
-                ...this.overrides,
-              }
-            );
-          tx.wait();
-
-          this.setState({ loading: false, tx: tx.hash });
-          setTimeout(() => {
-            this.setState({ tx: null });
-          }, 3000);
-        } catch (err) {
-          console.log(
-            `swapExactTokensForTokensSupportingFeeOnTransferTokens failed ${err}`
-          );
-          this.setState({ loading: false });
-        }
+        console.log('No token pair');
       }
-    } else {
-      console.log('No token pair');
     }
   };
 
   getTokenAAmount = async (tokenAmount: BigNumber) => {
     try {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
-      if (
-        this.state.tokenBData &&
-        Object.keys(this.state.tokenBData).length > 0
-      ) {
+      if (this.checkIfBothTokeSelected()) {
         const exchangeAddress = await this.getExchangeAddress(
           this.state.tokenAData.address,
           this.state.tokenBData.address
@@ -794,10 +863,7 @@ class App extends Component<IProps, IApp> {
   getTokenBAmount = async (tokenAmount: BigNumber) => {
     try {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
-      if (
-        this.state.tokenBData &&
-        Object.keys(this.state.tokenBData).length > 0
-      ) {
+      if (this.checkIfBothTokeSelected()) {
         const exchangeAddress = await this.getExchangeAddress(
           this.state.tokenAData.address,
           this.state.tokenBData.address
