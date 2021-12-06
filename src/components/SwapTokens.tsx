@@ -159,9 +159,24 @@ class SwapTokens extends Component<IProps, IState> {
   };
 
   setInputOutputVal = async () => {
+    let minimumReceived: any;
     this.inputAmountRef.current.value = this.state.outputAmount;
     this.outputAmountRef.current.value = this.state.inputAmount;
+
+    // if (this.state.switched) {
+    //   minimumReceived =
+    //     this.state.inputAmount -
+    //     (this.state.inputAmount * this.context.slippage) / 100;
+    // } else {
+    //   minimumReceived =
+    //     this.state.outputAmount -
+    //     (this.state.outputAmount * this.context.slippage) / 100;
+    // }
+
     this.setState({
+      calcStandard: this.state.outputAmount / this.state.inputAmount,
+      switched: !this.state.switched,
+      // minimumReceived,
       inputAmountInWei: this.state.outputAmountInWei,
       outputAmountInWei: this.state.inputAmountInWei,
     });
@@ -172,6 +187,7 @@ class SwapTokens extends Component<IProps, IState> {
 
     let inputAmount: any;
     let outputAmount: any;
+    let minimumReceived: any;
     let inputAmountInWei: BigNumber = BigNumber.from(0);
     let outputAmountInWei: BigNumber = BigNumber.from(0);
 
@@ -195,14 +211,22 @@ class SwapTokens extends Component<IProps, IState> {
           inputAmountInWei = inputAmountInWei[0].toString();
 
           this.context.getPriceImpact(inputAmountInWei);
-          const minimumReceived =
-            inputAmount - (inputAmount * this.context.slippage) / 100;
+
+          if (!this.state.switched) {
+            minimumReceived =
+              outputAmount - (outputAmount * this.context.slippage) / 100;
+          } else {
+            minimumReceived =
+              inputAmount - (inputAmount * this.context.slippage) / 100;
+          }
 
           this.inputAmountRef.current.value = inputAmount;
           this.context.getLiquidityOwner(this.context.tokenBData);
 
           this.setState({
-            calcStandard: inputAmount / outputAmount,
+            calcStandard: !this.state.switched
+              ? inputAmount / outputAmount
+              : outputAmount / inputAmount,
             inputAmount,
             outputAmount,
             inputAmountInWei,
@@ -233,6 +257,7 @@ class SwapTokens extends Component<IProps, IState> {
 
     let inputAmount: any;
     let outputAmount: any;
+    let minimumReceived: any;
     let inputAmountInWei: BigNumber = BigNumber.from(0);
     let outputAmountInWei: BigNumber = BigNumber.from(0);
 
@@ -255,14 +280,19 @@ class SwapTokens extends Component<IProps, IState> {
           outputAmount = this.context.fromWei(outputAmountInWei[1]);
           outputAmountInWei = outputAmountInWei[1].toString();
           this.context.getPriceImpact(outputAmountInWei);
-
-          const minimumReceived =
-            outputAmount - (outputAmount * this.context.slippage) / 100;
-
+          if (!this.state.switched) {
+            minimumReceived =
+              outputAmount - (outputAmount * this.context.slippage) / 100;
+          } else {
+            minimumReceived =
+              inputAmount - (inputAmount * this.context.slippage) / 100;
+          }
           this.outputAmountRef.current.value = outputAmount;
 
           this.setState({
-            calcStandard: inputAmount / outputAmount,
+            calcStandard: !this.state.switched
+              ? inputAmount / outputAmount
+              : outputAmount / inputAmount,
             inputAmount,
             outputAmount,
             inputAmountInWei,
@@ -296,15 +326,6 @@ class SwapTokens extends Component<IProps, IState> {
 
   clickSwitchForm = (e: any) => {
     this.props.switchForms();
-    const minimumReceived =
-      this.state.inputAmount -
-      (this.state.inputAmount * this.context.slippage) / 100;
-
-    this.setState({
-      switched: !this.state.switched,
-      calcStandard: this.state.outputAmount / this.state.inputAmount,
-      minimumReceived,
-    });
   };
 
   resetForms = () => {
@@ -345,7 +366,6 @@ class SwapTokens extends Component<IProps, IState> {
                 )}
               </span>
             </div>
-
             <div className="input-group mb-2">
               {!this.state.switched ? (
                 <input
@@ -374,23 +394,43 @@ class SwapTokens extends Component<IProps, IState> {
                   required
                 />
               )}
-              <div
-                className="input-group-append"
-                onClick={() => this.toggleModal(false)}
-              >
-                {this.context.tokenAData?.symbol ? (
-                  <div className="input-group-text">
-                    <Image src={this.context.tokenAData.logoURI}></Image>
-                    &nbsp; {this.context.tokenAData.symbol} <FaAngleDown />
-                  </div>
-                ) : (
-                  <div className="input-group-text">
-                    Select
-                    <FaAngleDown />
-                  </div>
-                )}
-              </div>
+              {!this.state.switched ? (
+                <div
+                  className="input-group-append"
+                  onClick={() => this.toggleModal(false)}
+                >
+                  {this.context.tokenAData?.symbol ? (
+                    <div className="input-group-text">
+                      <Image src={this.context.tokenAData.logoURI}></Image>
+                      &nbsp; {this.context.tokenAData.symbol} <FaAngleDown />
+                    </div>
+                  ) : (
+                    <div className="input-group-text">
+                      Select
+                      <FaAngleDown />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div
+                  className="input-group-append"
+                  onClick={() => this.toggleModal(false)}
+                >
+                  {this.context.tokenBData?.symbol ? (
+                    <div className="input-group-text">
+                      <Image src={this.context.tokenBData.logoURI}></Image>
+                      &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
+                    </div>
+                  ) : (
+                    <div className="input-group-text">
+                      Select
+                      <FaAngleDown />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+
             <div
               className="d-flex justify-content-center  m-3"
               onClick={this.clickSwitchForm}
@@ -437,23 +477,41 @@ class SwapTokens extends Component<IProps, IState> {
                   required
                 />
               )}
-
-              <div
-                className="input-group-append"
-                onClick={() => this.toggleModal(true)}
-              >
-                {this.context.tokenBData?.symbol ? (
-                  <div className="input-group-text">
-                    <Image src={this.context.tokenBData.logoURI}></Image>
-                    &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
-                  </div>
-                ) : (
-                  <div className="input-group-text">
-                    Select
-                    <FaAngleDown />
-                  </div>
-                )}
-              </div>
+              {!this.state.switched ? (
+                <div
+                  className="input-group-append"
+                  onClick={() => this.toggleModal(true)}
+                >
+                  {this.context.tokenBData?.symbol ? (
+                    <div className="input-group-text">
+                      <Image src={this.context.tokenBData.logoURI}></Image>
+                      &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
+                    </div>
+                  ) : (
+                    <div className="input-group-text">
+                      Select
+                      <FaAngleDown />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div
+                  className="input-group-append"
+                  onClick={() => this.toggleModal(true)}
+                >
+                  {this.context.tokenAData?.symbol ? (
+                    <div className="input-group-text">
+                      <Image src={this.context.tokenAData.logoURI}></Image>
+                      &nbsp; {this.context.tokenAData.symbol} <FaAngleDown />
+                    </div>
+                  ) : (
+                    <div className="input-group-text">
+                      Select
+                      <FaAngleDown />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="mb-5">
               <Row>
