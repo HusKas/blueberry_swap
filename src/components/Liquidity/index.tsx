@@ -63,13 +63,17 @@ interface IProps {
 
 export class AddLiquidity extends Component<any, IState> {
   static contextType = Context;
-  inputAmountRef = React.createRef<HTMLInputElement>();
-  outputAmountRef = React.createRef<HTMLInputElement>();
+  private inputAmountRef = React.createRef<any>();
+  private outputAmountRef = React.createRef<HTMLInputElement>();
 
   constructor(props: IProps) {
     super(props);
     this.removeLiquidity = this.removeLiquidity.bind(this);
     this.toggleModal = this.toggleModal.bind(this);
+    this.handleOnChangeTokenAAmount =
+      this.handleOnChangeTokenAAmount.bind(this);
+    this.handleOnChangeTokenBAmount =
+      this.handleOnChangeTokenBAmount.bind(this);
     this.state = {
       calc: 0,
       inputAmount: '',
@@ -128,10 +132,9 @@ export class AddLiquidity extends Component<any, IState> {
     let outputAmount: any;
     let inputAmountInWei: BigNumber = BigNumber.from(0);
     let outputAmountInWei: BigNumber = BigNumber.from(0);
-    const input = this.outputAmountRef.current.value;
+    outputAmount = this.outputAmountRef.current.value.replace(/\s+/g, '');
 
-    if (input !== '' && this.isNumeric(input)) {
-      outputAmount = input;
+    if (outputAmount !== '' && this.isNumeric(outputAmount)) {
       outputAmountInWei = this.context.toWei(outputAmount).toString();
       if (BigNumber.from(outputAmountInWei).gt(0)) {
         inputAmountInWei = await this.context.getTokenAAmount(
@@ -187,9 +190,9 @@ export class AddLiquidity extends Component<any, IState> {
     let outputAmount: any;
     let inputAmountInWei: BigNumber = BigNumber.from(0);
     let outputAmountInWei: BigNumber = BigNumber.from(0);
-    const input = this.inputAmountRef.current.value;
-    if (input !== '' && this.isNumeric(input)) {
-      inputAmount = input;
+    inputAmount = this.inputAmountRef.current.value.replace(/\s+/g, '');
+
+    if (inputAmount !== '' && this.isNumeric(inputAmount)) {
       inputAmountInWei = this.context.toWei(inputAmount).toString();
 
       if (BigNumber.from(inputAmountInWei).gt(0)) {
@@ -277,12 +280,14 @@ export class AddLiquidity extends Component<any, IState> {
               <input
                 id="tokenA"
                 type="text"
+                inputMode="decimal"
                 autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
                 placeholder="0.0"
                 ref={this.inputAmountRef}
-                onChange={(event: any) => {
-                  this.handleOnChangeTokenBAmount(event);
-                }}
+                onChange={this.handleOnChangeTokenBAmount}
                 className="form-control form-control-lg"
                 required
               />
@@ -316,12 +321,14 @@ export class AddLiquidity extends Component<any, IState> {
               <input
                 id="tokenB"
                 type="text"
+                inputMode="decimal"
                 autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
                 placeholder="0.0"
                 ref={this.outputAmountRef}
-                onChange={(event: any) => {
-                  this.handleOnChangeTokenAAmount(event);
-                }}
+                onChange={this.handleOnChangeTokenAAmount}
                 className="form-control form-control-lg"
                 required
               />

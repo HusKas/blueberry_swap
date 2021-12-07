@@ -28,6 +28,7 @@ const {
   REACT_APP_FACTORY_ADDRESS,
   REACT_APP_ZERO_ADDRESS,
   REACT_APP_WETH_ADDRESS,
+  REACT_APP_BLUEBERRY_ADDRESS,
 }: ProcessEnv = process.env;
 
 declare let window: any;
@@ -178,6 +179,7 @@ class App extends Component<IProps, IApp> {
     if (this.child?.current) {
       await this.child.current.setInputOutputVal();
     }
+    await this.switchTokens();
     this.setState({
       switched: !this.state.switched,
     });
@@ -185,6 +187,7 @@ class App extends Component<IProps, IApp> {
 
   switchTokens = async () => {
     if (this.state.switched) {
+      console.log('SWWWWWW');
       const tokenADataTmp = this.state.tokenAData;
       this.setState({
         tokenAData: this.state.tokenBData,
@@ -372,7 +375,7 @@ class App extends Component<IProps, IApp> {
     }
   }
 
-  checkIfBothTokeSelected = async () => {
+  checkIfBothTokeSelected = async (withMessage: boolean) => {
     if (
       this.state.tokenAData &&
       Object.keys(this.state.tokenAData).length > 0 &&
@@ -381,8 +384,10 @@ class App extends Component<IProps, IApp> {
     ) {
       return true;
     } else {
-      console.log('Select a token..');
-      this.setMsg('Select a token..');
+      if (withMessage) {
+        console.log('Select a token..');
+        this.setMsg('Select a token..');
+      }
       this.setState({
         loading: false,
       });
@@ -391,8 +396,15 @@ class App extends Component<IProps, IApp> {
 
   checkBalances = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
     if (
+      !this.state.switched &&
       this.state.tokenABalanceInWei.gt(tokenAAmount) &&
       this.state.tokenBBalanceInWei.gt(tokenBAmount)
+    ) {
+      return true;
+    } else if (
+      this.state.switched &&
+      this.state.tokenABalanceInWei.gt(tokenBAmount) &&
+      this.state.tokenBBalanceInWei.gt(tokenAAmount)
     ) {
       return true;
     } else {
@@ -419,13 +431,26 @@ class App extends Component<IProps, IApp> {
     }
   };
 
+  checkAllFieldInputs = async (
+    tokenAAmount: BigNumber,
+    tokenBAmount: BigNumber
+  ) => {
+    const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
+    const checkBalances = await this.checkBalances(tokenAAmount, tokenBAmount);
+    const checkValueInputs = await this.checkValueInputs(
+      tokenAAmount,
+      tokenBAmount
+    );
+    return checkSelectedTokens && checkBalances && checkValueInputs;
+  };
+
   addLiquidity = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
     this.setState({ loading: true });
-    if (
-      (await this.checkIfBothTokeSelected()) &&
-      (await this.checkBalances(tokenAAmount, tokenBAmount)) &&
-      (await this.checkValueInputs(tokenAAmount, tokenBAmount))
-    ) {
+    const checkInputs = await this.checkAllFieldInputs(
+      tokenAAmount,
+      tokenBAmount
+    );
+    if (checkInputs) {
       const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
       let exchangeAddress: any;
 
@@ -672,12 +697,11 @@ class App extends Component<IProps, IApp> {
   };
 
   swapTokens = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
-    // this.setState({ loading: true });
-    if (
-      (await this.checkIfBothTokeSelected()) &&
-      (await this.checkBalances(tokenAAmount, tokenBAmount)) &&
-      (await this.checkValueInputs(tokenAAmount, tokenBAmount))
-    ) {
+    const checkInputs = await this.checkAllFieldInputs(
+      tokenAAmount,
+      tokenBAmount
+    );
+    if (checkInputs) {
       const exchangeAddress = await this.getExchangeAddress(
         this.state.tokenAData.address,
         this.state.tokenBData.address
@@ -825,7 +849,8 @@ class App extends Component<IProps, IApp> {
   getTokenAAmount = async (tokenAmount: BigNumber) => {
     try {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
-      if (this.checkIfBothTokeSelected()) {
+      const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
+      if (checkSelectedTokens) {
         const exchangeAddress = await this.getExchangeAddress(
           this.state.tokenAData.address,
           this.state.tokenBData.address
@@ -863,7 +888,8 @@ class App extends Component<IProps, IApp> {
   getTokenBAmount = async (tokenAmount: BigNumber) => {
     try {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
-      if (this.checkIfBothTokeSelected()) {
+      const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
+      if (checkSelectedTokens) {
         const exchangeAddress = await this.getExchangeAddress(
           this.state.tokenAData.address,
           this.state.tokenBData.address
@@ -967,6 +993,7 @@ class App extends Component<IProps, IApp> {
       this.setState({ tokenBData: null, tokenBBalance: '0' });
     }
     await this.getTokenAmountAfterSelectedBToken();
+    await this.checkIfBlueberryTokenSelected(tokenAData);
     this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
     if (this.child.current) {
       if (tokenAData.address === REACT_APP_WETH_ADDRESS) {
@@ -987,11 +1014,18 @@ class App extends Component<IProps, IApp> {
       this.setState({ tokenAData: null, tokenABalance: '0' });
     }
     await this.getTokenAmountAfterSelectedAToken();
+    await this.checkIfBlueberryTokenSelected(tokenBData);
     this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
     if (this.child.current) {
       if (tokenBData?.address === REACT_APP_WETH_ADDRESS) {
         await this.getEthBalanceTokenB();
       }
+    }
+  };
+
+  checkIfBlueberryTokenSelected = async (tokenData: ITokenData) => {
+    if (tokenData.address === REACT_APP_BLUEBERRY_ADDRESS) {
+      this.setMsg('Set your slippage tolerance to 12%+');
     }
   };
 
@@ -1011,7 +1045,9 @@ class App extends Component<IProps, IApp> {
   };
 
   getPriceImpact = async (input: number) => {
-    if (input) {
+    if (input && BigNumber.from(input).gt(0)) {
+      let priceImp: number;
+
       const pairAddress = await this.state.factory.getPair(
         this.state.tokenAData.address,
         this.state.tokenBData.address
@@ -1023,15 +1059,26 @@ class App extends Component<IProps, IApp> {
         this.state.signer
       );
 
+      const tokenData = !this.state.switched
+        ? this.state.tokenBData
+        : this.state.tokenAData;
+
+      console.log('Price Impaaaact..');
+      console.log(tokenData);
+
+      console.log('Price Impaaaact..');
+
       const token2 = new ethers.Contract(
-        this.state.tokenBData.address,
+        tokenData.address,
         ERC20.abi,
         this.state.signer
       );
 
-      const token_B_LP_Balance = await token2.balanceOf(Pair.address);
+      const token_LP_Balance = await token2.balanceOf(Pair.address);
 
-      const priceImp = (input / parseFloat(token_B_LP_Balance)) * 100;
+      priceImp = (input * 100) / token_LP_Balance.toString();
+
+      console.log(priceImp, input, token_LP_Balance.toString());
 
       const priceImpact = Number.parseFloat(priceImp.toFixed(2));
 
@@ -1050,94 +1097,97 @@ class App extends Component<IProps, IApp> {
     token2Data: ITokenData
   ) => {
     try {
-      if (token1Data?.address && token2Data?.address) {
+      const checkSelectedTokens = await this.checkIfBothTokeSelected(false);
+      if (checkSelectedTokens) {
         const token1 = new ethers.Contract(
-          this.state.tokenAData.address,
+          this.state.tokenAData?.address,
           ERC20.abi,
           this.state.signer
         );
 
         const token2 = new ethers.Contract(
-          this.state.tokenBData.address,
+          this.state.tokenBData?.address,
           ERC20.abi,
           this.state.signer
         );
 
         const pairAddress = await this.state.factory.getPair(
-          token1Data.address,
-          token2Data.address
+          token1Data?.address,
+          token2Data?.address
         );
 
-        const Pair = new ethers.Contract(
-          pairAddress,
-          Exchange.abi,
-          this.state.signer
-        );
+        if (pairAddress !== '') {
+          const Pair = new ethers.Contract(
+            pairAddress,
+            Exchange.abi,
+            this.state.signer
+          );
 
-        if (Pair.address !== REACT_APP_ZERO_ADDRESS) {
-          const token_A_LP_Balance = await token1.balanceOf(Pair.address);
+          if (Pair.address !== REACT_APP_ZERO_ADDRESS) {
+            const token_A_LP_Balance = await token1.balanceOf(Pair.address);
 
-          const token_B_LP_Balance = await token2.balanceOf(Pair.address);
+            const token_B_LP_Balance = await token2.balanceOf(Pair.address);
 
-          //Pair balance account
-          const liquidity = await Pair.balanceOf(this.state.account);
+            //Pair balance account
+            const liquidity = await Pair.balanceOf(this.state.account);
 
-          const lpPairBalanceAccount = liquidity.toString();
-          //Token balance
-          const tokenA = token_A_LP_Balance.toString();
-          //WETH balance
-          const tokenB = token_B_LP_Balance.toString();
-          const totalSupply = await Pair.totalSupply();
+            const lpPairBalanceAccount = liquidity.toString();
+            //Token balance
+            const tokenA = token_A_LP_Balance.toString();
+            //WETH balance
+            const tokenB = token_B_LP_Balance.toString();
+            const totalSupply = await Pair.totalSupply();
 
-          const lpAccountShare = liquidity / totalSupply;
+            const lpAccountShare = liquidity / totalSupply;
 
-          const tokenAShare =
-            Number.parseFloat(this.state.fromWei(tokenA)) * lpAccountShare;
+            const tokenAShare =
+              Number.parseFloat(this.state.fromWei(tokenA)) * lpAccountShare;
 
-          const tokenBShare =
-            Number.parseFloat(this.state.fromWei(tokenB)) * lpAccountShare;
+            const tokenBShare =
+              Number.parseFloat(this.state.fromWei(tokenB)) * lpAccountShare;
 
-          const lpShareAccountviaInp: BigNumber = BigNumber.from(
-            this.child.current.state.inputAmountInWei
-          )
-            .mul(100)
-            .div(totalSupply);
+            const lpShareAccountviaInp: BigNumber = BigNumber.from(
+              this.child.current.state.inputAmountInWei
+            )
+              .mul(100)
+              .div(totalSupply);
 
-          const lpShareAccountviaInput = lpShareAccountviaInp.toString();
+            const lpShareAccountviaInput = lpShareAccountviaInp.toString();
 
-          const tokenASelectedShare = token1Data.symbol;
-          const tokenBSelectedShare = token2Data.symbol;
-          // console.log(
-          //   `LP Account: ${this.state.fromWei(lpPairBalanceAccount)}`
-          // );
-          // console.log(`LP Token Balance ${this.state.fromWei(tokenA)}`);
-          // console.log(`LP WETH Balance ${this.state.fromWei(tokenB)}`);
-          // console.log(`LP Total Supply: ${this.state.fromWei(totalSupply)}`);
-          // console.log(`Price impact ${priceImpact}`);
+            const tokenASelectedShare = token1Data.symbol;
+            const tokenBSelectedShare = token2Data.symbol;
+            // console.log(
+            //   `LP Account: ${this.state.fromWei(lpPairBalanceAccount)}`
+            // );
+            // console.log(`LP Token Balance ${this.state.fromWei(tokenA)}`);
+            // console.log(`LP WETH Balance ${this.state.fromWei(tokenB)}`);
+            // console.log(`LP Total Supply: ${this.state.fromWei(totalSupply)}`);
+            // console.log(`Price impact ${priceImpact}`);
 
-          this.setState({
-            liquidity,
-            lpPairBalanceAccount,
-            lpShareAccountviaInput,
-            lpAccountShare,
-            tokenASelectedShare,
-            tokenBSelectedShare,
-            tokenAShare,
-            tokenBShare,
-            Pair,
-          });
-        } else {
-          this.setState({
-            liquidity: 0,
-            tokenASelectedShare: '',
-            tokenBSelectedShare: '',
-            lpPairBalanceAccount: '0',
-            lpShareAccountviaInput: '0',
-            lpAccountShare: 0,
-            tokenAShare: 0,
-            tokenBShare: 0,
-            Pair,
-          });
+            this.setState({
+              liquidity,
+              lpPairBalanceAccount,
+              lpShareAccountviaInput,
+              lpAccountShare,
+              tokenASelectedShare,
+              tokenBSelectedShare,
+              tokenAShare,
+              tokenBShare,
+              Pair,
+            });
+          } else {
+            this.setState({
+              liquidity: 0,
+              tokenASelectedShare: '',
+              tokenBSelectedShare: '',
+              lpPairBalanceAccount: '0',
+              lpShareAccountviaInput: '0',
+              lpAccountShare: 0,
+              tokenAShare: 0,
+              tokenBShare: 0,
+              Pair,
+            });
+          }
         }
       }
     } catch (e) {
@@ -1181,14 +1231,16 @@ class App extends Component<IProps, IApp> {
         <Context.Provider value={this.state}>
           <Navbar account={this.state.account} />
         </Context.Provider>
-        <div className="container-fluid mt-5 background-img ">
+        <div className="container-fluid ">
           <div className="row">
             <main
               role="main"
               className="col-lg-12 ml-auto mr-auto main"
               style={{ maxWidth: '500px' }}
             >
-              <div className="content justify-content-center">{content}</div>
+              <div className="content justify-content-center mt-5">
+                {content}
+              </div>
             </main>
           </div>
         </div>

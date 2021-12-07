@@ -16,6 +16,7 @@ const Background = styled(Flex)`
   position: absolute;
   align-items: center;
   top: 0;
+  overflow: hidden;
 `;
 
 const ModalWrapper = styled.div`
@@ -170,6 +171,12 @@ export const ModalSlippage = ({ isOpen, toggleSlippageModal, setSlippage }) => {
                 </ButtonText>
                 %
               </ContainerRow>
+              <button
+                onClick={toggleItems}
+                className="btn btn-info btn-block confirm"
+              >
+                Confirm
+              </button>
             </Container>
           </ModalWrapper>
         </Background>
