@@ -12,8 +12,6 @@
 # production
 /build
 /cache
-/src/abi
-
 
 #Config
 /package.json
