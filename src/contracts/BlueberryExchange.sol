@@ -9,8 +9,6 @@ import './interfaces/IFactory.sol';
 import './interfaces/IExchangeCallee.sol';
 import './libraries/SafeMath.sol';
 
-import 'hardhat/console.sol';
-
 contract BlueberryExchange is BlueberryERC20 {
     using SafeMath for uint256;
    
@@ -145,9 +143,6 @@ contract BlueberryExchange is BlueberryERC20 {
         _safeTransfer(_token1, to, amount1);
         balance0 = IERC20(_token0).balanceOf(address(this));
         balance1 = IERC20(_token1).balanceOf(address(this));
-        console.log('BBBBBBB');
-        console.log(balance0, balance1, _reserve0, _reserve1);
-        console.log('BBBBBBB');
         _update(balance0, balance1, _reserve0, _reserve1);
         if (feeOn) kLast = uint(reserve0).mul(reserve1); // reserve0 and reserve1 are up-to-date
         emit Burn(msg.sender, amount0, amount1, to);

@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 contract BlueberryERC20  {
     string public constant name = 'BlueberrySwap V2';

@@ -11,9 +11,9 @@ export interface ITokenData {
 export interface IApp {
   account: string;
   web3: any;
-  router: any;
-  exchange: any;
-  factory: any;
+  router: Contract;
+  exchange: Contract;
+  factory: Contract;
   Pair: any;
   tokenABalance: string;
   tokenBBalance: string;
@@ -28,11 +28,13 @@ export interface IApp {
   addLiquidity(tokenAmount: BigNumber, tokenBAmount: BigNumber): void;
   removeLiquidity(liquidityAmount: string): void;
   getTokenAAmount(tokenAmount: BigNumber): void;
+  getTokenAAmountSwitchedForm(tokenAmount: BigNumber): void;
+  getTokenBAmountSwitchedForm(tokenAmount: BigNumber): void;
   getTokenBAmount(tokenAmount: BigNumber): void;
   getExchangeAddress(token1: any, token2: any): any;
   getExchange(exchange: any): any;
   getLiquidityOwner(token1Data: ITokenData, token2Data: ITokenData): void;
-  getPriceImpact(input: number): void;
+  getPriceImpact(input: BigNumber): void;
   fromWei(value: any): string;
   toWei(value: any): BigNumber;
   isOpenModalSlippage: boolean;

@@ -8,7 +8,7 @@ import Factory from '../abi/src/contracts/BlueberryFactory.sol/BlueberryFactory.
 import Router from '../abi/src/contracts/BlueberryRouter.sol/BlueberryRouter.json';
 import WETH from '../abi/src/contracts/WETH.sol/WETH.json';
 import ERC20 from '../abi/src/contracts/BlueberryERC20.sol/BlueberryERC20.json';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber, ethers, Contract } from 'ethers';
 import Context from './Context';
 import { Modal } from '../components/Modalform';
 import { IApp, ITokenData } from '../components/IStates/IApp';
@@ -75,9 +75,9 @@ class App extends Component<IProps, IApp> {
     this.state = {
       account: '',
       web3: new Web3(Web3.givenProvider),
-      router: {},
-      factory: {},
-      exchange: {},
+      router: {} as Contract,
+      factory: {} as Contract,
+      exchange: {} as Contract,
       Pair: {},
       tokenABalance: '0',
       tokenBBalance: '0',
@@ -92,6 +92,8 @@ class App extends Component<IProps, IApp> {
       addLiquidity: this.addLiquidity,
       removeLiquidity: this.removeLiquidity,
       getTokenAAmount: this.getTokenAAmount,
+      getTokenAAmountSwitchedForm: this.getTokenAAmountSwitchedForm,
+      getTokenBAmountSwitchedForm: this.getTokenBAmountSwitchedForm,
       getTokenBAmount: this.getTokenBAmount,
       getExchangeAddress: this.getExchangeAddress,
       getExchange: this.getExchange,
@@ -138,22 +140,7 @@ class App extends Component<IProps, IApp> {
   overrides = {
     gasLimit: 9966666,
   };
-  // clear between switch tap or removing input
-  clearStates = () => {
-    this.setState({
-      inputAmount: '',
-      outputAmount: '',
-      outputAmountInWei: '',
-      inputAmountInWei: '',
-    });
-  };
 
-  setSlippage = (slippage: string) => {
-    console.log(`setSlippage...${slippage}`);
-    this.setState({
-      slippage,
-    });
-  };
   async componentDidMount() {
     this._isMounted = true;
     this.setState({
@@ -174,26 +161,37 @@ class App extends Component<IProps, IApp> {
       );
     }
   }
-  switchForms = async () => {
-    console.log('switchForms..');
-    if (this.child?.current) {
-      await this.child.current.setInputOutputVal();
-    }
-    await this.switchTokens();
+
+  // clear at switching taps or removing input
+  clearStates = () => {
     this.setState({
-      switched: !this.state.switched,
+      priceImpact: 0,
+      inputAmount: null,
+      outputAmount: null,
+      outputAmountInWei: null,
+      inputAmountInWei: null,
     });
   };
 
+  setSlippage = (slippage: string) => {
+    console.log(`setSlippage...${slippage}`);
+    this.setState({
+      slippage,
+    });
+  };
+
+  switchForms = async () => {
+    console.log('switchForms..');
+    await this.switchTokens();
+  };
+
   switchTokens = async () => {
-    if (this.state.switched) {
-      console.log('SWWWWWW');
-      const tokenADataTmp = this.state.tokenAData;
-      this.setState({
-        tokenAData: this.state.tokenBData,
-        tokenBData: tokenADataTmp,
-      });
-    }
+    const tokenADataTmp = this.state.tokenAData;
+    this.setState({
+      tokenAData: this.state.tokenBData,
+      tokenBData: tokenADataTmp,
+      switched: !this.state.switched,
+    });
   };
 
   connectToWeb3 = async () => {
@@ -518,8 +516,7 @@ class App extends Component<IProps, IApp> {
               ...this.overrides,
             }
           );
-
-          await tx.wait();
+          await tx.wait(1);
 
           const tx2 = await this.state.router.addLiquidityETH(
             this.state.tokenAData.address,
@@ -534,7 +531,7 @@ class App extends Component<IProps, IApp> {
               ...this.overrides,
             }
           );
-          await tx2.wait();
+          await tx2.wait(1);
 
           this.setState({ loading: false, tx: tx2.hash });
         } catch (err) {
@@ -683,7 +680,6 @@ class App extends Component<IProps, IApp> {
   };
 
   getExchangeAddress = async (token1Address: any, token2Address: any) => {
-    console.log(token1Address, token2Address);
     try {
       const exchangeAddress = await this.state.factory.getPair(
         token1Address,
@@ -727,7 +723,6 @@ class App extends Component<IProps, IApp> {
         ERC20.abi,
         this.state.signer
       );
-      await this.switchTokens();
 
       if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
         if (this.state.tokenAData.address === REACT_APP_WETH_ADDRESS) {
@@ -846,6 +841,87 @@ class App extends Component<IProps, IApp> {
     }
   };
 
+  getTokenAAmountSwitchedForm = async (tokenAmount: BigNumber) => {
+    console.log('getTokenAAmountSwitchedForm...');
+    try {
+      console.log(`Selected token: ${this.state.tokenBData.address}`);
+      const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
+      if (checkSelectedTokens) {
+        const exchangeAddress = await this.getExchangeAddress(
+          this.state.tokenAData.address,
+          this.state.tokenBData.address
+        );
+        console.log(`Exchange address - getTokenAAmount: ${exchangeAddress}`);
+        if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
+          if (BigNumber.from(tokenAmount).gt(0)) {
+            let res: BigNumber[] = await this._getTokenAmountIn(
+              tokenAmount,
+              this.state.tokenBData.address,
+              this.state.tokenAData.address
+            );
+
+            setTimeout(() => {
+              this.setState({ msg: null });
+            }, 4000);
+            return res;
+          } else {
+            console.log('TokenAmount is undefined..');
+          }
+        } else {
+          console.log('No Pair exists.. Please set the initial price');
+          this.setMsg('No Pair exists.. Please set the initial price');
+          return;
+        }
+      } else {
+        console.log('getTokenAAmount: Select a token..');
+        this.setMsg('Select a token..');
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  getTokenBAmountSwitchedForm = async (tokenAmount: BigNumber) => {
+    console.log('getTokenBAmountSwitchedForm...');
+    try {
+      console.log(`Selected token: ${this.state.tokenBData.address}`);
+      const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
+      if (checkSelectedTokens) {
+        const exchangeAddress = await this.getExchangeAddress(
+          this.state.tokenAData.address,
+          this.state.tokenBData.address
+        );
+        console.log(`Exchange address - getTokenBAmount: ${exchangeAddress}`);
+
+        if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
+          if (BigNumber.from(tokenAmount).gt(0)) {
+            const res = await this._getTokenAmountOut(
+              tokenAmount,
+              this.state.tokenBData.address,
+              this.state.tokenAData.address
+            );
+
+            setTimeout(() => {
+              this.setState({ msg: null });
+            }, 3000);
+            return res;
+          } else {
+            console.log('TokenAmount is undefined..');
+          }
+        } else {
+          console.log('No Pair exists.. Please set the initial price');
+          this.setMsg('No Pair exists.. Please set the initial price');
+          return;
+        }
+      } else {
+        console.log('getTokenBAmount: Select a token..');
+        this.setMsg('Select a token..');
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   getTokenAAmount = async (tokenAmount: BigNumber) => {
     try {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
@@ -858,7 +934,7 @@ class App extends Component<IProps, IApp> {
         console.log(`Exchange address - getTokenAAmount: ${exchangeAddress}`);
         if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
           if (BigNumber.from(tokenAmount).gt(0)) {
-            const res = await this._getTokenAmountIn(
+            let res = await this._getTokenAmountIn(
               tokenAmount,
               this.state.tokenAData.address,
               this.state.tokenBData.address
@@ -930,21 +1006,30 @@ class App extends Component<IProps, IApp> {
     token0: string,
     token1: string
   ) => {
-    const res = await this.state.router.getAmountsOut(_amount, [
-      token0,
-      token1,
-    ]);
+    console.log('_getTokenAmountOut..');
+    try {
+      if (_amount && BigNumber.from(_amount).gt(0)) {
+        const res = await this.state.router.getAmountsOut(_amount, [
+          token0,
+          token1,
+        ]);
 
-    if (res === undefined) {
-      console.log(
-        'No Pair exists.. You are the first provider.Please set the initial price'
-      );
-      this.setMsg(
-        'No Pair exists..You are the first provider. Please set the initial price'
-      );
-      return;
-    } else {
-      return res;
+        if (res === undefined) {
+          console.log(
+            'No Pair exists.. You are the first provider.Please set the initial price'
+          );
+          this.setMsg(
+            'No Pair exists..You are the first provider. Please set the initial price'
+          );
+          return;
+        } else {
+          return res;
+        }
+      } else {
+        console.log('Amount is empty or zero..');
+      }
+    } catch (err: any) {
+      console.log(err);
     }
   };
 
@@ -954,17 +1039,30 @@ class App extends Component<IProps, IApp> {
     token1: string
   ) => {
     console.log('_getTokenAmountIn..');
-    const res = await this.state.router.getAmountsIn(_amount, [token0, token1]);
-    if (res === undefined) {
-      console.log(
-        'No Pair exists.. You are the first provider.Please set the initial price'
-      );
-      this.setMsg(
-        'No Pair exists..You are the first provider. Please set the initial price'
-      );
-      return;
-    } else {
-      return res;
+    let res: any;
+    try {
+      if (_amount && BigNumber.from(_amount).gt(0)) {
+        try {
+          res = await this.state.router.getAmountsIn(_amount, [token0, token1]);
+        } catch (err: any) {
+          console.log(err);
+        }
+
+        if (res === undefined) {
+          console.log(
+            'No Pair exists.. You are the first provider.Please set the initial price'
+          );
+          this.setMsg(
+            'No Pair exists..You are the first provider. Please set the initial price'
+          );
+        } else {
+          return res;
+        }
+      } else {
+        console.log('Amount is empty or zero..');
+      }
+    } catch (err: any) {
+      console.log(err);
     }
   };
 
@@ -1032,7 +1130,7 @@ class App extends Component<IProps, IApp> {
   getTokenAmountAfterSelectedAToken = async () => {
     console.log('getTokenAmountAfterSelectedBToken..');
     if (this.child?.current) {
-      await this.child.current.handleOnChangeTokenBAmount();
+      await this.child.current.handleTokenChanges(true);
     }
   };
 
@@ -1040,13 +1138,13 @@ class App extends Component<IProps, IApp> {
     console.log('getTokenAmountAfterSelectedBToken..');
 
     if (this.child?.current) {
-      await this.child.current.handleOnChangeTokenAAmount();
+      await this.child.current.handleTokenChanges(false);
     }
   };
 
-  getPriceImpact = async (input: number) => {
+  getPriceImpact = async (input: any) => {
     if (input && BigNumber.from(input).gt(0)) {
-      let priceImp: number;
+      let priceImp: any;
 
       const pairAddress = await this.state.factory.getPair(
         this.state.tokenAData.address,
@@ -1059,14 +1157,8 @@ class App extends Component<IProps, IApp> {
         this.state.signer
       );
 
-      const tokenData = !this.state.switched
-        ? this.state.tokenBData
-        : this.state.tokenAData;
-
-      console.log('Price Impaaaact..');
-      console.log(tokenData);
-
-      console.log('Price Impaaaact..');
+      // token switch is considered
+      const tokenData = this.state.tokenBData;
 
       const token2 = new ethers.Contract(
         tokenData.address,
@@ -1076,11 +1168,10 @@ class App extends Component<IProps, IApp> {
 
       const token_LP_Balance = await token2.balanceOf(Pair.address);
 
-      priceImp = (input * 100) / token_LP_Balance.toString();
+      priceImp =
+        (parseFloat(input.toString()) * 100) / token_LP_Balance.toString();
 
-      console.log(priceImp, input, token_LP_Balance.toString());
-
-      const priceImpact = Number.parseFloat(priceImp.toFixed(2));
+      const priceImpact = priceImp > 99.9999 ? 100 : priceImp.toFixed(4);
 
       this.setState({
         priceImpact,
@@ -1162,7 +1253,6 @@ class App extends Component<IProps, IApp> {
             // console.log(`LP Token Balance ${this.state.fromWei(tokenA)}`);
             // console.log(`LP WETH Balance ${this.state.fromWei(tokenB)}`);
             // console.log(`LP Total Supply: ${this.state.fromWei(totalSupply)}`);
-            // console.log(`Price impact ${priceImpact}`);
 
             this.setState({
               liquidity,

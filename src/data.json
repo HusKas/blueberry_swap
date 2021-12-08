@@ -20,12 +20,5 @@
     "symbol": "USDT",
     "decimals": 18,
     "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/825.png"
-  },
-  {
-    "name": "Shiba",
-    "address": "0x6BDDbB6ea12a52F05822F77A22668A4FB73f511A",
-    "symbol": "Shiba",
-    "decimals": 18,
-    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/5994.png"
   }
 ]

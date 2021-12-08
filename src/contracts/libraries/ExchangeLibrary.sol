@@ -24,7 +24,7 @@ using SafeMath for uint256;
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                hex'0456fb707f84d5fbe961588ae3d6950bd14dbbb35e93145edc86183bd92d128c' // init code hash
+                hex'b6358878fef968253604387961fea0d1cdf3bfdcd99e900b014e0da2f86e1f5f' // init code hash
             )))));
      
     }
@@ -33,7 +33,6 @@ using SafeMath for uint256;
         (address token0,) = sortTokens(tokenA, tokenB);
         (uint reserve0, uint reserve1,) = IExchange(pairFor(factory, tokenA, tokenB)).getReserves();
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
-        console.log(reserveA, reserveB);
     }
 
     function quote(uint amountA, uint reserveA, uint reserveB) internal pure returns (uint amountB) {

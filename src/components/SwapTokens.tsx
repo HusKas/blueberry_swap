@@ -4,6 +4,7 @@ import Context from './Context';
 import { FaAngleDown } from 'react-icons/fa';
 import { AiOutlineQuestionCircle } from 'react-icons/ai';
 import { BigNumber } from 'ethers';
+
 const Container = styled.div`
   margin-bottom: 20px;
   border-radius: 25px;
@@ -97,6 +98,11 @@ interface IState {
   switched: boolean;
 }
 
+enum Token {
+  tokenA = 'tokenA',
+  tokenB = 'tokenB',
+}
+
 class SwapTokens extends Component<IProps, IState> {
   static contextType = Context;
   private inputAmountRef = React.createRef<HTMLInputElement>();
@@ -116,6 +122,23 @@ class SwapTokens extends Component<IProps, IState> {
       minimumReceived: 0,
       switched: false,
     };
+  }
+
+  resetFormFields = async () => {
+    this.inputAmountRef.current.value = null;
+    this.outputAmountRef.current.value = null;
+    this.setState({
+      calcStandard: 0,
+      inputAmount: null,
+      outputAmount: null,
+      inputAmountInWei: null,
+      outputAmountInWei: null,
+    });
+    await this.context.clearStates();
+  };
+
+  isNumeric(n: any) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
   }
 
   handleSubmit = async (event: any) => {
@@ -142,13 +165,15 @@ class SwapTokens extends Component<IProps, IState> {
     }
   };
 
-  setInputOutputVal = async () => {
+  setInputOutputValAfterSwitch = async () => {
     let minimumReceived: any;
     let inputAmount: any, outputAmount: any;
     inputAmount = this.state.inputAmount;
     outputAmount = this.state.outputAmount;
-    this.outputAmountRef.current.value = inputAmount;
-    this.inputAmountRef.current.value = outputAmount;
+
+    const tmp = this.outputAmountRef.current.value;
+    this.outputAmountRef.current.value = this.inputAmountRef.current.value;
+    this.inputAmountRef.current.value = tmp;
 
     if (this.state.switched) {
       minimumReceived =
@@ -158,12 +183,8 @@ class SwapTokens extends Component<IProps, IState> {
         inputAmount - (inputAmount * this.context.slippage) / 100;
     }
 
-    console.log(minimumReceived);
-
     this.setState({
-      calcStandard: !this.state.switched
-        ? this.state.outputAmount / this.state.inputAmount
-        : this.state.inputAmount / this.state.outputAmount,
+      calcStandard: 0,
       minimumReceived,
       switched: !this.state.switched,
       inputAmountInWei: this.state.outputAmountInWei,
@@ -171,145 +192,174 @@ class SwapTokens extends Component<IProps, IState> {
     });
   };
 
-  handleOnChangeTokenAAmount = async (e: any) => {
-    console.log('handleOnChangeTokenAAmount..');
-
+  handleTokenChanges = async (isTokenA: boolean) => {
     let inputAmount: any;
     let outputAmount: any;
     let minimumReceived: any;
+    let calcStandard: any;
+    let exchangePrice: any;
     let inputAmountInWei: BigNumber = BigNumber.from(0);
     let outputAmountInWei: BigNumber = BigNumber.from(0);
 
-    const input = this.outputAmountRef.current.value.replace(/\s+/g, '');
-    if (input !== '' && this.isNumeric(input)) {
-      outputAmount = input;
-      outputAmountInWei = this.context.toWei(outputAmount);
+    const inputWithoutSpace = isTokenA
+      ? this.inputAmountRef.current?.value.replace(/\s+/g, '')
+      : this.outputAmountRef.current?.value.replace(/\s+/g, '');
 
-      if (BigNumber.from(outputAmountInWei).gt(0)) {
-        inputAmountInWei = await this.context.getTokenAAmount(
-          outputAmountInWei
-        );
+    const tokenID = isTokenA
+      ? this.inputAmountRef.current.id
+      : this.outputAmountRef.current.id;
 
-        if (inputAmountInWei) {
-          console.log(
-            inputAmountInWei[0].toString(),
-            inputAmountInWei[1].toString()
-          );
+    if (inputWithoutSpace !== '' && this.isNumeric(inputWithoutSpace)) {
+      inputAmount = inputWithoutSpace;
+      /**
+       * ###########################################
+       * !Switched && tokenA || Switched && tokenA
+       *  ###########################################
+       */
 
-          inputAmount = this.context.fromWei(inputAmountInWei[0]);
-          inputAmountInWei = inputAmountInWei[0].toString();
+      if (
+        (!this.state.switched && tokenID === Token.tokenA) ||
+        (this.state.switched && tokenID === Token.tokenA)
+      ) {
+        console.log('-------------------');
+        console.log(this.state.switched, tokenID);
+        console.log('-------------------');
+        inputAmountInWei = this.context.toWei(inputAmount);
+        inputAmount = this.context.fromWei(inputAmountInWei);
 
-          this.context.getPriceImpact(outputAmountInWei);
-
+        if (BigNumber.from(inputAmountInWei).gt(0)) {
           if (!this.state.switched) {
+            outputAmountInWei = await this.context.getTokenBAmount(
+              inputAmountInWei
+            );
+            exchangePrice = await this.context.getTokenAAmount(
+              this.context.toWei(1)
+            );
+          } else {
+            outputAmountInWei = await this.context.getTokenAAmountSwitchedForm(
+              inputAmountInWei
+            );
+
+            exchangePrice = await this.context.getTokenBAmountSwitchedForm(
+              this.context.toWei(1)
+            );
+          }
+          if (outputAmountInWei) {
+            if (!this.state.switched) {
+              outputAmount = this.context.fromWei(outputAmountInWei[1]);
+              outputAmountInWei = outputAmountInWei[1].toString();
+
+              if (exchangePrice) {
+                calcStandard = this.context.fromWei(
+                  exchangePrice[0].toString()
+                );
+              }
+            } else {
+              outputAmount = this.context.fromWei(outputAmountInWei[0]);
+              outputAmountInWei = outputAmountInWei[0].toString();
+
+              if (exchangePrice) {
+                calcStandard = this.context.fromWei(
+                  exchangePrice[1].toString()
+                );
+              }
+            }
+            await this.context.getPriceImpact(outputAmountInWei);
             minimumReceived =
               outputAmount - (outputAmount * this.context.slippage) / 100;
-          } else {
-            minimumReceived =
-              inputAmount - (inputAmount * this.context.slippage) / 100;
+
+            this.outputAmountRef.current.value = outputAmount;
+            await this.context.getLiquidityOwner(this.context.tokenAData);
+
+            this.setState({
+              calcStandard,
+              inputAmount,
+              outputAmount,
+              inputAmountInWei,
+              outputAmountInWei,
+              minimumReceived,
+            });
           }
+        }
+        /**
+         * ###########################################
+         *  !Switched && tokenB || Switched && tokenB
+         *  ###########################################
+         */
+      } else if (
+        (!this.state.switched && tokenID === Token.tokenB) ||
+        (this.state.switched && tokenID === Token.tokenB)
+      ) {
+        console.log('-------------------');
+        console.log(this.state.switched, tokenID);
+        console.log('-------------------');
+        outputAmount = inputWithoutSpace;
 
-          this.inputAmountRef.current.value = inputAmount;
-          this.context.getLiquidityOwner(this.context.tokenBData);
+        outputAmountInWei = this.context.toWei(outputAmount);
+        outputAmount = this.context.fromWei(outputAmountInWei);
 
-          this.setState({
-            calcStandard: !this.state.switched
-              ? inputAmount / outputAmount
-              : outputAmount / inputAmount,
-            inputAmount,
-            outputAmount,
-            inputAmountInWei,
-            outputAmountInWei,
-            minimumReceived,
-          });
-        } else {
-          this.inputAmountRef.current.value = '';
-          this.setState({
-            outputAmount,
-            outputAmountInWei,
-          });
+        if (BigNumber.from(outputAmountInWei).gt(0)) {
+          if (!this.state.switched) {
+            inputAmountInWei = await this.context.getTokenAAmount(
+              outputAmountInWei
+            );
+            exchangePrice = await this.context.getTokenBAmount(
+              this.context.toWei(0)
+            );
+          } else {
+            inputAmountInWei = await this.context.getTokenBAmountSwitchedForm(
+              outputAmountInWei
+            );
+            exchangePrice = await this.context.getTokenBAmountSwitchedForm(
+              this.context.toWei(1)
+            );
+          }
+          if (inputAmountInWei) {
+            if (!this.state.switched) {
+              inputAmount = this.context.fromWei(inputAmountInWei[0]);
+              inputAmountInWei = inputAmountInWei[0].toString();
+
+              if (exchangePrice) {
+                calcStandard = this.context.fromWei(
+                  exchangePrice[1].toString()
+                );
+                this.setState({
+                  calcStandard,
+                });
+              }
+            } else {
+              inputAmount = this.context.fromWei(inputAmountInWei[1]);
+              inputAmountInWei = inputAmountInWei[1].toString();
+
+              if (exchangePrice) {
+                calcStandard = this.context.fromWei(
+                  exchangePrice[1].toString()
+                );
+                this.setState({
+                  calcStandard,
+                });
+              }
+            }
+
+            minimumReceived =
+              outputAmount - (outputAmount * this.context.slippage) / 100;
+            await this.context.getPriceImpact(outputAmountInWei);
+
+            this.inputAmountRef.current.value = inputAmount;
+            this.context.getLiquidityOwner(this.context.tokenBData);
+
+            this.setState({
+              inputAmount,
+              outputAmount,
+              inputAmountInWei,
+              outputAmountInWei,
+              minimumReceived,
+            });
+          }
         }
       }
     } else {
-      this.inputAmountRef.current.value = '';
-      this.setState({
-        inputAmount: '',
-        outputAmount: '',
-        outputAmountInWei: BigNumber.from(0),
-        calcStandard: 0,
-      });
-    }
-  };
-
-  handleOnChangeTokenBAmount = async (e: any) => {
-    console.log('handleOnChangeTokenBAmount..');
-
-    let inputAmount: any;
-    let outputAmount: any;
-    let minimumReceived: any;
-    let inputAmountInWei: BigNumber = BigNumber.from(0);
-    let outputAmountInWei: BigNumber = BigNumber.from(0);
-
-    const input = this.inputAmountRef.current.value.replace(/\s+/g, '');
-    if (input !== '' && this.isNumeric(input)) {
-      inputAmount = input;
-      inputAmountInWei = this.context.toWei(inputAmount);
-
-      console.log(inputAmountInWei.toString());
-      if (BigNumber.from(inputAmountInWei).gt(0)) {
-        outputAmountInWei = await this.context.getTokenBAmount(
-          inputAmountInWei
-        );
-
-        if (outputAmountInWei) {
-          console.log(
-            outputAmountInWei[0].toString(),
-            outputAmountInWei[1].toString()
-          );
-
-          outputAmount = this.context.fromWei(outputAmountInWei[1]);
-          outputAmountInWei = outputAmountInWei[1].toString();
-
-          this.context.getPriceImpact(outputAmountInWei);
-
-          if (!this.state.switched) {
-            minimumReceived =
-              outputAmount - (outputAmount * this.context.slippage) / 100;
-          } else {
-            minimumReceived =
-              inputAmount - (inputAmount * this.context.slippage) / 100;
-          }
-          this.outputAmountRef.current.value = outputAmount;
-          this.context.getLiquidityOwner(this.context.tokenAData);
-
-          this.setState({
-            calcStandard: !this.state.switched
-              ? inputAmount / outputAmount
-              : outputAmount / inputAmount,
-            inputAmount,
-            outputAmount,
-            inputAmountInWei,
-            outputAmountInWei,
-            minimumReceived,
-          });
-        } else {
-          this.outputAmountRef.current.value = '';
-          this.setState({
-            inputAmount,
-            inputAmountInWei,
-          });
-        }
-      }
-    } else {
-      this.outputAmountRef.current.value = '';
-      this.context.getPriceImpact(null);
-      this.context.clearStates();
-      this.setState({
-        inputAmount: '',
-        outputAmount: '',
-        inputAmountInWei: BigNumber.from(0),
-        outputAmountInWei: BigNumber.from(0),
-      });
+      await this.resetFormFields();
     }
   };
 
@@ -317,22 +367,10 @@ class SwapTokens extends Component<IProps, IState> {
     this.context.toggleTokenListModal(tokenBSelected);
   };
 
-  clickSwitchForm = (e: any) => {
+  clickSwitchForm = async (e: any) => {
     this.props.switchForms();
+    await this.setInputOutputValAfterSwitch();
   };
-
-  resetForms = () => {
-    this.setState({
-      inputAmount: null,
-      outputAmount: null,
-      inputAmountInWei: null,
-      outputAmountInWei: null,
-    });
-  };
-
-  isNumeric(n: any) {
-    return !isNaN(parseFloat(n)) && isFinite(n);
-  }
 
   main = () => (
     <div id="content">
@@ -360,77 +398,36 @@ class SwapTokens extends Component<IProps, IState> {
               </span>
             </div>
             <div className="input-group mb-2">
-              {!this.state.switched ? (
-                <>
-                  <input
-                    id="tokenA"
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    placeholder="0.0"
-                    ref={this.inputAmountRef}
-                    onChange={(event: any) => {
-                      this.handleOnChangeTokenBAmount(event);
-                    }}
-                    className="form-control form-control-lg"
-                    required
-                  />
-                  <div
-                    className="input-group-append"
-                    onClick={() => this.toggleModal(false)}
-                  >
-                    {this.context.tokenAData?.symbol ? (
-                      <div className="input-group-text">
-                        <Image src={this.context.tokenAData.logoURI}></Image>
-                        &nbsp; {this.context.tokenAData.symbol} <FaAngleDown />
-                      </div>
-                    ) : (
-                      <div className="input-group-text">
-                        Select
-                        <FaAngleDown />
-                      </div>
-                    )}
+              <input
+                id="tokenA"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                placeholder="0.0"
+                ref={this.inputAmountRef}
+                onChange={() => this.handleTokenChanges(true)}
+                className="form-control form-control-lg"
+                required
+              />
+              <div
+                className="input-group-append"
+                onClick={() => this.toggleModal(false)}
+              >
+                {this.context.tokenAData?.symbol ? (
+                  <div className="input-group-text">
+                    <Image src={this.context.tokenAData.logoURI}></Image>
+                    &nbsp; {this.context.tokenAData.symbol} <FaAngleDown />
                   </div>
-                </>
-              ) : (
-                <>
-                  <input
-                    id="tokenB"
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    placeholder="0.0"
-                    ref={this.outputAmountRef}
-                    onChange={(event: any) => {
-                      this.handleOnChangeTokenAAmount(event);
-                    }}
-                    className="form-control form-control-lg"
-                    required
-                  />
-                  <div
-                    className="input-group-append"
-                    onClick={() => this.toggleModal(true)}
-                  >
-                    {this.context.tokenBData?.symbol ? (
-                      <div className="input-group-text">
-                        <Image src={this.context.tokenBData.logoURI}></Image>
-                        &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
-                      </div>
-                    ) : (
-                      <div className="input-group-text">
-                        Select
-                        <FaAngleDown />
-                      </div>
-                    )}
+                ) : (
+                  <div className="input-group-text">
+                    Select
+                    <FaAngleDown />
                   </div>
-                </>
-              )}
+                )}
+              </div>
             </div>
 
             <div
@@ -453,77 +450,36 @@ class SwapTokens extends Component<IProps, IState> {
               </span>
             </div>
             <div className="input-group mb-2">
-              {!this.state.switched ? (
-                <>
-                  <input
-                    id="tokenB"
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    placeholder="0.0"
-                    ref={this.outputAmountRef}
-                    onChange={(event: any) => {
-                      this.handleOnChangeTokenAAmount(event);
-                    }}
-                    className="form-control form-control-lg"
-                    required
-                  />
-                  <div
-                    className="input-group-append"
-                    onClick={() => this.toggleModal(true)}
-                  >
-                    {this.context.tokenBData?.symbol ? (
-                      <div className="input-group-text">
-                        <Image src={this.context.tokenBData.logoURI}></Image>
-                        &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
-                      </div>
-                    ) : (
-                      <div className="input-group-text">
-                        Select
-                        <FaAngleDown />
-                      </div>
-                    )}
+              <input
+                id="tokenB"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                placeholder="0.0"
+                ref={this.outputAmountRef}
+                onChange={() => this.handleTokenChanges(false)}
+                className="form-control form-control-lg"
+                required
+              />
+              <div
+                className="input-group-append"
+                onClick={() => this.toggleModal(true)}
+              >
+                {this.context.tokenBData?.symbol ? (
+                  <div className="input-group-text">
+                    <Image src={this.context.tokenBData.logoURI}></Image>
+                    &nbsp; {this.context.tokenBData.symbol} <FaAngleDown />
                   </div>
-                </>
-              ) : (
-                <>
-                  <input
-                    id="tokenA"
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    placeholder="0.0"
-                    ref={this.inputAmountRef}
-                    onChange={(event: any) => {
-                      this.handleOnChangeTokenBAmount(event);
-                    }}
-                    className="form-control form-control-lg"
-                    required
-                  />
-                  <div
-                    className="input-group-append"
-                    onClick={() => this.toggleModal(false)}
-                  >
-                    {this.context.tokenAData?.symbol ? (
-                      <div className="input-group-text">
-                        <Image src={this.context.tokenAData.logoURI}></Image>
-                        &nbsp; {this.context.tokenAData.symbol} <FaAngleDown />
-                      </div>
-                    ) : (
-                      <div className="input-group-text">
-                        Select
-                        <FaAngleDown />
-                      </div>
-                    )}
+                ) : (
+                  <div className="input-group-text">
+                    Select
+                    <FaAngleDown />
                   </div>
-                </>
-              )}
+                )}
+              </div>
             </div>
             <div className="mb-5">
               <Row>
@@ -535,25 +491,12 @@ class SwapTokens extends Component<IProps, IState> {
                 <>
                   <span className="float-left text-muted">Exchange Rate</span>
                   <br />
-                  {this.state.switched ? (
-                    <span className="float-right text-muted">
-                      <i style={{ margin: '3px' }}>1</i>
-                      {this.context.tokenAData?.symbol} =
-                      <i style={{ margin: '3px' }}>
-                        {this.state?.calcStandard}
-                      </i>
-                      {this.context.tokenBData?.symbol}
-                    </span>
-                  ) : (
-                    <span className="float-right text-muted">
-                      <i style={{ margin: '3px' }}>1</i>
-                      {this.context.tokenBData?.symbol} =
-                      <i style={{ margin: '3px' }}>
-                        {this.state?.calcStandard}
-                      </i>
-                      {this.context.tokenAData?.symbol}
-                    </span>
-                  )}
+                  <span className="float-right text-muted">
+                    <i style={{ margin: '3px' }}>1</i>
+                    {this.context.tokenBData?.symbol} =
+                    <i style={{ margin: '3px' }}>{this.state?.calcStandard}</i>
+                    {this.context.tokenAData?.symbol}
+                  </span>
                 </>
               ) : null}
             </div>

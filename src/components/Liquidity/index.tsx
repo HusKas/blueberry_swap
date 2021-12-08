@@ -61,6 +61,11 @@ interface IProps {
   clearStates(): any;
 }
 
+enum Token {
+  tokenA = 'tokenA',
+  tokenB = 'tokenB',
+}
+
 export class AddLiquidity extends Component<any, IState> {
   static contextType = Context;
   private inputAmountRef = React.createRef<any>();
@@ -70,10 +75,7 @@ export class AddLiquidity extends Component<any, IState> {
     super(props);
     this.removeLiquidity = this.removeLiquidity.bind(this);
     this.toggleModal = this.toggleModal.bind(this);
-    this.handleOnChangeTokenAAmount =
-      this.handleOnChangeTokenAAmount.bind(this);
-    this.handleOnChangeTokenBAmount =
-      this.handleOnChangeTokenBAmount.bind(this);
+
     this.state = {
       calc: 0,
       inputAmount: '',
@@ -86,23 +88,25 @@ export class AddLiquidity extends Component<any, IState> {
 
   handleSubmit = async (event: any) => {
     console.log('submit..');
-    if (event.target.value !== '') {
+    event.preventDefault();
+    this.setState({ loading: true });
+    try {
       const inputAmountInWei: BigNumber = BigNumber.from(
         this.state.inputAmountInWei
       );
       const outputAmountInWei: BigNumber = BigNumber.from(
         this.state.outputAmountInWei
       );
-      const inputAmount = this.state.inputAmount;
-      if (
-        inputAmountInWei &&
-        outputAmountInWei &&
-        inputAmount < this.context.tokenABalance
-      ) {
+
+      if (inputAmountInWei && outputAmountInWei) {
         await this.context.addLiquidity(inputAmountInWei, outputAmountInWei);
-      } else {
-        alert('Not enough balance');
+        this.setState({ loading: false });
       }
+    } catch (e: any) {
+      console.log(`AddLiquidity:handleSubmit ${e.error}`);
+      this.setState({
+        loading: false,
+      });
     }
   };
 
@@ -123,58 +127,8 @@ export class AddLiquidity extends Component<any, IState> {
       });
     } else {
       console.log('Could not remove liquidity');
-    }
-  };
-
-  handleOnChangeTokenAAmount = async (e: any) => {
-    console.log('handleOnChangeTokenAAmount..');
-    let inputAmount: any;
-    let outputAmount: any;
-    let inputAmountInWei: BigNumber = BigNumber.from(0);
-    let outputAmountInWei: BigNumber = BigNumber.from(0);
-    outputAmount = this.outputAmountRef.current.value.replace(/\s+/g, '');
-
-    if (outputAmount !== '' && this.isNumeric(outputAmount)) {
-      outputAmountInWei = this.context.toWei(outputAmount).toString();
-      if (BigNumber.from(outputAmountInWei).gt(0)) {
-        inputAmountInWei = await this.context.getTokenAAmount(
-          outputAmountInWei
-        );
-
-        if (inputAmountInWei) {
-          console.log(
-            inputAmountInWei[0].toString(),
-            inputAmountInWei[1].toString()
-          );
-
-          inputAmount = this.context.fromWei(inputAmountInWei[0]);
-          inputAmountInWei = inputAmountInWei[0].toString();
-
-          this.inputAmountRef.current.value = inputAmount;
-
-          this.setState({
-            calc: inputAmount / outputAmount,
-            inputAmount,
-            inputAmountInWei,
-            outputAmount,
-            outputAmountInWei,
-          });
-          this.context.getLiquidityOwner(
-            this.context.tokenAData,
-            this.context.tokenBData
-          );
-        } else {
-          this.setState({
-            outputAmount,
-            outputAmountInWei,
-          });
-        }
-      }
-    } else {
-      this.props.clearStates();
       this.setState({
-        inputAmount: '',
-        outputAmount: '',
+        loading: false,
       });
     }
   };
@@ -183,76 +137,107 @@ export class AddLiquidity extends Component<any, IState> {
     return !isNaN(parseFloat(n)) && isFinite(n);
   }
 
-  handleOnChangeTokenBAmount = async (e: any) => {
-    console.log('handleOnChangeTokenBAmount..');
-
-    let inputAmount: any;
-    let outputAmount: any;
-    let inputAmountInWei: BigNumber = BigNumber.from(0);
-    let outputAmountInWei: BigNumber = BigNumber.from(0);
-    inputAmount = this.inputAmountRef.current.value.replace(/\s+/g, '');
-
-    if (inputAmount !== '' && this.isNumeric(inputAmount)) {
-      inputAmountInWei = this.context.toWei(inputAmount).toString();
-
-      if (BigNumber.from(inputAmountInWei).gt(0)) {
-        outputAmountInWei = await this.context.getTokenBAmount(
-          inputAmountInWei
-        );
-
-        if (outputAmountInWei) {
-          console.log(
-            outputAmountInWei[0].toString(),
-            outputAmountInWei[1].toString()
-          );
-
-          outputAmount = this.context.fromWei(outputAmountInWei[1]);
-          outputAmountInWei = outputAmountInWei[1].toString();
-
-          this.outputAmountRef.current.value = outputAmount;
-
-          this.setState({
-            calc: inputAmount / outputAmount,
-            inputAmount,
-            inputAmountInWei,
-            outputAmount,
-            outputAmountInWei,
-          });
-          this.context.getLiquidityOwner(
-            this.context.tokenAData,
-            this.context.tokenBData
-          );
-        } else {
-          this.setState({
-            inputAmount,
-            inputAmountInWei,
-          });
-        }
-      }
-    } else {
-      this.props.clearStates();
-      this.setState({
-        inputAmount: '',
-        outputAmount: '',
-      });
-    }
-  };
-
   toggleModal = (tokenBSelected: boolean) => {
     this.context.toggleTokenListModal(tokenBSelected);
   };
 
-  checkLoadingStatus = () => {
-    return <p>{this.state.loading ? 'Loading..' : ''}</p>;
+  resetFormsFields = async () => {
+    this.inputAmountRef.current.value = null;
+    this.outputAmountRef.current.value = null;
+    this.setState({
+      inputAmount: null,
+      outputAmount: null,
+      inputAmountInWei: null,
+      outputAmountInWei: null,
+    });
   };
 
-  resetForms = () => {
-    this.setState({
-      inputAmount: '',
-      outputAmount: '',
-      inputAmountInWei: BigNumber.from(0),
-      outputAmountInWei: BigNumber.from(0),
-    });
+  handleTokenChanges = async (isTokenA: boolean) => {
+    let inputAmount: any;
+    let outputAmount: any;
+    let inputAmountInWei: BigNumber = BigNumber.from(0);
+    let outputAmountInWei: BigNumber = BigNumber.from(0);
+
+    const inputWithoutSpace = isTokenA
+      ? this.inputAmountRef.current?.value.replace(/\s+/g, '')
+      : this.outputAmountRef.current?.value.replace(/\s+/g, '');
+
+    const tokenID = isTokenA
+      ? this.inputAmountRef.current.id
+      : this.outputAmountRef.current.id;
+
+    if (inputWithoutSpace !== '' && this.isNumeric(inputWithoutSpace)) {
+      inputAmount = inputWithoutSpace;
+      /**
+       * ###########################################
+       * !Switched && tokenA || Switched && tokenA
+       *  ###########################################
+       */
+
+      if (tokenID === Token.tokenA) {
+        console.log('-------------------');
+        console.log(tokenID);
+        console.log('-------------------');
+        inputAmountInWei = this.context.toWei(inputAmount);
+        inputAmount = this.context.fromWei(inputAmountInWei);
+
+        if (BigNumber.from(inputAmountInWei).gt(0)) {
+          outputAmountInWei = await this.context.getTokenBAmount(
+            inputAmountInWei
+          );
+
+          if (outputAmountInWei) {
+            outputAmount = this.context.fromWei(outputAmountInWei[1]);
+            outputAmountInWei = outputAmountInWei[1].toString();
+
+            this.outputAmountRef.current.value = outputAmount;
+            await this.context.getLiquidityOwner(this.context.tokenAData);
+
+            this.setState({
+              inputAmount,
+              outputAmount,
+              inputAmountInWei,
+              outputAmountInWei,
+            });
+          }
+        }
+        /**
+         * ###########################################
+         *  tokenB
+         *  ###########################################
+         */
+      } else if (tokenID === Token.tokenB) {
+        console.log('-------------------');
+        console.log(tokenID);
+        console.log('-------------------');
+        outputAmount = inputWithoutSpace;
+
+        outputAmountInWei = this.context.toWei(outputAmount);
+        outputAmount = this.context.fromWei(outputAmountInWei);
+
+        if (BigNumber.from(outputAmountInWei).gt(0)) {
+          inputAmountInWei = await this.context.getTokenAAmount(
+            outputAmountInWei
+          );
+
+          if (inputAmountInWei) {
+            inputAmount = this.context.fromWei(inputAmountInWei[0]);
+            inputAmountInWei = inputAmountInWei[0].toString();
+          }
+          this.inputAmountRef.current.value = inputAmount;
+          this.context.getLiquidityOwner(this.context.tokenBData);
+
+          this.setState({
+            inputAmount,
+            outputAmount,
+            inputAmountInWei,
+            outputAmountInWei,
+          });
+        }
+      }
+    } else {
+      await this.resetFormsFields();
+    }
   };
 
   main = () => (
@@ -287,7 +272,7 @@ export class AddLiquidity extends Component<any, IState> {
                 spellCheck="false"
                 placeholder="0.0"
                 ref={this.inputAmountRef}
-                onChange={this.handleOnChangeTokenBAmount}
+                onChange={() => this.handleTokenChanges(true)}
                 className="form-control form-control-lg"
                 required
               />
@@ -328,7 +313,7 @@ export class AddLiquidity extends Component<any, IState> {
                 spellCheck="false"
                 placeholder="0.0"
                 ref={this.outputAmountRef}
-                onChange={this.handleOnChangeTokenAAmount}
+                onChange={() => this.handleTokenChanges(false)}
                 className="form-control form-control-lg"
                 required
               />
