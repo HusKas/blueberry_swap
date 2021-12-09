@@ -178,70 +178,17 @@ class App extends Component<any, IApp> {
     }
   }
 
-  getGasLimit = async () => {
-    const gasLimit = await this.state.web3.eth.getBlock('latest');
-    return gasLimit;
-  };
-
-  isAddress(value: any): string {
-    try {
-      return getAddress(value);
-    } catch {
-      return null;
-    }
-  }
-  // clear at switching taps or removing input
-  clearStates = () => {
-    this.setState({
-      priceImpact: 0,
-      inputAmount: null,
-      outputAmount: null,
-      outputAmountInWei: null,
-      inputAmountInWei: null,
-    });
-  };
-
-  setSlippage = (slippage: string) => {
-    console.log(`setSlippage...${slippage}`);
-    this.setState({
-      slippage,
-    });
-  };
-
-  switchForms = async () => {
-    console.log('switchForms..');
-    await this.switchTokens();
-  };
-
-  switchTokens = async () => {
-    const tokenADataTmp = this.state.tokenAData;
-    this.setState({
-      tokenAData: this.state.tokenBData,
-      tokenBData: tokenADataTmp,
-      switched: !this.state.switched,
-    });
-  };
-
-  getCalcExchangeAddress = async (tokenA: ITokenData, tokenB: ITokenData) => {
-    const REACT_APP_FACTORY_ADDRESS_NEW = this.isAddress(
-      REACT_APP_FACTORY_ADDRESS
-    );
-    return computePairAddress({
-      factoryAddress: REACT_APP_FACTORY_ADDRESS_NEW,
-      tokenA,
-      tokenB,
-    });
-  };
-
   connectToWeb3 = async () => {
     try {
       if (window.ethereum) {
         window.web3 = new Web3(window.ethereum);
-        await window.ethereum.enable();
+        //await window.ethereum.enable();
+
         window.ethereum.on('chainChanged', (chainId: string) =>
           window.location.reload()
         );
       } else if (window.web3) {
+        console.log('AAAAAAAAA');
         window.web3 = new Web3(window.web3.currentProvider);
       } else {
         window.alert(
@@ -318,6 +265,61 @@ class App extends Component<any, IApp> {
     )
       await this.getEthBalanceTokenA();
   }
+
+  getGasLimit = async () => {
+    const gasLimit = await this.state.web3.eth.getBlock('latest');
+    return gasLimit;
+  };
+
+  isAddress(value: any): string {
+    try {
+      return getAddress(value);
+    } catch {
+      return null;
+    }
+  }
+  // clear at switching taps or removing input
+  clearStates = () => {
+    this.setState({
+      priceImpact: 0,
+      inputAmount: null,
+      outputAmount: null,
+      outputAmountInWei: null,
+      inputAmountInWei: null,
+    });
+  };
+
+  setSlippage = (slippage: string) => {
+    console.log(`setSlippage...${slippage}`);
+    this.setState({
+      slippage,
+    });
+  };
+
+  switchForms = async () => {
+    console.log('switchForms..');
+    await this.switchTokens();
+  };
+
+  switchTokens = async () => {
+    const tokenADataTmp = this.state.tokenAData;
+    this.setState({
+      tokenAData: this.state.tokenBData,
+      tokenBData: tokenADataTmp,
+      switched: !this.state.switched,
+    });
+  };
+
+  getCalcExchangeAddress = async (tokenA: ITokenData, tokenB: ITokenData) => {
+    const REACT_APP_FACTORY_ADDRESS_NEW = this.isAddress(
+      REACT_APP_FACTORY_ADDRESS
+    );
+    return computePairAddress({
+      factoryAddress: REACT_APP_FACTORY_ADDRESS_NEW,
+      tokenA,
+      tokenB,
+    });
+  };
 
   getNetworkName = async (network: string) => {
     console.log(network);
@@ -727,6 +729,8 @@ class App extends Component<any, IApp> {
   };
 
   getExchangeAddress = async (token1Address: any, token2Address: any) => {
+    console.log(this.state.factory.address);
+
     try {
       const exchangeAddress = await this.state.factory.getPair(
         token1Address,
@@ -1027,15 +1031,12 @@ class App extends Component<any, IApp> {
           this.state.tokenBData.address
         );
 
-        console.log('-----------');
-        console.log(exchangeAddress);
-        console.log('-----------');
-
         console.log(`Exchange address - getTokenBAmount: ${exchangeAddress}`);
 
+        let res: any;
         if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
           if (BigNumber.from(tokenAmount).gt(0)) {
-            const res = await this._getTokenAmountOut(
+            res = await this._getTokenAmountOut(
               tokenAmount,
               this.state.tokenAData.address,
               this.state.tokenBData.address
@@ -1058,7 +1059,7 @@ class App extends Component<any, IApp> {
         this.setMsg('Select a token..');
       }
     } catch (err) {
-      console.log(err);
+      console.log(err.data.message);
     }
   };
 
@@ -1068,11 +1069,18 @@ class App extends Component<any, IApp> {
     token1: string
   ) => {
     console.log('_getTokenAmountOut..');
+
     let res: any;
     try {
       if (_amount && BigNumber.from(_amount).gt(0)) {
-        res = await this.state.router.getAmountsOut(_amount, [token0, token1]);
-
+        try {
+          res = await this.state.router.getAmountsOut(_amount, [
+            token0,
+            token1,
+          ]);
+        } catch (err: any) {
+          console.log(err.data.message);
+        }
         if (res === undefined) {
           console.log(
             'No Pair exists.. You are the first provider.Please set the initial price'
@@ -1087,7 +1095,9 @@ class App extends Component<any, IApp> {
         console.log('Amount is empty or zero..');
       }
     } catch (err: any) {
-      console.log(err);
+      console.log('---------------');
+      console.log(`_getTokenAmountOut ${err.data.message}`);
+      console.log('---------------');
     }
   };
 
@@ -1120,7 +1130,9 @@ class App extends Component<any, IApp> {
         console.log('Amount is empty or zero..');
       }
     } catch (err: any) {
-      console.log(err);
+      console.log('---------------');
+      console.log(`_getTokenAmountIn ${err}`);
+      console.log('---------------');
     }
   };
 

@@ -185,7 +185,7 @@ export class AddLiquidity extends Component<any, IState> {
         console.log(this.state.switched, tokenID);
         console.log('-------------------');
         try {
-          inputAmountInWei = this.context.toWei(inputWithoutSpace);
+          inputAmountInWei = this.context.toWei(inputAmount);
           inputAmount = this.context.fromWei(inputAmountInWei);
 
           if (BigNumber.from(inputAmountInWei).gt(0)) {

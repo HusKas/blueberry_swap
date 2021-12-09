@@ -227,6 +227,7 @@ class SwapTokens extends Component<IProps, IState> {
         try {
           inputAmountInWei = this.context.toWei(inputAmount);
           inputAmount = this.context.fromWei(inputAmountInWei);
+
           if (BigNumber.from(inputAmountInWei).gt(0)) {
             if (!this.state.switched) {
               outputAmountInWei = await this.context.getTokenBAmount(
