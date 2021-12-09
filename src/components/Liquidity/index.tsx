@@ -55,10 +55,9 @@ interface IState {
   inputAmountInWei: BigNumber;
   outputAmount: any;
   outputAmountInWei: BigNumber;
+  loadingRemoveLp: Boolean;
   loading: boolean;
-}
-interface IProps {
-  clearStates(): any;
+  switched: boolean;
 }
 
 enum Token {
@@ -68,13 +67,14 @@ enum Token {
 
 export class AddLiquidity extends Component<any, IState> {
   static contextType = Context;
-  private inputAmountRef = React.createRef<any>();
+  private inputAmountRef = React.createRef<HTMLInputElement>();
   private outputAmountRef = React.createRef<HTMLInputElement>();
 
-  constructor(props: IProps) {
+  constructor(props: any) {
     super(props);
     this.removeLiquidity = this.removeLiquidity.bind(this);
     this.toggleModal = this.toggleModal.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
 
     this.state = {
       calc: 0,
@@ -82,14 +82,62 @@ export class AddLiquidity extends Component<any, IState> {
       inputAmountInWei: BigNumber.from(0),
       outputAmountInWei: BigNumber.from(0),
       outputAmount: '',
+      loadingRemoveLp: false,
       loading: false,
+      switched: false,
     };
   }
+
+  removeLiquidity = async (lpPairBalanceAccount: string) => {
+    this.setState({
+      loadingRemoveLp: true,
+      loading: true,
+    });
+
+    const res = await this.context.removeLiquidity(lpPairBalanceAccount);
+
+    if (res) {
+      await this.context.getLiquidityOwner(
+        this.context.tokenAData,
+        this.context.tokenBData
+      );
+      this.setState({
+        loadingRemoveLp: false,
+        loading: false,
+      });
+    } else {
+      console.log('Could not remove liquidity');
+      this.setState({
+        loadingRemoveLp: false,
+        loading: false,
+      });
+    }
+  };
+
+  isNumeric(n: any) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+  }
+
+  toggleModal = (tokenBSelected: boolean) => {
+    this.context.toggleTokenListModal(tokenBSelected);
+  };
+
+  resetFormFields = async () => {
+    this.inputAmountRef.current.value = null;
+    this.outputAmountRef.current.value = null;
+    this.setState({
+      inputAmount: null,
+      outputAmount: null,
+      inputAmountInWei: null,
+      outputAmountInWei: null,
+    });
+  };
 
   handleSubmit = async (event: any) => {
     console.log('submit..');
     event.preventDefault();
     this.setState({ loading: true });
+
     try {
       const inputAmountInWei: BigNumber = BigNumber.from(
         this.state.inputAmountInWei
@@ -110,48 +158,6 @@ export class AddLiquidity extends Component<any, IState> {
     }
   };
 
-  removeLiquidity = async (lpPairBalanceAccount: string) => {
-    this.setState({
-      loading: true,
-    });
-
-    const res = await this.context.removeLiquidity(lpPairBalanceAccount);
-
-    if (res) {
-      await this.context.getLiquidityOwner(
-        this.context.tokenAData,
-        this.context.tokenBData
-      );
-      this.setState({
-        loading: false,
-      });
-    } else {
-      console.log('Could not remove liquidity');
-      this.setState({
-        loading: false,
-      });
-    }
-  };
-
-  isNumeric(n: any) {
-    return !isNaN(parseFloat(n)) && isFinite(n);
-  }
-
-  toggleModal = (tokenBSelected: boolean) => {
-    this.context.toggleTokenListModal(tokenBSelected);
-  };
-
-  resetFormsFields = async () => {
-    this.inputAmountRef.current.value = null;
-    this.outputAmountRef.current.value = null;
-    this.setState({
-      inputAmount: null,
-      outputAmount: null,
-      inputAmountInWei: null,
-      outputAmountInWei: null,
-    });
-  };
-
   handleTokenChanges = async (isTokenA: boolean) => {
     let inputAmount: any;
     let outputAmount: any;
@@ -170,73 +176,97 @@ export class AddLiquidity extends Component<any, IState> {
       inputAmount = inputWithoutSpace;
       /**
        * ###########################################
-       * !Switched && tokenA || Switched && tokenA
+       * !Switched && tokenA
        *  ###########################################
        */
 
-      if (tokenID === Token.tokenA) {
+      if (!this.state.switched && tokenID === Token.tokenA) {
+        console.log('------------------');
+        console.log(this.state.switched, tokenID);
         console.log('-------------------');
-        console.log(tokenID);
-        console.log('-------------------');
-        inputAmountInWei = this.context.toWei(inputAmount);
-        inputAmount = this.context.fromWei(inputAmountInWei);
+        try {
+          inputAmountInWei = this.context.toWei(inputWithoutSpace);
+          inputAmount = this.context.fromWei(inputAmountInWei);
 
-        if (BigNumber.from(inputAmountInWei).gt(0)) {
-          outputAmountInWei = await this.context.getTokenBAmount(
-            inputAmountInWei
-          );
+          if (BigNumber.from(inputAmountInWei).gt(0)) {
+            outputAmountInWei = await this.context.getTokenBAmount(
+              inputAmountInWei
+            );
 
-          if (outputAmountInWei) {
-            outputAmount = this.context.fromWei(outputAmountInWei[1]);
-            outputAmountInWei = outputAmountInWei[1].toString();
+            if (outputAmountInWei) {
+              if (!this.state.switched) {
+                outputAmount = this.context.fromWei(outputAmountInWei[1]);
+                outputAmountInWei = outputAmountInWei[1].toString();
+              } else {
+                outputAmount = this.context.fromWei(outputAmountInWei[0]);
+                outputAmountInWei = outputAmountInWei[0].toString();
+              }
+              await this.context.getPriceImpact(outputAmountInWei);
 
-            this.outputAmountRef.current.value = outputAmount;
-            await this.context.getLiquidityOwner(this.context.tokenAData);
+              this.outputAmountRef.current.value = outputAmount;
+              await this.context.getLiquidityOwner(this.context.tokenAData);
 
-            this.setState({
-              inputAmount,
-              outputAmount,
-              inputAmountInWei,
-              outputAmountInWei,
-            });
+              this.setState({
+                inputAmount,
+                outputAmount,
+                inputAmountInWei,
+                outputAmountInWei,
+              });
+            } else {
+              this.setState({
+                inputAmount,
+                inputAmountInWei,
+              });
+            }
           }
+        } catch (e: any) {
+          console.log(e);
         }
         /**
          * ###########################################
-         *  tokenB
+         *  !Switched && tokenB
          *  ###########################################
          */
-      } else if (tokenID === Token.tokenB) {
+      } else if (!this.state.switched && tokenID === Token.tokenB) {
+        console.log('------------------');
+        console.log(this.state.switched, tokenID);
         console.log('-------------------');
-        console.log(tokenID);
-        console.log('-------------------');
-        outputAmount = inputWithoutSpace;
 
-        outputAmountInWei = this.context.toWei(outputAmount);
+        outputAmountInWei = this.context.toWei(inputWithoutSpace);
         outputAmount = this.context.fromWei(outputAmountInWei);
 
-        if (BigNumber.from(outputAmountInWei).gt(0)) {
-          inputAmountInWei = await this.context.getTokenAAmount(
-            outputAmountInWei
-          );
+        try {
+          if (BigNumber.from(outputAmountInWei).gt(0)) {
+            inputAmountInWei = await this.context.getTokenAAmount(
+              outputAmountInWei
+            );
 
-          if (inputAmountInWei) {
-            inputAmount = this.context.fromWei(inputAmountInWei[0]);
-            inputAmountInWei = inputAmountInWei[0].toString();
+            if (inputAmountInWei) {
+              inputAmount = this.context.fromWei(inputAmountInWei[0]);
+              inputAmountInWei = inputAmountInWei[0].toString();
+
+              this.inputAmountRef.current.value = inputAmount;
+              this.context.getLiquidityOwner(this.context.tokenBData);
+
+              this.setState({
+                inputAmount,
+                outputAmount,
+                inputAmountInWei,
+                outputAmountInWei,
+              });
+            } else {
+              this.setState({
+                outputAmount,
+                outputAmountInWei,
+              });
+            }
           }
-          this.inputAmountRef.current.value = inputAmount;
-          this.context.getLiquidityOwner(this.context.tokenBData);
-
-          this.setState({
-            inputAmount,
-            outputAmount,
-            inputAmountInWei,
-            outputAmountInWei,
-          });
+        } catch (e: any) {
+          console.log(e);
         }
       }
     } else {
-      await this.resetFormsFields();
+      await this.resetFormFields();
     }
   };
 
@@ -247,10 +277,7 @@ export class AddLiquidity extends Component<any, IState> {
           <form
             autoComplete="off"
             className="mb-3"
-            onSubmit={async (event: any) => {
-              event.preventDefault();
-              this.handleSubmit(event);
-            }}
+            onSubmit={this.handleSubmit}
           >
             <div>
               <label className="float-left">
@@ -350,8 +377,8 @@ export class AddLiquidity extends Component<any, IState> {
               ) : null}
             </div>
             {this.context.correctNetwork && this.context.account ? (
-              !this.context.loadingRemoveLp ? (
-                !this.context.loading ? (
+              !this.state.loadingRemoveLp ? (
+                !this.state.loading ? (
                   <button
                     type="submit"
                     className="btn btn-primary btn-block btn-lg"
@@ -405,9 +432,8 @@ export class AddLiquidity extends Component<any, IState> {
                 <Column>{this.context.tokenBShare}</Column>
               </Row>
             </ColumnContainer>
-            {!this.context.loading ? (
-              this.context.lpAccountShare > 0 &&
-              !this.context.loadingRemoveLp ? (
+            {!this.state.loading ? (
+              this.context.lpAccountShare > 0 && !this.state.loadingRemoveLp ? (
                 <button
                   type="submit"
                   className="btn  btn-block btn-lg removeLpButton"

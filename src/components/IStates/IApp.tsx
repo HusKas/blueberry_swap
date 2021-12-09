@@ -14,7 +14,7 @@ export interface IApp {
   router: Contract;
   exchange: Contract;
   factory: Contract;
-  Pair: any;
+  Pair: Contract;
   tokenABalance: string;
   tokenBBalance: string;
   tokenABalanceInWei: BigNumber;

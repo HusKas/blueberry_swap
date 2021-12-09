@@ -1,7 +1,7 @@
 [
   {
     "name": "BNB",
-    "address": "0xcbaA8c4302C69422C82c4321bB316176B32E3978",
+    "address": "0xa7C5a60087EbE11b259B147c225724d5b8362568",
     "symbol": "BNB",
     "decimals": 18,
     "chainId": 4,
@@ -16,7 +16,7 @@
   },
   {
     "name": "USDT",
-    "address": "0x2020B78D0F0e04b8B6c63899BD789f277027eE70",
+    "address": "0x46a6213A25eE3D13Ee0F200214a589ddF8b45623",
     "symbol": "USDT",
     "decimals": 18,
     "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/825.png"
