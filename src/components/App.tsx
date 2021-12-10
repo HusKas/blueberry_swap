@@ -1247,72 +1247,72 @@ class App extends Component<any, IApp> {
           this.state.signer
         );
 
-        // const pairAddress = await this.getCalcExchangeAddress(
-        //   this.state.tokenAData,
-        //   this.state.tokenBData
-        // );
+        const pairAddress = await this.getCalcExchangeAddress(
+          this.state.tokenAData,
+          this.state.tokenBData
+        );
 
-        // const Pair = new ethers.Contract(
-        //   pairAddress,
-        //   Exchange.abi,
-        //   this.state.signer
-        // );
+        const Pair = new ethers.Contract(
+          pairAddress,
+          Exchange.abi,
+          this.state.signer
+        );
 
-        // if (Pair.address !== REACT_APP_ZERO_ADDRESS) {
-        // const PairAddress = this.isAddress(Pair.address);
-        // const token_A_LP_Balance = await token1.balanceOf(PairAddress);
-        // const token_B_LP_Balance = await token2.balanceOf(PairAddress);
-        // //Pair balance account
-        // const liquidity = await Pair.balanceOf(this.state.account);
-        // const lpPairBalanceAccount = liquidity.toString();
-        // //Token balance
-        // const tokenA = token_A_LP_Balance.toString();
-        // //WETH balance
-        // const tokenB = token_B_LP_Balance.toString();
-        // const totalSupply = await Pair.totalSupply();
-        // const lpAccountShare = liquidity / totalSupply;
-        // const tokenAShare =
-        //   Number.parseFloat(this.state.fromWei(tokenA)) * lpAccountShare;
-        // const tokenBShare =
-        //   Number.parseFloat(this.state.fromWei(tokenB)) * lpAccountShare;
-        // const lpShareAccountviaInp: BigNumber = BigNumber.from(
-        //   this.child.current.state.inputAmountInWei
-        // )
-        //   .mul(100)
-        //   .div(totalSupply);
-        // const lpShareAccountviaInput = lpShareAccountviaInp.toString();
-        // const tokenASelectedShare = token1Data.symbol;
-        // const tokenBSelectedShare = token2Data.symbol;
-        // // console.log(
-        // //   `LP Account: ${this.state.fromWei(lpPairBalanceAccount)}`
-        // // );
-        // // console.log(`LP Token Balance ${this.state.fromWei(tokenA)}`);
-        // // console.log(`LP WETH Balance ${this.state.fromWei(tokenB)}`);
-        // // console.log(`LP Total Supply: ${this.state.fromWei(totalSupply)}`);
-        // this.setState({
-        //   liquidity,
-        //   lpPairBalanceAccount,
-        //   lpShareAccountviaInput,
-        //   lpAccountShare,
-        //   tokenASelectedShare,
-        //   tokenBSelectedShare,
-        //   tokenAShare,
-        //   tokenBShare,
-        //   Pair,
-        // });
-        // } else {
-        //   this.setState({
-        //     liquidity: 0,
-        //     tokenASelectedShare: '',
-        //     tokenBSelectedShare: '',
-        //     lpPairBalanceAccount: '0',
-        //     lpShareAccountviaInput: '0',
-        //     lpAccountShare: 0,
-        //     tokenAShare: 0,
-        //     tokenBShare: 0,
-        //     Pair,
-        //   });
-        // }
+        if (Pair.address !== REACT_APP_ZERO_ADDRESS) {
+          const PairAddress = this.isAddress(Pair.address);
+          const token_A_LP_Balance = await token1.balanceOf(PairAddress);
+          const token_B_LP_Balance = await token2.balanceOf(PairAddress);
+          //Pair balance account
+          const liquidity = await Pair.balanceOf(this.state.account);
+          const lpPairBalanceAccount = liquidity.toString();
+          //Token balance
+          const tokenA = token_A_LP_Balance.toString();
+          //WETH balance
+          const tokenB = token_B_LP_Balance.toString();
+          const totalSupply = await Pair.totalSupply();
+          const lpAccountShare = liquidity / totalSupply;
+          const tokenAShare =
+            Number.parseFloat(this.state.fromWei(tokenA)) * lpAccountShare;
+          const tokenBShare =
+            Number.parseFloat(this.state.fromWei(tokenB)) * lpAccountShare;
+          const lpShareAccountviaInp: BigNumber = BigNumber.from(
+            this.child.current.state.inputAmountInWei
+          )
+            .mul(100)
+            .div(totalSupply);
+          const lpShareAccountviaInput = lpShareAccountviaInp.toString();
+          const tokenASelectedShare = token1Data.symbol;
+          const tokenBSelectedShare = token2Data.symbol;
+          // console.log(
+          //   `LP Account: ${this.state.fromWei(lpPairBalanceAccount)}`
+          // );
+          // console.log(`LP Token Balance ${this.state.fromWei(tokenA)}`);
+          // console.log(`LP WETH Balance ${this.state.fromWei(tokenB)}`);
+          // console.log(`LP Total Supply: ${this.state.fromWei(totalSupply)}`);
+          this.setState({
+            liquidity,
+            lpPairBalanceAccount,
+            lpShareAccountviaInput,
+            lpAccountShare,
+            tokenASelectedShare,
+            tokenBSelectedShare,
+            tokenAShare,
+            tokenBShare,
+            Pair,
+          });
+        } else {
+          this.setState({
+            liquidity: 0,
+            tokenASelectedShare: '',
+            tokenBSelectedShare: '',
+            lpPairBalanceAccount: '0',
+            lpShareAccountviaInput: '0',
+            lpAccountShare: 0,
+            tokenAShare: 0,
+            tokenBShare: 0,
+            Pair,
+          });
+        }
       }
     } catch (e) {
       console.log(`Error getting contract ${e}`);

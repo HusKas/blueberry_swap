@@ -4,10 +4,6 @@ import Context from '../Context';
 import { FaAngleDown } from 'react-icons/fa';
 import { BigNumber } from 'ethers';
 
-export interface ProcessEnv {
-  [key: string]: string | undefined;
-}
-
 const Container = styled.div`
   margin-bottom: 20px;
   border-radius: 25px;
