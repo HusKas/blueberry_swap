@@ -189,9 +189,13 @@ export class AddLiquidity extends Component<any, IState> {
           inputAmount = this.context.fromWei(inputAmountInWei);
 
           if (BigNumber.from(inputAmountInWei).gt(0)) {
-            outputAmountInWei = await this.context.getTokenBAmount(
-              inputAmountInWei
-            );
+            try {
+              outputAmountInWei = await this.context.getTokenBAmount(
+                inputAmountInWei
+              );
+            } catch (e) {
+              console.log(e);
+            }
 
             if (outputAmountInWei) {
               if (!this.state.switched) {
@@ -262,7 +266,7 @@ export class AddLiquidity extends Component<any, IState> {
             }
           }
         } catch (e: any) {
-          console.log(e);
+          console.log(e.data.message);
         }
       }
     } else {

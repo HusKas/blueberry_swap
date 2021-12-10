@@ -182,21 +182,18 @@ class App extends Component<any, IApp> {
     try {
       if (window.ethereum) {
         window.web3 = new Web3(window.ethereum);
-        //await window.ethereum.enable();
-
+        await window.ethereum.enable();
         window.ethereum.on('chainChanged', (chainId: string) =>
           window.location.reload()
         );
       } else if (window.web3) {
-        console.log('AAAAAAAAA');
         window.web3 = new Web3(window.web3.currentProvider);
       } else {
         window.alert(
           'Non-Ethereum browser detected. You should consider trying Metamask'
         );
       }
-    } catch (err) {
-      console.log('INnnnn');
+    } catch (err: any) {
       console.log(err);
     }
   };
@@ -493,9 +490,8 @@ class App extends Component<any, IApp> {
     );
     if (checkInputs) {
       const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
-      let exchangeAddress: any;
 
-      exchangeAddress = await this.getExchangeAddress(
+      const exchangeAddress = await this.getExchangeAddress(
         this.state.tokenAData.address,
         this.state.tokenBData.address
       );
@@ -513,11 +509,12 @@ class App extends Component<any, IApp> {
         this.state.signer
       );
       if (
-        this.state.tokenAData.address === this.isAddress(REACT_APP_WETH_ADDRESS)
+        this.state.tokenAData.address ===
+          this.isAddress(REACT_APP_WETH_ADDRESS) &&
+        exchangeAddress !== REACT_APP_ZERO_ADDRESS
       ) {
         try {
           console.log('Adding liquditiy ETH now ...');
-          //Router load
 
           const tx = await token2.approve(
             this.state.router.address,
@@ -553,7 +550,9 @@ class App extends Component<any, IApp> {
           this.setState({ loading: false });
         }
       } else if (
-        this.state.tokenBData.address === this.isAddress(REACT_APP_WETH_ADDRESS)
+        this.state.tokenBData.address ===
+          this.isAddress(REACT_APP_WETH_ADDRESS) &&
+        exchangeAddress !== REACT_APP_ZERO_ADDRESS
       ) {
         try {
           console.log('Adding liquditiy Token to ETH now ...');
@@ -591,52 +590,54 @@ class App extends Component<any, IApp> {
           this.setState({ loading: false });
         }
       } else {
-        try {
-          console.log('Adding liquditiy Token to Token now ...');
+        if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
+          try {
+            console.log('Adding liquditiy Token to Token now ...');
 
-          const tx0 = await token1.approve(
-            this.state.router.address,
-            tokenAAmount,
-            {
-              from: this.state.account,
-              ...this.overrides,
-            }
-          );
-          await tx0.wait();
+            const tx0 = await token1.approve(
+              this.state.router.address,
+              tokenAAmount,
+              {
+                from: this.state.account,
+                ...this.overrides,
+              }
+            );
+            await tx0.wait();
 
-          const tx1 = await token2.approve(
-            this.state.router.address,
-            tokenBAmount,
-            {
-              from: this.state.account,
-              ...this.overrides,
-            }
-          );
+            const tx1 = await token2.approve(
+              this.state.router.address,
+              tokenBAmount,
+              {
+                from: this.state.account,
+                ...this.overrides,
+              }
+            );
 
-          await tx1.wait();
+            await tx1.wait(1);
 
-          const tx2 = await this.state.router.addLiquidity(
-            this.state.tokenAData.address,
-            this.state.tokenBData.address,
-            tokenAAmount,
-            tokenBAmount,
-            0,
-            0,
-            this.state.account,
-            deadline,
-            {
-              from: this.state.account,
-              ...this.overrides,
-            }
-          );
-          await tx2.wait();
+            const tx2 = await this.state.router.addLiquidity(
+              this.state.tokenAData.address,
+              this.state.tokenBData.address,
+              tokenAAmount,
+              tokenBAmount,
+              0,
+              0,
+              this.state.account,
+              deadline,
+              {
+                from: this.state.account,
+                ...this.overrides,
+              }
+            );
+            await tx2.wait(1);
 
-          this.setState({ loading: false, tx: tx2.hash });
-          setTimeout(() => {
-            this.setState({ tx: null });
-          }, 3000);
-        } catch (err) {
-          this.setState({ loading: false });
+            this.setState({ loading: false, tx: tx2.hash });
+            setTimeout(() => {
+              this.setState({ tx: null });
+            }, 3000);
+          } catch (err) {
+            this.setState({ loading: false });
+          }
         }
       }
     }
@@ -731,14 +732,15 @@ class App extends Component<any, IApp> {
   getExchangeAddress = async (token1Address: any, token2Address: any) => {
     console.log(this.state.factory.address);
 
+    let exchangeAddress: any;
     try {
-      const exchangeAddress = await this.state.factory.getPair(
+      exchangeAddress = await this.state.factory.getPair(
         token1Address,
         token2Address
       );
 
       return exchangeAddress;
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
     }
   };
@@ -905,22 +907,24 @@ class App extends Component<any, IApp> {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
       const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
       if (checkSelectedTokens) {
-        const exchangeAddress = await this.getExchangeAddress(
-          this.state.tokenAData.address,
-          this.state.tokenBData.address
+        const exchangeAddress = await this.getCalcExchangeAddress(
+          this.state.tokenAData,
+          this.state.tokenBData
         );
         console.log(`Exchange address - getTokenAAmount: ${exchangeAddress}`);
         if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
           if (BigNumber.from(tokenAmount).gt(0)) {
-            let res: BigNumber[] = await this._getTokenAmountIn(
+            const res = await this._getTokenAmountIn(
               tokenAmount,
               this.state.tokenBData.address,
               this.state.tokenAData.address
             );
 
-            setTimeout(() => {
-              this.setState({ msg: null });
-            }, 4000);
+            if (!res) {
+              console.log('No Pair exists.. Please set the initial price');
+              this.setMsg('No Pair exists.. Please set the initial price');
+              return;
+            }
             return res;
           } else {
             console.log('TokenAmount is undefined..');
@@ -945,9 +949,9 @@ class App extends Component<any, IApp> {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
       const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
       if (checkSelectedTokens) {
-        const exchangeAddress = await this.getExchangeAddress(
-          this.state.tokenAData.address,
-          this.state.tokenBData.address
+        const exchangeAddress = await this.getCalcExchangeAddress(
+          this.state.tokenAData,
+          this.state.tokenBData
         );
         console.log(`Exchange address - getTokenBAmount: ${exchangeAddress}`);
 
@@ -959,9 +963,12 @@ class App extends Component<any, IApp> {
               this.state.tokenAData.address
             );
 
-            setTimeout(() => {
-              this.setState({ msg: null });
-            }, 3000);
+            if (!res) {
+              console.log('No Pair exists.. Please set the initial price');
+              this.setMsg('No Pair exists.. Please set the initial price');
+              return;
+            }
+
             return res;
           } else {
             console.log('TokenAmount is undefined..');
@@ -986,10 +993,11 @@ class App extends Component<any, IApp> {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
       const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
       if (checkSelectedTokens) {
-        const exchangeAddress = await this.getExchangeAddress(
-          this.state.tokenAData.address,
-          this.state.tokenBData.address
+        const exchangeAddress = await this.getCalcExchangeAddress(
+          this.state.tokenAData,
+          this.state.tokenBData
         );
+
         console.log(`Exchange address - getTokenAAmount: ${exchangeAddress}`);
         if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
           if (BigNumber.from(tokenAmount).gt(0)) {
@@ -999,9 +1007,12 @@ class App extends Component<any, IApp> {
               this.state.tokenBData.address
             );
 
-            setTimeout(() => {
-              this.setState({ msg: null });
-            }, 4000);
+            if (!res) {
+              console.log('No Pair exists.. Please set the initial price');
+              this.setMsg('No Pair exists.. Please set the initial price');
+              return;
+            }
+
             return res;
           } else {
             console.log('TokenAmount is undefined..');
@@ -1033,18 +1044,20 @@ class App extends Component<any, IApp> {
 
         console.log(`Exchange address - getTokenBAmount: ${exchangeAddress}`);
 
-        let res: any;
         if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
           if (BigNumber.from(tokenAmount).gt(0)) {
-            res = await this._getTokenAmountOut(
+            const res = await this._getTokenAmountOut(
               tokenAmount,
               this.state.tokenAData.address,
               this.state.tokenBData.address
             );
 
-            setTimeout(() => {
-              this.setState({ msg: null });
-            }, 3000);
+            if (!res) {
+              console.log('No Pair exists.. Please set the initial price');
+              this.setMsg('No Pair exists.. Please set the initial price');
+              return;
+            }
+
             return res;
           } else {
             console.log('TokenAmount is undefined..');
@@ -1059,44 +1072,22 @@ class App extends Component<any, IApp> {
         this.setMsg('Select a token..');
       }
     } catch (err) {
-      console.log(err.data.message);
+      console.log(err);
     }
   };
 
-  _getTokenAmountOut = async (
-    _amount: BigNumber,
-    token0: string,
-    token1: string
-  ) => {
+  _getTokenAmountOut = async (_amount: BigNumber, token0: any, token1: any) => {
     console.log('_getTokenAmountOut..');
-
-    let res: any;
     try {
-      if (_amount && BigNumber.from(_amount).gt(0)) {
-        try {
-          res = await this.state.router.getAmountsOut(_amount, [
-            token0,
-            token1,
-          ]);
-        } catch (err: any) {
-          console.log(err.data.message);
-        }
-        if (res === undefined) {
-          console.log(
-            'No Pair exists.. You are the first provider.Please set the initial price'
-          );
-          this.setMsg(
-            'No Pair exists..You are the first provider. Please set the initial price'
-          );
-        } else {
-          return res;
-        }
-      } else {
-        console.log('Amount is empty or zero..');
-      }
+      const res = await this.state.router.getAmountsOut(_amount, [
+        token0,
+        token1,
+      ]);
+
+      return res;
     } catch (err: any) {
       console.log('---------------');
-      console.log(`_getTokenAmountOut ${err.data.message}`);
+      console.log(`_getTokenAmountOut ${err}`);
       console.log('---------------');
     }
   };
@@ -1109,26 +1100,8 @@ class App extends Component<any, IApp> {
     console.log('_getTokenAmountIn..');
     let res: any;
     try {
-      if (_amount && BigNumber.from(_amount).gt(0)) {
-        try {
-          res = await this.state.router.getAmountsIn(_amount, [token0, token1]);
-        } catch (err: any) {
-          console.log(err);
-        }
-
-        if (res === undefined) {
-          console.log(
-            'No Pair exists.. You are the first provider.Please set the initial price'
-          );
-          this.setMsg(
-            'No Pair exists..You are the first provider. Please set the initial price'
-          );
-        } else {
-          return res;
-        }
-      } else {
-        console.log('Amount is empty or zero..');
-      }
+      res = await this.state.router.getAmountsIn(_amount, [token0, token1]);
+      return res;
     } catch (err: any) {
       console.log('---------------');
       console.log(`_getTokenAmountIn ${err}`);
@@ -1274,83 +1247,72 @@ class App extends Component<any, IApp> {
           this.state.signer
         );
 
-        const pairAddress = await this.getCalcExchangeAddress(
-          this.state.tokenAData,
-          this.state.tokenBData
-        );
+        // const pairAddress = await this.getCalcExchangeAddress(
+        //   this.state.tokenAData,
+        //   this.state.tokenBData
+        // );
 
-        const Pair = new ethers.Contract(
-          pairAddress,
-          Exchange.abi,
-          this.state.signer
-        );
+        // const Pair = new ethers.Contract(
+        //   pairAddress,
+        //   Exchange.abi,
+        //   this.state.signer
+        // );
 
-        if (Pair.address !== REACT_APP_ZERO_ADDRESS) {
-          const PairAddress = this.isAddress(Pair.address);
-
-          const token_A_LP_Balance = await token1.balanceOf(PairAddress);
-
-          const token_B_LP_Balance = await token2.balanceOf(PairAddress);
-
-          //Pair balance account
-          const liquidity = await Pair.balanceOf(this.state.account);
-
-          const lpPairBalanceAccount = liquidity.toString();
-          //Token balance
-          const tokenA = token_A_LP_Balance.toString();
-          //WETH balance
-          const tokenB = token_B_LP_Balance.toString();
-          const totalSupply = await Pair.totalSupply();
-
-          const lpAccountShare = liquidity / totalSupply;
-
-          const tokenAShare =
-            Number.parseFloat(this.state.fromWei(tokenA)) * lpAccountShare;
-
-          const tokenBShare =
-            Number.parseFloat(this.state.fromWei(tokenB)) * lpAccountShare;
-
-          const lpShareAccountviaInp: BigNumber = BigNumber.from(
-            this.child.current.state.inputAmountInWei
-          )
-            .mul(100)
-            .div(totalSupply);
-
-          const lpShareAccountviaInput = lpShareAccountviaInp.toString();
-
-          const tokenASelectedShare = token1Data.symbol;
-          const tokenBSelectedShare = token2Data.symbol;
-          // console.log(
-          //   `LP Account: ${this.state.fromWei(lpPairBalanceAccount)}`
-          // );
-          // console.log(`LP Token Balance ${this.state.fromWei(tokenA)}`);
-          // console.log(`LP WETH Balance ${this.state.fromWei(tokenB)}`);
-          // console.log(`LP Total Supply: ${this.state.fromWei(totalSupply)}`);
-
-          this.setState({
-            liquidity,
-            lpPairBalanceAccount,
-            lpShareAccountviaInput,
-            lpAccountShare,
-            tokenASelectedShare,
-            tokenBSelectedShare,
-            tokenAShare,
-            tokenBShare,
-            Pair,
-          });
-        } else {
-          this.setState({
-            liquidity: 0,
-            tokenASelectedShare: '',
-            tokenBSelectedShare: '',
-            lpPairBalanceAccount: '0',
-            lpShareAccountviaInput: '0',
-            lpAccountShare: 0,
-            tokenAShare: 0,
-            tokenBShare: 0,
-            Pair,
-          });
-        }
+        // if (Pair.address !== REACT_APP_ZERO_ADDRESS) {
+        // const PairAddress = this.isAddress(Pair.address);
+        // const token_A_LP_Balance = await token1.balanceOf(PairAddress);
+        // const token_B_LP_Balance = await token2.balanceOf(PairAddress);
+        // //Pair balance account
+        // const liquidity = await Pair.balanceOf(this.state.account);
+        // const lpPairBalanceAccount = liquidity.toString();
+        // //Token balance
+        // const tokenA = token_A_LP_Balance.toString();
+        // //WETH balance
+        // const tokenB = token_B_LP_Balance.toString();
+        // const totalSupply = await Pair.totalSupply();
+        // const lpAccountShare = liquidity / totalSupply;
+        // const tokenAShare =
+        //   Number.parseFloat(this.state.fromWei(tokenA)) * lpAccountShare;
+        // const tokenBShare =
+        //   Number.parseFloat(this.state.fromWei(tokenB)) * lpAccountShare;
+        // const lpShareAccountviaInp: BigNumber = BigNumber.from(
+        //   this.child.current.state.inputAmountInWei
+        // )
+        //   .mul(100)
+        //   .div(totalSupply);
+        // const lpShareAccountviaInput = lpShareAccountviaInp.toString();
+        // const tokenASelectedShare = token1Data.symbol;
+        // const tokenBSelectedShare = token2Data.symbol;
+        // // console.log(
+        // //   `LP Account: ${this.state.fromWei(lpPairBalanceAccount)}`
+        // // );
+        // // console.log(`LP Token Balance ${this.state.fromWei(tokenA)}`);
+        // // console.log(`LP WETH Balance ${this.state.fromWei(tokenB)}`);
+        // // console.log(`LP Total Supply: ${this.state.fromWei(totalSupply)}`);
+        // this.setState({
+        //   liquidity,
+        //   lpPairBalanceAccount,
+        //   lpShareAccountviaInput,
+        //   lpAccountShare,
+        //   tokenASelectedShare,
+        //   tokenBSelectedShare,
+        //   tokenAShare,
+        //   tokenBShare,
+        //   Pair,
+        // });
+        // } else {
+        //   this.setState({
+        //     liquidity: 0,
+        //     tokenASelectedShare: '',
+        //     tokenBSelectedShare: '',
+        //     lpPairBalanceAccount: '0',
+        //     lpShareAccountviaInput: '0',
+        //     lpAccountShare: 0,
+        //     tokenAShare: 0,
+        //     tokenBShare: 0,
+        //     Pair,
+        //   });
+        // }
       }
     } catch (e) {
       console.log(`Error getting contract ${e}`);
