@@ -34,7 +34,8 @@ export interface IApp {
   getExchangeAddress(token1: any, token2: any): any;
   getExchange(exchange: any): any;
   getLiquidityOwner(token1Data: ITokenData, token2Data: ITokenData): void;
-  getPriceImpact(input: BigNumber): void;
+  getPriceImpactAToken(input: BigNumber): void;
+  getPriceImpactBToken(input: BigNumber): void;
   fromWei(value: any): string;
   toWei(value: any): BigNumber;
   isOpenModalSlippage: boolean;

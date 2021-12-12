@@ -118,7 +118,8 @@ class App extends Component<any, IApp> {
       getExchangeAddress: this.getExchangeAddress,
       getExchange: this.getExchange,
       getLiquidityOwner: this.getLiquidityOwner,
-      getPriceImpact: this.getPriceImpact,
+      getPriceImpactAToken: this.getPriceImpactAToken,
+      getPriceImpactBToken: this.getPriceImpactBToken,
       fromWei: this.fromWei,
       toWei: this.toWei,
       isOpen: false,
@@ -1187,7 +1188,58 @@ class App extends Component<any, IApp> {
     }
   };
 
-  getPriceImpact = async (input: any) => {
+  getPriceImpactAToken = async (input: any) => {
+    if (input && BigNumber.from(input).gt(0)) {
+      let priceImp: any;
+
+      const pairAddress = await this.getCalcExchangeAddress(
+        this.state.tokenBData,
+        this.state.tokenAData
+      );
+
+      console.log(pairAddress);
+      const Pair = new ethers.Contract(
+        pairAddress,
+        Exchange.abi,
+        this.state.signer
+      );
+
+      console.log(Pair);
+      // token switch is considered
+      const tokenData = this.state.tokenAData;
+      console.log(tokenData);
+
+      const token2 = new ethers.Contract(
+        tokenData.address,
+        ERC20.abi,
+        this.state.signer
+      );
+
+      const token_LP_Balance = await token2.balanceOf(Pair.address);
+
+      console.log('------------------');
+      console.log(input.toString(), token_LP_Balance.toString());
+
+      console.log('-------------------');
+
+      priceImp =
+        (parseFloat(input.toString()) * 100) / token_LP_Balance.toString();
+
+      console.log(priceImp);
+
+      const priceImpact = priceImp > 99.9999 ? 100 : priceImp.toFixed(4);
+
+      this.setState({
+        priceImpact,
+      });
+    } else {
+      this.setState({
+        priceImpact: 0,
+      });
+    }
+  };
+
+  getPriceImpactBToken = async (input: any) => {
     if (input && BigNumber.from(input).gt(0)) {
       let priceImp: any;
 
@@ -1204,6 +1256,7 @@ class App extends Component<any, IApp> {
 
       // token switch is considered
       const tokenData = this.state.tokenBData;
+      console.log(tokenData);
 
       const token2 = new ethers.Contract(
         tokenData.address,
@@ -1281,8 +1334,8 @@ class App extends Component<any, IApp> {
             .mul(100)
             .div(totalSupply);
           const lpShareAccountviaInput = lpShareAccountviaInp.toString();
-          const tokenASelectedShare = token1Data.symbol;
-          const tokenBSelectedShare = token2Data.symbol;
+          const tokenASelectedShare = token1Data?.symbol;
+          const tokenBSelectedShare = token2Data?.symbol;
           // console.log(
           //   `LP Account: ${this.state.fromWei(lpPairBalanceAccount)}`
           // );
