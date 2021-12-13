@@ -46,6 +46,19 @@ const Link = styled.a`
   color: white;
 `;
 
+const MsgInner = styled.div`
+  position: relative;
+  padding: 2px;
+  border: 1px solid white;
+  border-radius: 25px;
+  height: 30px;
+  min-height: 30px;
+  margin: 10px;
+  text-align: center;
+  color: white;
+  display: visible;
+`;
+
 export const computePairAddress = ({
   factoryAddress,
   tokenA,
@@ -1411,6 +1424,9 @@ class App extends Component<any, IApp> {
             </Link>
           </ContainerLink>
         ) : null}
+        <div style={{ visibility: this.state.msg ? 'visible' : 'hidden' }}>
+          <MsgInner className="MsgInner">{this.state.msgTxt}</MsgInner>
+        </div>
         <Tabs
           toggleSlippageModal={this.toggleSlippageModal}
           clearStates={this.clearStates}
