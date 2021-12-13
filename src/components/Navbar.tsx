@@ -3,7 +3,7 @@ import Identicon from 'identicon.js';
 import styled from 'styled-components';
 import logo from '../images/logo_blueberry.png';
 import Context from './Context';
-import { FaWallet, FaSignOutAlt } from 'react-icons/fa';
+import { FaWallet } from 'react-icons/fa';
 
 const WrongNetwork = styled.div`
   border: 0.5px solid deeppink;
