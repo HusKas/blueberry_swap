@@ -3,6 +3,7 @@ import Identicon from 'identicon.js';
 import styled from 'styled-components';
 import logo from '../images/logo_blueberry.png';
 import Context from './Context';
+import { FaWallet } from 'react-icons/fa';
 
 const WrongNetwork = styled.div`
   border: 0.5px solid deeppink;
@@ -26,7 +27,7 @@ class Navbar extends Component<IProps, IState> {
             <img alt="logo" src={logo} height="60" />
             blueberryswap.finance
           </a>
-          <ul className="navbar-nav px-3 d-flex flex-row">
+          <ul className="navbar-nav px-1 d-flex flex-wrap flex-row lh-la">
             {this.context.networkName && this.context.account ? (
               <li className="nav-item px-5 ">
                 <WrongNetwork>{this.context.networkName}</WrongNetwork>
@@ -36,27 +37,35 @@ class Navbar extends Component<IProps, IState> {
             )}
             {this.props.account ? (
               <>
-                <li className="nav-item text-nowrap px-3 ">
+                <li className="nav-item text-nowrap px-3 mt-2 ">
                   <small className="text-light">
                     <small id="account">{this.props.account}</small>
                   </small>
+                  <img
+                    className="ml-2"
+                    width="30"
+                    height="30"
+                    src={`data:image/pending;base64,${new Identicon(
+                      this.props.account,
+                      30
+                    ).toString()}`}
+                    alt=""
+                  />
                 </li>
-                <img
-                  className="ml-2"
-                  width="30"
-                  height="30"
-                  src={`data:image/pending;base64,${new Identicon(
-                    this.props.account,
-                    30
-                  ).toString()}`}
-                  alt=""
-                />
               </>
             ) : (
               <li className="nav-item px-5 ">
                 <WrongNetwork>Please Connect Metamask..</WrongNetwork>
               </li>
             )}
+            <li className="mt-2">
+              <FaWallet
+                size={34}
+                color="white"
+                cursor="pointer"
+                onClick={this.context.connectToWeb3}
+              ></FaWallet>
+            </li>
           </ul>
         </div>
       </nav>

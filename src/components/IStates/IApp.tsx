@@ -71,4 +71,5 @@ export interface IApp {
   networkName: string;
   correctNetwork: boolean;
   switched: boolean;
+  connectToWeb3(): void;
 }
