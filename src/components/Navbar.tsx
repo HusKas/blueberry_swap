@@ -60,7 +60,7 @@ class Navbar extends Component<IProps, IState> {
                 <WrongNetwork>Please Connect Metamask..</WrongNetwork>
               </li>
             )}
-            <li className="mt-2 px-3">
+            <li className="mt-1 px-3">
               <FaWallet
                 size={34}
                 color="white"
