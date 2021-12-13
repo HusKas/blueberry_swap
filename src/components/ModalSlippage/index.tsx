@@ -37,7 +37,6 @@ const Header = styled.div`
   display: flex;
   justify-content: end;
   flex-direction: row;
-  padding: 15px;
 `;
 
 const CloseIcon = styled(Flex)`
