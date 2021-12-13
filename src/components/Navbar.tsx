@@ -29,7 +29,7 @@ class Navbar extends Component<IProps, IState> {
           </a>
           <ul className="navbar-nav px-1 d-flex flex-wrap flex-row">
             {this.context.networkName && this.context.account ? (
-              <li className="nav-item px-5 ">
+              <li className="nav-item">
                 <WrongNetwork>{this.context.networkName}</WrongNetwork>
               </li>
             ) : (
@@ -39,7 +39,7 @@ class Navbar extends Component<IProps, IState> {
           <ul className="navbar-nav px-1 d-flex flex-wrap flex-row">
             {this.props.account ? (
               <>
-                <li className="nav-item text-nowrap px-3 mt-2 ">
+                <li className="nav-item text-nowrap mt-2 ">
                   <small className="text-light">
                     <small id="account">{this.props.account}</small>
                   </small>
@@ -56,11 +56,11 @@ class Navbar extends Component<IProps, IState> {
                 </li>
               </>
             ) : (
-              <li className="nav-item px-1 ">
+              <li className="nav-item">
                 <WrongNetwork>Please Connect Metamask..</WrongNetwork>
               </li>
             )}
-            <li className="mt-2">
+            <li className="mt-2 px-3">
               <FaWallet
                 size={34}
                 color="white"
