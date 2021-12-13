@@ -39,7 +39,7 @@ class Navbar extends Component<IProps, IState> {
           <ul className="navbar-nav px-1 d-flex flex-wrap flex-row">
             {this.props.account ? (
               <>
-                <li className="nav-item text-nowrap mt-2 ">
+                <li className="nav-item text-nowrap">
                   <small className="text-light">
                     <small id="account">{this.props.account}</small>
                   </small>
@@ -60,7 +60,7 @@ class Navbar extends Component<IProps, IState> {
                 <WrongNetwork>Please Connect Metamask..</WrongNetwork>
               </li>
             )}
-            <li className="mt-1 px-3">
+            <li className="px-3">
               <FaWallet
                 size={34}
                 color="white"
