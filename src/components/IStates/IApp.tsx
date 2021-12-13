@@ -72,4 +72,5 @@ export interface IApp {
   correctNetwork: boolean;
   switched: boolean;
   connectToWeb3(): void;
+  web3Modal: any;
 }

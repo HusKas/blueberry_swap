@@ -206,6 +206,7 @@ class SwapTokens extends Component<IProps, IState> {
   };
 
   handleTokenChanges = async (isTokenA: boolean) => {
+    console.log('handleTokenChanges...');
     let inputAmount: any;
     let outputAmount: any;
     let minimumReceived: any;

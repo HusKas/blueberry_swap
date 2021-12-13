@@ -142,6 +142,7 @@ class App extends Component<any, IApp> {
       correctNetwork: false,
       switched: false,
       connectToWeb3: this.connectToWeb3,
+      web3Modal: {},
     };
   }
 
@@ -152,6 +153,7 @@ class App extends Component<any, IApp> {
       tokenAData: data[0],
       tokensGData: data,
     });
+
     await this.loadBlockchainData();
     await this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
   }
@@ -168,7 +170,8 @@ class App extends Component<any, IApp> {
   connectToWeb3 = async () => {
     try {
       const provider = await detectEthereumProvider();
-      if (provider || window.ethereum) {
+      window.localStorage.setItem('networkActive', true);
+      if (provider) {
         const providerOptions = {
           injected: {
             display: {
@@ -201,11 +204,16 @@ class App extends Component<any, IApp> {
         });
 
         await web3Modal.connect();
+
         await this.loadBlockchainData();
         await this.getLiquidityOwner(
           this.state.tokenAData,
           this.state.tokenBData
         );
+
+        this.setState({
+          web3Modal,
+        });
       }
     } catch (err: any) {
       console.log(err);
@@ -217,8 +225,6 @@ class App extends Component<any, IApp> {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner(0);
     const network = await provider.getNetwork();
-
-    window.localStorage.setItem('networkActive', true);
 
     let networkName: any, correctNetwork: any;
     [networkName, correctNetwork] = await this.getNetworkName(network.name);
@@ -363,15 +369,18 @@ class App extends Component<any, IApp> {
   async getEthBalanceTokenA() {
     try {
       let ethBalance: any, ethBalanceInWei: BigNumber;
-      ethBalanceInWei = await this.state.provider.getBalance(
-        this.state.account
-      );
-      ethBalance = this.fromWei(ethBalanceInWei).toString();
+      if (this.state.account) {
+        ethBalanceInWei = await this.state.provider.getBalance(
+          this.state.account
+        );
 
-      this.setState({
-        tokenABalance: ethBalance,
-        tokenABalanceInWei: ethBalanceInWei,
-      });
+        ethBalance = this.fromWei(ethBalanceInWei).toString();
+
+        this.setState({
+          tokenABalance: ethBalance,
+          tokenABalanceInWei: ethBalanceInWei,
+        });
+      }
     } catch (err) {
       console.log(err);
     }
@@ -379,15 +388,17 @@ class App extends Component<any, IApp> {
 
   async getEthBalanceTokenB() {
     try {
-      let ethBalance: any, ethBalanceInWei: BigNumber;
-      ethBalanceInWei = await this.state.provider.getBalance(
-        this.state.account
-      );
-      ethBalance = this.fromWei(ethBalanceInWei).toString();
-      this.setState({
-        tokenBBalance: ethBalance,
-        tokenBBalanceInWei: ethBalanceInWei,
-      });
+      if (this.state.account) {
+        let ethBalance: any, ethBalanceInWei: BigNumber;
+        ethBalanceInWei = await this.state.provider.getBalance(
+          this.state.account
+        );
+        ethBalance = this.fromWei(ethBalanceInWei).toString();
+        this.setState({
+          tokenBBalance: ethBalance,
+          tokenBBalanceInWei: ethBalanceInWei,
+        });
+      }
     } catch (err) {
       console.log(err);
     }
@@ -1169,6 +1180,7 @@ class App extends Component<any, IApp> {
       this.setState({ tokenBData });
     }
     await this.getTokenBBalance(tokenBData);
+
     if (tokenBData?.address === this.state.tokenAData?.address) {
       this.setState({ tokenAData: null, tokenABalance: '0' });
     }
@@ -1232,11 +1244,6 @@ class App extends Component<any, IApp> {
       );
 
       const token_LP_Balance = await token2.balanceOf(Pair.address);
-
-      console.log('------------------');
-      console.log(input.toString(), token_LP_Balance.toString());
-
-      console.log('-------------------');
 
       priceImp =
         (parseFloat(input.toString()) * 100) / token_LP_Balance.toString();

@@ -3,7 +3,7 @@ import Identicon from 'identicon.js';
 import styled from 'styled-components';
 import logo from '../images/logo_blueberry.png';
 import Context from './Context';
-import { FaWallet } from 'react-icons/fa';
+import { FaWallet, FaSignOutAlt } from 'react-icons/fa';
 
 const WrongNetwork = styled.div`
   border: 0.5px solid deeppink;
@@ -35,6 +35,8 @@ class Navbar extends Component<IProps, IState> {
             ) : (
               ''
             )}
+          </ul>
+          <ul className="navbar-nav px-1 d-flex flex-wrap flex-row">
             {this.props.account ? (
               <>
                 <li className="nav-item text-nowrap px-3 mt-2 ">
@@ -42,7 +44,7 @@ class Navbar extends Component<IProps, IState> {
                     <small id="account">{this.props.account}</small>
                   </small>
                   <img
-                    className="ml-2"
+                    className="ml-1"
                     width="30"
                     height="30"
                     src={`data:image/pending;base64,${new Identicon(
@@ -54,7 +56,7 @@ class Navbar extends Component<IProps, IState> {
                 </li>
               </>
             ) : (
-              <li className="nav-item px-5 ">
+              <li className="nav-item px-1 ">
                 <WrongNetwork>Please Connect Metamask..</WrongNetwork>
               </li>
             )}
