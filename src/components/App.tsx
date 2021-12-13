@@ -1223,10 +1223,8 @@ class App extends Component<any, IApp> {
 
   getTokenAmountAfterSelectedBToken = async () => {
     console.log('getTokenAmountAfterSelectedBToken..');
-
     if (this.child?.current) {
-      if (this.state.inputAmount !== '')
-        await this.child.current.handleTokenChanges(false);
+      await this.child.current.handleTokenChanges(false);
     }
   };
 

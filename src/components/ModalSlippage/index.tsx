@@ -122,7 +122,6 @@ export const ModalSlippage = ({ isOpen, toggleSlippageModal, setSlippage }) => {
   }
 
   const setSlippageVal = (buttonIndex: number) => {
-    console.log(buttonIndex === ButtonList.FirstButton);
     if (buttonIndex === ButtonList.FirstButton) {
       setSlippage('0.1');
       setFirstButton(true);

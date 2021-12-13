@@ -45,19 +45,6 @@ const Image = styled.img`
   height: 32px;
 `;
 
-const MsgInner = styled.div`
-  position: relative;
-  padding: 2px;
-  border: 1px solid white;
-  border-radius: 25px;
-  height: 30px;
-  min-height: 30px;
-  margin: 10px;
-  text-align: center;
-  color: white;
-  display: visible;
-`;
-
 interface IState {
   calc: any;
   inputAmount: any;
@@ -285,9 +272,6 @@ export class AddLiquidity extends Component<any, IState> {
 
   main = () => (
     <div id="content">
-      <div style={{ visibility: this.context.msg ? 'visible' : 'hidden' }}>
-        <MsgInner className="MsgInner">{this.context.msgTxt}</MsgInner>
-      </div>
       <div className="card mb-4">
         <div className="card-body">
           <form
