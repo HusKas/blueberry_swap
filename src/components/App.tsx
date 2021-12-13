@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { pack, keccak256 } from '@ethersproject/solidity';
 import { getCreate2Address, getAddress } from '@ethersproject/address';
+import detectEthereumProvider from '@metamask/detect-provider';
 
 import './App.css';
 import Navbar from './Navbar';
@@ -180,13 +181,12 @@ class App extends Component<any, IApp> {
   }
 
   connectToWeb3 = async () => {
+    const provider = await detectEthereumProvider();
+
     try {
-      if (window.ethereum) {
+      if (provider || window.ethereum) {
         window.web3 = new Web3(window.ethereum);
         await window.ethereum.enable();
-        window.ethereum.on('chainChanged', (chainId: string) =>
-          window.location.reload()
-        );
       } else if (window.web3) {
         window.web3 = new Web3(window.web3.currentProvider);
       } else {
