@@ -27,7 +27,7 @@ class Navbar extends Component<IProps, IState> {
             <img alt="logo" src={logo} height="60" />
             blueberryswap.finance
           </a>
-          <ul className="navbar-nav px-1 d-flex flex-wrap flex-row lh-la">
+          <ul className="navbar-nav px-1 d-flex flex-wrap flex-row">
             {this.context.networkName && this.context.account ? (
               <li className="nav-item px-5 ">
                 <WrongNetwork>{this.context.networkName}</WrongNetwork>

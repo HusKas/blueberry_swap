@@ -79,6 +79,27 @@ const Image = styled.img`
   height: 32px;
 `;
 
+const Msg = styled.div`
+  height: 35px;
+  position: relative;
+  top: -50px;
+  color: white;
+  border-radius: 25px;
+  text-align: center;
+`;
+
+const MsgInner = styled.div`
+  position: relative;
+  padding: 2px;
+  color: white;
+  border: 1px solid white;
+  border-radius: 25px;
+  height: 30px;
+  margin: 10px;
+  text-align: center;
+  color: white;
+`;
+
 export interface ProcessEnv {
   [key: string]: string | undefined;
 }
@@ -386,6 +407,9 @@ class SwapTokens extends Component<IProps, IState> {
 
   main = () => (
     <div id="content">
+      {this.context.msg ? (
+        <MsgInner className="MsgInner">{this.context.msgTxt}</MsgInner>
+      ) : null}
       <div className="card mb-4">
         <div className="card-body">
           <form

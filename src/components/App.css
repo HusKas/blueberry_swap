@@ -36,6 +36,10 @@
   }
 }
 
+.navbar-nav {
+  z-index: 99999999 !important;
+}
+
 .App-header {
   background-color: #282c34;
 
