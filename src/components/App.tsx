@@ -168,14 +168,8 @@ class App extends Component<any, IApp> {
       tokenAData: data[0],
       tokensGData: data,
     });
-    const networkActive = window.localStorage.getItem('networkActive');
-    if (networkActive) {
-      await this.loadBlockchainData();
-      await this.getLiquidityOwner(
-        this.state.tokenAData,
-        this.state.tokenBData
-      );
-    }
+    await this.loadBlockchainData();
+    await this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
   }
 
   async componentDidUpdate(prevProps: any, prevState: any) {
@@ -293,10 +287,6 @@ class App extends Component<any, IApp> {
         this.state.tokenBData.address === this.isAddress(REACT_APP_WETH_ADDRESS)
       ) {
         await this.getEthBalanceTokenA();
-        await this.getTokenBBalance(this.state.tokenBData);
-      } else {
-        await this.getTokenABalance(this.state.tokenAData);
-        await this.getTokenBBalance(this.state.tokenBData);
       }
     });
 
@@ -306,10 +296,6 @@ class App extends Component<any, IApp> {
       this.state.tokenBData.address === this.isAddress(REACT_APP_WETH_ADDRESS)
     ) {
       await this.getEthBalanceTokenA();
-      await this.getTokenABalance(this.state.tokenAData);
-    } else {
-      await this.getTokenBBalance(this.state.tokenBData);
-      await this.getTokenABalance(this.state.tokenAData);
     }
   }
 
