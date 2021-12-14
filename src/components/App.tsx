@@ -183,8 +183,8 @@ class App extends Component<any, IApp> {
   connectToWeb3 = async () => {
     try {
       const provider = await detectEthereumProvider();
-      window.localStorage.setItem('networkActive', true);
-      if (provider) {
+
+      if (provider || window.ethereum) {
         const providerOptions = {
           injected: {
             display: {
@@ -1216,15 +1216,15 @@ class App extends Component<any, IApp> {
   getTokenAmountAfterSelectedAToken = async () => {
     console.log('getTokenAmountAfterSelectedAToken..');
 
-    if (this.child?.current && this.state.outputAmount !== '') {
-      await this.child.current.handleTokenChanges(true);
+    if (this.child?.current) {
+      await this.child.current.handleTokenChanges(false);
     }
   };
 
   getTokenAmountAfterSelectedBToken = async () => {
     console.log('getTokenAmountAfterSelectedBToken..');
-    if (this.child?.current) {
-      await this.child.current.handleTokenChanges(false);
+    if (this.child.current) {
+      await this.child.current.handleTokenChanges(true);
     }
   };
 
