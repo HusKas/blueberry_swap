@@ -201,7 +201,6 @@ export class AddLiquidity extends Component<any, IState> {
                 outputAmount = this.context.fromWei(outputAmountInWei[0]);
                 outputAmountInWei = outputAmountInWei[0].toString();
               }
-              await this.context.getPriceImpact(outputAmountInWei);
 
               this.outputAmountRef.current.value = outputAmount;
               await this.context.getLiquidityOwner(this.context.tokenAData);
