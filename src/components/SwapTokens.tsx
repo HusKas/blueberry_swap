@@ -315,7 +315,7 @@ class SwapTokens extends Component<IProps, IState> {
                 outputAmountInWei
               );
               exchangePrice = await this.context.getTokenBAmount(
-                this.context.toWei(0)
+                this.context.toWei(1)
               );
             } else {
               inputAmountInWei = await this.context.getTokenBAmountSwitchedForm(
