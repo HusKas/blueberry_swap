@@ -518,14 +518,12 @@ class App extends Component<any, IApp> {
   checkBalances = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
     if (
       !this.state.switched &&
-      this.state.tokenABalanceInWei.gt(tokenAAmount) &&
-      this.state.tokenBBalanceInWei.gt(tokenBAmount)
+      this.state.tokenABalanceInWei.gt(tokenAAmount)
     ) {
       return true;
     } else if (
       this.state.switched &&
-      this.state.tokenABalanceInWei.gt(tokenBAmount) &&
-      this.state.tokenBBalanceInWei.gt(tokenAAmount)
+      this.state.tokenABalanceInWei.gt(tokenBAmount)
     ) {
       return true;
     } else {
@@ -594,7 +592,7 @@ class App extends Component<any, IApp> {
       if (
         this.state.tokenAData.address ===
           this.isAddress(REACT_APP_WETH_ADDRESS) &&
-        exchangeAddress !== REACT_APP_ZERO_ADDRESS
+        exchangeAddress === REACT_APP_ZERO_ADDRESS
       ) {
         try {
           console.log('Adding liquditiy ETH now ...');
