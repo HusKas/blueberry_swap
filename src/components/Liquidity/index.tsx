@@ -48,9 +48,9 @@ const Image = styled.img`
 interface IState {
   calc: any;
   inputAmount: any;
-  inputAmountInWei: BigNumber;
   outputAmount: any;
-  outputAmountInWei: BigNumber;
+  inputAmountInWei: any;
+  outputAmountInWei: any;
   loadingRemoveLp: Boolean;
   loading: boolean;
   switched: boolean;
@@ -135,12 +135,9 @@ export class AddLiquidity extends Component<any, IState> {
     this.setState({ loading: true });
 
     try {
-      const inputAmountInWei: BigNumber = BigNumber.from(
-        this.state.inputAmountInWei
-      );
-      const outputAmountInWei: BigNumber = BigNumber.from(
-        this.state.outputAmountInWei
-      );
+      const inputAmountInWei = this.state.inputAmountInWei;
+
+      const outputAmountInWei = this.state.outputAmountInWei;
 
       if (inputAmountInWei && outputAmountInWei) {
         await this.context.addLiquidity(inputAmountInWei, outputAmountInWei);

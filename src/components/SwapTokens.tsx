@@ -242,7 +242,7 @@ class SwapTokens extends Component<IProps, IState> {
                 this.context.tokenBData.decimals
               );
               outputAmountInWei = outputAmountInWei[1].toString();
-              await this.context.getPriceImpactBToken(outputAmountInWei);
+              await this.context.getPriceImpactAToken(inputAmountInWei);
 
               exchangePrice = await this.context.getTokenAAmount(
                 this.context.toWei(1, this.context.tokenBData.decimals)
@@ -305,7 +305,7 @@ class SwapTokens extends Component<IProps, IState> {
               );
               outputAmountInWei = outputAmountInWei[0].toString();
 
-              await this.context.getPriceImpactAToken(inputAmountInWei);
+              await this.context.getPriceImpactBToken(inputAmountInWei);
 
               exchangePrice = await this.context.getTokenBAmountSwitchedForm(
                 this.context.toWei(1, this.context.tokenBData.decimals)
@@ -436,7 +436,7 @@ class SwapTokens extends Component<IProps, IState> {
                 this.context.tokenAData.decimals
               );
               inputAmountInWei = inputAmountInWei[1].toString();
-              await this.context.getPriceImpactAToken(inputAmountInWei);
+              await this.context.getPriceImpactAToken(outputAmountInWei);
 
               exchangePrice = await this.context.getTokenBAmountSwitchedForm(
                 this.context.toWei(1, this.context.tokenBData.decimals)

@@ -138,7 +138,7 @@ class App extends Component<any, IApp> {
       tokenBSelectedShare: '',
       lpPairBalanceAccount: '0',
       lpShareAccountviaInput: '0',
-      priceImpact: 0,
+      priceImpact: '0',
       lpAccountShare: 0,
       tokenAShare: 0,
       tokenBShare: 0,
@@ -356,7 +356,7 @@ class App extends Component<any, IApp> {
   // clear at switching taps or removing input
   clearStates = () => {
     this.setState({
-      priceImpact: 0,
+      priceImpact: '0',
       inputAmount: null,
       outputAmount: null,
       outputAmountInWei: null,
@@ -577,7 +577,7 @@ class App extends Component<any, IApp> {
     return checkSelectedTokens && checkBalances && checkValueInputs;
   };
 
-  addLiquidity = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
+  addLiquidity = async (tokenAAmount: any, tokenBAmount: any) => {
     this.setState({ loading: true });
     const checkInputs = await this.checkAllFieldInputs(
       tokenAAmount,
@@ -1029,7 +1029,7 @@ class App extends Component<any, IApp> {
               console.log('The amount is to high...');
               this.setMsg('The amount is to high...');
               this.setState({
-                priceImpact: 100,
+                priceImpact: '100',
               });
               return;
             }
@@ -1075,7 +1075,7 @@ class App extends Component<any, IApp> {
               console.log('The amount is to high...');
               this.setMsg('The amount is to high...');
               this.setState({
-                priceImpact: 100,
+                priceImpact: '100',
               });
               return;
             }
@@ -1122,7 +1122,7 @@ class App extends Component<any, IApp> {
               console.log('The amount is to high...');
               this.setMsg('The amount is to high...');
               this.setState({
-                priceImpact: 100,
+                priceImpact: '100',
               });
               return;
             }
@@ -1170,7 +1170,7 @@ class App extends Component<any, IApp> {
               console.log('The amount is to high...');
               this.setMsg('The amount is to high...');
               this.setState({
-                priceImpact: 100,
+                priceImpact: '100',
               });
               return;
             }
@@ -1205,7 +1205,7 @@ class App extends Component<any, IApp> {
       console.log('---------------');
       console.log(`_getTokenAmountOut ${err}`);
       this.setState({
-        priceImpact: 100,
+        priceImpact: '100',
       });
       console.log('---------------');
     }
@@ -1228,7 +1228,7 @@ class App extends Component<any, IApp> {
       console.log('---------------');
       console.log(`_getTokenAmountIn ${err}`);
       this.setState({
-        priceImpact: 100,
+        priceImpact: '100',
       });
       console.log('---------------');
     }
@@ -1312,13 +1312,20 @@ class App extends Component<any, IApp> {
   };
 
   getPriceImpactAToken = async (input: any) => {
+    console.log('getPriceImpactAToken..');
     if (input && BigNumber.from(input).gt(0)) {
-      let priceImp: any;
-
-      const pairAddress = await this.getCalcExchangeAddress(
-        this.state.tokenBData,
-        this.state.tokenAData
-      );
+      let pairAddress: any;
+      if (!this.state.switched) {
+        pairAddress = await this.getCalcExchangeAddress(
+          this.state.tokenAData,
+          this.state.tokenBData
+        );
+      } else {
+        pairAddress = await this.getCalcExchangeAddress(
+          this.state.tokenBData,
+          this.state.tokenAData
+        );
+      }
 
       const Pair = new ethers.Contract(
         pairAddress,
@@ -1326,73 +1333,88 @@ class App extends Component<any, IApp> {
         this.state.signer
       );
 
-      console.log(Pair);
-      // token switch is considered
-      const tokenData = this.state.tokenAData;
-      console.log(tokenData);
+      const reserves = await Pair.getReserves();
 
-      const token2 = new ethers.Contract(
-        tokenData.address,
-        ERC20.abi,
-        this.state.signer
+      let reserve_a_initial = parseFloat(
+        ethers.utils.formatUnits(reserves._reserve0)
       );
+      let reserve_b_initial = parseFloat(
+        ethers.utils.formatUnits(reserves._reserve1)
+      );
+      let amount_traded = parseFloat(ethers.utils.formatUnits(input));
 
-      const token_LP_Balance = await token2.balanceOf(Pair.address);
+      console.log(`Blueberry in pool: ${reserve_a_initial}`);
+      console.log(`BNB in pool: ${reserve_b_initial}`);
+      console.log(`Amount traded: ${amount_traded}`);
 
-      priceImp =
-        (parseFloat(input.toString()) * 100) / token_LP_Balance.toString();
+      const fee = 0.01;
+      const amountInWithFee = amount_traded * (1 - fee);
+      const priceImpactCalc =
+        amountInWithFee / (reserve_b_initial + amountInWithFee);
 
-      console.log(priceImp);
-
-      const priceImpact = priceImp > 99.9999 ? 100 : priceImp.toFixed(4);
+      const priceImpact = (priceImpactCalc * 100).toFixed(4);
 
       this.setState({
         priceImpact,
       });
     } else {
       this.setState({
-        priceImpact: 0,
+        priceImpact: '0',
       });
     }
   };
 
   getPriceImpactBToken = async (input: any) => {
+    console.log('getPriceImpactBToken..');
     if (input && BigNumber.from(input).gt(0)) {
-      let priceImp: any;
+      let pairAddress: any;
+      if (!this.state.switched) {
+        pairAddress = await this.getCalcExchangeAddress(
+          this.state.tokenAData,
+          this.state.tokenBData
+        );
+      } else {
+        pairAddress = await this.getCalcExchangeAddress(
+          this.state.tokenBData,
+          this.state.tokenAData
+        );
+      }
 
-      const pairAddress = await this.getCalcExchangeAddress(
-        this.state.tokenAData,
-        this.state.tokenBData
-      );
-
+      console.log('xxxxxxxx');
+      console.log(pairAddress);
+      console.log('xxxxxxxx');
       const Pair = new ethers.Contract(
         pairAddress,
         Exchange.abi,
         this.state.signer
       );
 
-      // token switch is considered
-      const tokenData = this.state.tokenBData;
+      const reserves = await Pair.getReserves();
 
-      const token2 = new ethers.Contract(
-        tokenData.address,
-        ERC20.abi,
-        this.state.signer
+      let reserve_a_initial = parseFloat(
+        ethers.utils.formatUnits(reserves._reserve0)
       );
+      let reserve_b_initial = parseFloat(
+        ethers.utils.formatUnits(reserves._reserve1)
+      );
+      let amount_traded = parseFloat(ethers.utils.formatUnits(input));
 
-      const token_LP_Balance = await token2.balanceOf(Pair.address);
+      console.log(`Blueberry in pool: ${reserve_a_initial}`);
+      console.log(`BNB in pool: ${reserve_b_initial}`);
+      console.log(`Amount traded: ${amount_traded}`);
 
-      priceImp =
-        (parseFloat(input.toString()) * 100) / token_LP_Balance.toString();
+      const fee = 0.01;
+      const amountInWithFee = amount_traded * (1 - fee);
+      const priceImpactCalc =
+        amountInWithFee / (reserve_b_initial + amountInWithFee);
 
-      const priceImpact = priceImp > 99.9999 ? 100 : priceImp.toFixed(4);
-
+      const priceImpact = (priceImpactCalc * 100).toFixed(4);
       this.setState({
         priceImpact,
       });
     } else {
       this.setState({
-        priceImpact: 0,
+        priceImpact: '0',
       });
     }
   };
