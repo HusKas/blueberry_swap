@@ -36,8 +36,8 @@ export interface IApp {
   getLiquidityOwner(token1Data: ITokenData, token2Data: ITokenData): void;
   getPriceImpactAToken(input: BigNumber): void;
   getPriceImpactBToken(input: BigNumber): void;
-  fromWei(value: any): string;
-  toWei(value: any): BigNumber;
+  fromWei(value: any, decimals: any): any;
+  toWei(value: any, decimals: any): any;
   isOpenModalSlippage: boolean;
   isOpen: boolean;
   toggleSlippageModal(): void;

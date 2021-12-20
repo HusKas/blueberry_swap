@@ -410,13 +410,14 @@ class App extends Component<any, IApp> {
     }
   };
 
-  toWei(value: any) {
-    return ethers.utils.parseEther(value.toString());
+  toWei(value: string, decimals: number) {
+    return ethers.utils.parseUnits(value.toString(), decimals);
   }
 
-  fromWei(value: any) {
-    return ethers.utils.formatEther(
-      typeof value === 'string' ? value : value.toString()
+  fromWei(value: any, decimals: number) {
+    return ethers.utils.formatUnits(
+      typeof value === 'string' ? value : value.toString(),
+      decimals
     );
   }
 
@@ -428,7 +429,10 @@ class App extends Component<any, IApp> {
           this.state.account
         );
 
-        ethBalance = this.fromWei(ethBalanceInWei).toString();
+        ethBalance = this.fromWei(
+          ethBalanceInWei,
+          this.state.tokenAData.decimals
+        ).toString();
 
         this.setState({
           tokenABalance: ethBalance,
@@ -447,7 +451,10 @@ class App extends Component<any, IApp> {
         ethBalanceInWei = await this.state.provider.getBalance(
           this.state.account
         );
-        ethBalance = this.fromWei(ethBalanceInWei).toString();
+        ethBalance = this.fromWei(
+          ethBalanceInWei,
+          this.state.tokenBData.decimals
+        ).toString();
         this.setState({
           tokenBBalance: ethBalance,
           tokenBBalanceInWei: ethBalanceInWei,
@@ -468,7 +475,10 @@ class App extends Component<any, IApp> {
 
       let tokenABalance: any, tokenABalanceInWei: any;
       tokenABalanceInWei = await token1.balanceOf(this.state.account);
-      tokenABalance = this.fromWei(tokenABalanceInWei).toString();
+      tokenABalance = this.fromWei(
+        tokenABalanceInWei,
+        this.state.tokenAData.decimals
+      ).toString();
 
       this.setState({ tokenABalance, tokenABalanceInWei });
     } catch (err) {
@@ -487,7 +497,11 @@ class App extends Component<any, IApp> {
 
       let tokenBBalance: any, tokenBBalanceInWei: any;
       tokenBBalanceInWei = await token2.balanceOf(this.state.account);
-      tokenBBalance = this.fromWei(tokenBBalanceInWei).toString();
+
+      tokenBBalance = this.fromWei(
+        tokenBBalanceInWei,
+        this.state.tokenBData.decimals
+      ).toString();
 
       this.setState({ tokenBBalance, tokenBBalanceInWei });
     } catch (err) {
@@ -1011,9 +1025,12 @@ class App extends Component<any, IApp> {
               this.state.tokenAData.address
             );
 
-            if (!res) {
-              console.log('No Pair exists.. Please set the initial price');
-              this.setMsg('No Pair exists.. Please set the initial price');
+            if (res && !Object.keys(res).length) {
+              console.log('The amount is to high...');
+              this.setMsg('The amount is to high...');
+              this.setState({
+                priceImpact: 100,
+              });
               return;
             }
             return res;
@@ -1054,9 +1071,12 @@ class App extends Component<any, IApp> {
               this.state.tokenAData.address
             );
 
-            if (!res) {
-              console.log('No Pair exists.. Please set the initial price');
-              this.setMsg('No Pair exists.. Please set the initial price');
+            if (res && !Object.keys(res).length) {
+              console.log('The amount is to high...');
+              this.setMsg('The amount is to high...');
+              this.setState({
+                priceImpact: 100,
+              });
               return;
             }
 
@@ -1098,9 +1118,12 @@ class App extends Component<any, IApp> {
               this.state.tokenBData.address
             );
 
-            if (!res) {
-              console.log('No Pair exists.. Please set the initial price');
-              this.setMsg('No Pair exists.. Please set the initial price');
+            if (res && !Object.keys(res).length) {
+              console.log('The amount is to high...');
+              this.setMsg('The amount is to high...');
+              this.setState({
+                priceImpact: 100,
+              });
               return;
             }
 
@@ -1143,9 +1166,12 @@ class App extends Component<any, IApp> {
               this.state.tokenBData.address
             );
 
-            if (!res) {
-              console.log('No Pair exists.. Please set the initial price');
-              this.setMsg('No Pair exists.. Please set the initial price');
+            if (res && !Object.keys(res).length) {
+              console.log('The amount is to high...');
+              this.setMsg('The amount is to high...');
+              this.setState({
+                priceImpact: 100,
+              });
               return;
             }
 
@@ -1178,6 +1204,9 @@ class App extends Component<any, IApp> {
     } catch (err: any) {
       console.log('---------------');
       console.log(`_getTokenAmountOut ${err}`);
+      this.setState({
+        priceImpact: 100,
+      });
       console.log('---------------');
     }
   };
@@ -1193,10 +1222,14 @@ class App extends Component<any, IApp> {
       res = await this.state.router
         .connect(this.state.signer)
         .getAmountsIn(_amount, [token0, token1]);
+      console.log(res);
       return res;
     } catch (err: any) {
       console.log('---------------');
       console.log(`_getTokenAmountIn ${err}`);
+      this.setState({
+        priceImpact: 100,
+      });
       console.log('---------------');
     }
   };
@@ -1408,9 +1441,13 @@ class App extends Component<any, IApp> {
           const totalSupply = await Pair.totalSupply();
           const lpAccountShare = liquidity / totalSupply;
           const tokenAShare =
-            Number.parseFloat(this.state.fromWei(tokenA)) * lpAccountShare;
+            Number.parseFloat(
+              this.fromWei(tokenA, this.context.tokenBData.decimals)
+            ) * lpAccountShare;
           const tokenBShare =
-            Number.parseFloat(this.state.fromWei(tokenB)) * lpAccountShare;
+            Number.parseFloat(
+              this.fromWei(tokenB, this.context.tokenBData.decimals)
+            ) * lpAccountShare;
           const lpShareAccountviaInp: BigNumber = BigNumber.from(
             this.child.current.state.inputAmountInWei
           )

@@ -181,26 +181,26 @@ export class AddLiquidity extends Component<any, IState> {
         console.log(this.state.switched, tokenID);
         console.log('-------------------');
         try {
-          inputAmountInWei = this.context.toWei(inputAmount);
-          inputAmount = this.context.fromWei(inputAmountInWei);
+          inputAmountInWei = this.context.toWei(
+            inputAmount,
+            this.context.tokenAData.decimals
+          );
+          inputAmount = this.context.fromWei(
+            inputAmountInWei,
+            this.context.tokenAData.decimals
+          );
 
           if (BigNumber.from(inputAmountInWei).gt(0)) {
-            try {
-              outputAmountInWei = await this.context.getTokenBAmount(
-                inputAmountInWei
-              );
-            } catch (e) {
-              console.log(e);
-            }
+            outputAmountInWei = await this.context.getTokenBAmount(
+              inputAmountInWei
+            );
 
             if (outputAmountInWei) {
-              if (!this.state.switched) {
-                outputAmount = this.context.fromWei(outputAmountInWei[1]);
-                outputAmountInWei = outputAmountInWei[1].toString();
-              } else {
-                outputAmount = this.context.fromWei(outputAmountInWei[0]);
-                outputAmountInWei = outputAmountInWei[0].toString();
-              }
+              outputAmount = this.context.fromWei(
+                outputAmountInWei[1],
+                this.context.tokenBData.decimals
+              );
+              outputAmountInWei = outputAmountInWei[1].toString();
 
               this.outputAmountRef.current.value = outputAmount;
               await this.context.getLiquidityOwner(this.context.tokenAData);
@@ -231,8 +231,14 @@ export class AddLiquidity extends Component<any, IState> {
         console.log(this.state.switched, tokenID);
         console.log('-------------------');
 
-        outputAmountInWei = this.context.toWei(inputWithoutSpace);
-        outputAmount = this.context.fromWei(outputAmountInWei);
+        outputAmountInWei = this.context.toWei(
+          inputWithoutSpace,
+          this.context.tokenBData.decimals
+        );
+        outputAmount = this.context.fromWei(
+          outputAmountInWei,
+          this.context.tokenBData.decimals
+        );
 
         try {
           if (BigNumber.from(outputAmountInWei).gt(0)) {
@@ -241,7 +247,10 @@ export class AddLiquidity extends Component<any, IState> {
             );
 
             if (inputAmountInWei) {
-              inputAmount = this.context.fromWei(inputAmountInWei[0]);
+              inputAmount = this.context.fromWei(
+                inputAmountInWei[0],
+                this.context.tokenAData.decimals
+              );
               inputAmountInWei = inputAmountInWei[0].toString();
 
               this.inputAmountRef.current.value = inputAmount;
