@@ -437,7 +437,7 @@ class SwapTokens extends Component<IProps, IState> {
               );
               inputAmountInWei = inputAmountInWei[1].toString();
 
-              await this.context.getPriceImpactAToken(inputAmountInWei);
+              await this.context.getPriceImpactBToken(inputAmountInWei);
 
               exchangePrice = await this.context.getTokenBAmountSwitchedForm(
                 this.context.toWei(1, this.context.tokenBData.decimals)
