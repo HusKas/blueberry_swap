@@ -26,7 +26,7 @@ module.exports = {
       chainId: 31337,
     },
     testnet: {
-      url: 'https://speedy-nodes-nyc.moralis.io/2b47989c2a753a2cee72aa2f/bsc/testnet',
+      url: 'https://speedy-nodes-nyc.moralis.io/69616cb06e43d4b548b65d83/bsc/testnet',
       chainId: 97,
       accounts: [process.env.TEST_NET_KEY],
     },

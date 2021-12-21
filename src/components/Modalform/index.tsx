@@ -4,7 +4,6 @@ import { FixedSizeList } from 'react-window';
 import ERC20 from '../../abi/src/contracts/BlueberryERC20.sol/BlueberryERC20.json';
 import { ethers } from 'ethers';
 import Context from './../Context';
-import whicCoin from './../../images/whichCoin.png';
 
 const Flex = styled.div`
   display: flex;
@@ -102,6 +101,8 @@ const Image = styled.img`
   height: 32px;
 `;
 
+const imgDefault = 'https://cdn-icons-png.flaticon.com/512/189/189665.png';
+
 class Token {
   constructor(
     public readonly name: string,
@@ -114,7 +115,7 @@ class Token {
   ) {}
 }
 
-interface Context {
+interface IContext {
   signer: any;
   provider: any;
   isAddress(address: any): any;
@@ -146,7 +147,7 @@ export const Modal = ({
   const [decimals, setDecimals] = useState();
   const [chainId, setChainId] = useState('');
   const [logoURI, setlogoURI] = useState('');
-  const context = useContext(Context) as Context;
+  const context = useContext(Context) as IContext;
 
   useEffect(() => {
     const token = window.localStorage.getItem('tokenData');
@@ -174,7 +175,7 @@ export const Modal = ({
       symbol,
       decimals,
       chainId,
-      'https://cdn-icons-png.flaticon.com/512/189/189665.png',
+      imgDefault,
       false
     ) as IToken;
 
@@ -192,7 +193,7 @@ export const Modal = ({
       symbol,
       decimals,
       chainId,
-      'https://cdn-icons-png.flaticon.com/512/189/189665.png',
+      imgDefault,
       true
     ) as IToken;
 

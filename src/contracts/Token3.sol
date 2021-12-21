@@ -28,8 +28,8 @@ contract Token3 is Context, IERC20, Ownable {
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = 'Token3';
-    string private _symbol = 'Token3';
+    string private _name = 'Blueberry';
+    string private _symbol = 'Blueberry';
     uint8 private _decimals = 9;
 
     constructor () {

@@ -1465,7 +1465,7 @@ class App extends Component<any, IApp> {
           const lpAccountShare = liquidity / totalSupply;
           const tokenAShare =
             Number.parseFloat(
-              this.fromWei(tokenA, this.context.tokenBData.decimals)
+              this.fromWei(tokenA, this.context.tokenAData.decimals)
             ) * lpAccountShare;
           const tokenBShare =
             Number.parseFloat(

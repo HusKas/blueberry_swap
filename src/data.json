@@ -1,7 +1,7 @@
 [
   {
     "name": "BNB",
-    "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+    "address": "0x7bca9d90dBc922C77571E44BfF9ce6651B65139e",
     "symbol": "BNB",
     "decimals": 18,
     "chainId": 4,
@@ -9,16 +9,18 @@
   },
   {
     "name": "Blueberry",
-    "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "address": "0x2004381cA2F06E293D4E6a1D0C32697c4F5b2E46",
     "symbol": "Blueberry",
     "decimals": 9,
+    "chainId": 4,
     "logoURI": "https://avatars.githubusercontent.com/u/94470848?v=4"
   },
   {
     "name": "USDT",
-    "address": "0x46a6213A25eE3D13Ee0F200214a589ddF8b45623",
+    "address": "0x07784365d42845ca97623919f655Cd372D812e3D",
     "symbol": "USDT",
     "decimals": 18,
+    "chainId": 4,
     "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/825.png"
   }
 ]
