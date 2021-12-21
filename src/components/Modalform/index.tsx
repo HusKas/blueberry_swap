@@ -156,8 +156,6 @@ export const Modal = ({
     if (token && Object.keys(tokenJSON).length) {
       tokensData.push(tokenJSON);
     }
-
-    console.log(tokensData);
     setTokens(tokensData);
     setSearchVals(tokensData);
   }, [tokensData]);
@@ -186,7 +184,6 @@ export const Modal = ({
 
   const handleImageError = (event: any) => {
     console.log('handleImageError..');
-
     const newToken = new Token(
       name,
       address,

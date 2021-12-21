@@ -580,6 +580,7 @@ class App extends Component<any, IApp> {
 
   addLiquidity = async (tokenAAmount: any, tokenBAmount: any) => {
     this.setState({ loading: true });
+    console.log(tokenAAmount.toString(), tokenBAmount.toString());
     const checkInputs = await this.checkAllFieldInputs(
       tokenAAmount,
       tokenBAmount
@@ -833,8 +834,6 @@ class App extends Component<any, IApp> {
   };
 
   getExchangeAddress = async (token1Address: any, token2Address: any) => {
-    console.log(this.state.factory.address);
-
     let exchangeAddress: any;
     try {
       exchangeAddress = await this.state.factory.getPair(
@@ -886,7 +885,7 @@ class App extends Component<any, IApp> {
           this.isAddress(REACT_APP_WETH_ADDRESS)
         ) {
           console.log(`swapExactETHForTokensSupportingFeeOnTransferTokens..`);
-          console.log(tokenAAmount.toString(), tokenBAmount.toString());
+
           try {
             const tx = await this.state.router
               .connect(this.state.signer)
@@ -917,7 +916,7 @@ class App extends Component<any, IApp> {
           this.isAddress(REACT_APP_WETH_ADDRESS)
         ) {
           console.log('swapExactTokensForETHSupportingFeeOnTransferTokens..');
-          console.log(tokenAAmount.toString(), tokenBAmount.toString());
+
           const tx0 = await token1.approve(
             this.state.router.address,
             tokenAAmount,
@@ -955,7 +954,7 @@ class App extends Component<any, IApp> {
           }
         } else {
           console.log('swapExactTokensForTokensSupportingFeeOnTransferTokens');
-          console.log(tokenAAmount.toString(), tokenBAmount.toString());
+
           const tx0 = await token1.approve(
             this.state.router.address,
             tokenAAmount,
@@ -1223,7 +1222,6 @@ class App extends Component<any, IApp> {
       res = await this.state.router
         .connect(this.state.signer)
         .getAmountsIn(_amount, [token0, token1]);
-      console.log(res);
       return res;
     } catch (err: any) {
       console.log('---------------');
@@ -1299,7 +1297,6 @@ class App extends Component<any, IApp> {
 
   getTokenAmountAfterSelectedAToken = async () => {
     console.log('getTokenAmountAfterSelectedAToken..');
-
     if (this.child?.current) {
       await this.child.current.handleTokenChanges(false);
     }
@@ -1339,21 +1336,14 @@ class App extends Component<any, IApp> {
       let reserve_a_initial = parseFloat(
         ethers.utils.formatUnits(reserves._reserve0)
       );
-      let reserve_b_initial = parseFloat(
-        ethers.utils.formatUnits(reserves._reserve1)
-      );
       let amount_traded = parseFloat(ethers.utils.formatUnits(input));
-
-      console.log(`Blueberry in pool: ${reserve_a_initial}`);
-      console.log(`BNB in pool: ${reserve_b_initial}`);
-      console.log(`Amount traded: ${amount_traded}`);
 
       const fee = 0.01;
       const amountInWithFee = amount_traded * (1 - fee);
       const priceImpactCalc =
-        amountInWithFee / (reserve_b_initial + amountInWithFee);
+        amountInWithFee / (reserve_a_initial + amountInWithFee);
 
-      const priceImpact = (priceImpactCalc * 100).toFixed(4);
+      const priceImpact = (priceImpactCalc * 100).toFixed(6);
 
       this.setState({
         priceImpact,
@@ -1381,9 +1371,6 @@ class App extends Component<any, IApp> {
         );
       }
 
-      console.log('xxxxxxxx');
-      console.log(pairAddress);
-      console.log('xxxxxxxx');
       const Pair = new ethers.Contract(
         pairAddress,
         Exchange.abi,
@@ -1392,24 +1379,20 @@ class App extends Component<any, IApp> {
 
       const reserves = await Pair.getReserves();
 
-      let reserve_a_initial = parseFloat(
-        ethers.utils.formatUnits(reserves._reserve0)
-      );
+      console.log(reserves.toString());
+
       let reserve_b_initial = parseFloat(
         ethers.utils.formatUnits(reserves._reserve1)
       );
-      let amount_traded = parseFloat(ethers.utils.formatUnits(input));
 
-      console.log(`Blueberry in pool: ${reserve_a_initial}`);
-      console.log(`BNB in pool: ${reserve_b_initial}`);
-      console.log(`Amount traded: ${amount_traded}`);
+      let amount_traded = parseFloat(ethers.utils.formatUnits(input));
 
       const fee = 0.01;
       const amountInWithFee = amount_traded * (1 - fee);
       const priceImpactCalc =
         amountInWithFee / (reserve_b_initial + amountInWithFee);
 
-      const priceImpact = (priceImpactCalc * 100).toFixed(4);
+      const priceImpact = (priceImpactCalc * 100).toFixed(6);
       this.setState({
         priceImpact,
       });

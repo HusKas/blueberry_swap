@@ -281,7 +281,6 @@ class SwapTokens extends Component<IProps, IState> {
       } else if (this.state.switched && tokenID === Token.tokenA) {
         console.log('------------------');
         console.log(this.state.switched, tokenID);
-        console.log(this.context.tokenAData);
         console.log('-------------------');
         try {
           inputAmountInWei = this.context.toWei(
@@ -374,11 +373,11 @@ class SwapTokens extends Component<IProps, IState> {
               );
               inputAmountInWei = inputAmountInWei[0].toString();
 
+              await this.context.getPriceImpactAToken(inputAmountInWei);
+
               exchangePrice = await this.context.getTokenAAmount(
                 this.context.toWei(1, this.context.tokenBData.decimals)
               );
-
-              await this.context.getPriceImpactBToken(outputAmountInWei);
 
               if (exchangePrice) {
                 calcStandard = this.context.fromWei(
@@ -436,7 +435,8 @@ class SwapTokens extends Component<IProps, IState> {
                 this.context.tokenAData.decimals
               );
               inputAmountInWei = inputAmountInWei[1].toString();
-              await this.context.getPriceImpactAToken(outputAmountInWei);
+
+              await this.context.getPriceImpactBToken(inputAmountInWei);
 
               exchangePrice = await this.context.getTokenBAmountSwitchedForm(
                 this.context.toWei(1, this.context.tokenBData.decimals)
