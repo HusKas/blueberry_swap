@@ -155,6 +155,7 @@ class App extends Component<any, IApp> {
       switched: false,
       connectToWeb3: this.connectToWeb3,
       web3Modal: {},
+      isAddress: this.isAddress,
     };
   }
 
@@ -1563,14 +1564,16 @@ class App extends Component<any, IApp> {
             toggleSlippageModal={this.toggleSlippageModal}
           />
         </Context.Provider>
-        <Modal
-          getTokenAData={this.getTokenAData}
-          getTokenBData={this.getTokenBData}
-          tokenBSelected={this.state.tokenBSelected}
-          isOpen={this.state.isOpen}
-          toggleTokenListModal={this.toggleTokenListModal}
-          tokensData={this.state.tokensData}
-        />
+        <Context.Provider value={this.state}>
+          <Modal
+            getTokenAData={this.getTokenAData}
+            getTokenBData={this.getTokenBData}
+            tokenBSelected={this.state.tokenBSelected}
+            isOpen={this.state.isOpen}
+            toggleTokenListModal={this.toggleTokenListModal}
+            tokensData={this.state.tokensData}
+          />
+        </Context.Provider>
       </>
     );
   }

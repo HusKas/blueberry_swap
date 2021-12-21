@@ -73,4 +73,5 @@ export interface IApp {
   switched: boolean;
   connectToWeb3(): void;
   web3Modal: any;
+  isAddress(address: any): any;
 }
