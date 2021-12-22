@@ -38,9 +38,9 @@ async function main() {
   weth = await WETH.deploy();
   await weth.deployed();
 
-  // ExchangeLibrary = await ethers.getContractFactory('ExchangeLibrary');
-  // exchangeLibrary = await ExchangeLibrary.deploy();
-  // await exchangeLibrary.deployed();
+  ExchangeLibrary = await ethers.getContractFactory('ExchangeLibrary');
+  exchangeLibrary = await ExchangeLibrary.deploy();
+  await exchangeLibrary.deployed();
 
   Factory = await ethers.getContractFactory('BlueberryFactory');
   factory = await Factory.deploy();
@@ -53,7 +53,7 @@ async function main() {
   console.log(`Token1 is deployed to: ${token1.address}`);
   console.log(`Token2 is deployed to: ${token2.address}`);
   console.log(`Token3 is deployed to: ${token3.address}`);
-  // console.log(`ExchangeLibrary is deployed to: ${exchangeLibrary.address}`);
+  console.log(`ExchangeLibrary is deployed to: ${exchangeLibrary.address}`);
   console.log(`WETH is deployed to: ${weth.address}`);
   console.log(`Factory is deployed to: ${factory.address}`);
   console.log(`Router is deployed to: ${router.address}`);

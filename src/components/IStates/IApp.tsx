@@ -28,8 +28,6 @@ export interface IApp {
   addLiquidity(tokenAmount: BigNumber, tokenBAmount: BigNumber): void;
   removeLiquidity(liquidityAmount: string): void;
   getTokenAAmount(tokenAmount: BigNumber): void;
-  getTokenAAmountSwitchedForm(tokenAmount: BigNumber): void;
-  getTokenBAmountSwitchedForm(tokenAmount: BigNumber): void;
   getTokenBAmount(tokenAmount: BigNumber): void;
   getExchangeAddress(token1: any, token2: any): any;
   getExchange(exchange: any): any;
@@ -74,4 +72,6 @@ export interface IApp {
   connectToWeb3(): void;
   web3Modal: any;
   isAddress(address: any): any;
+  pairAddress: any;
+  replaceLast3DigitsWithZero(input: any, replaceNum: number): any;
 }

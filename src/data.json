@@ -1,7 +1,7 @@
 [
   {
     "name": "BNB",
-    "address": "0x7bca9d90dBc922C77571E44BfF9ce6651B65139e",
+    "address": "0x763ad43B06acF653ADb36055083103F186d07b26",
     "symbol": "BNB",
     "decimals": 18,
     "chainId": 4,
@@ -9,7 +9,7 @@
   },
   {
     "name": "Blueberry",
-    "address": "0x2004381cA2F06E293D4E6a1D0C32697c4F5b2E46",
+    "address": "0x5f3bE09A7D1fF4Cfef179B3F621873BaC7559D9C",
     "symbol": "Blueberry",
     "decimals": 9,
     "chainId": 4,
@@ -17,7 +17,7 @@
   },
   {
     "name": "USDT",
-    "address": "0x07784365d42845ca97623919f655Cd372D812e3D",
+    "address": "0xB46d67fB63770052A07d5b7C14Ed858A8c90f825",
     "symbol": "USDT",
     "decimals": 18,
     "chainId": 4,

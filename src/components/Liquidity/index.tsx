@@ -182,6 +182,7 @@ export class AddLiquidity extends Component<any, IState> {
             inputAmount,
             this.context.tokenAData.decimals
           );
+
           inputAmount = this.context.fromWei(
             inputAmountInWei,
             this.context.tokenAData.decimals
@@ -194,10 +195,15 @@ export class AddLiquidity extends Component<any, IState> {
 
             if (outputAmountInWei) {
               outputAmount = this.context.fromWei(
-                outputAmountInWei[1],
+                outputAmountInWei,
                 this.context.tokenBData.decimals
               );
-              outputAmountInWei = outputAmountInWei[1].toString();
+
+              if (outputAmount.split('.')[0].toString().length > 10) {
+                outputAmount = await this.context.replaceLast3DigitsWithZero(
+                  outputAmount
+                );
+              }
 
               this.outputAmountRef.current.value = outputAmount;
               await this.context.getLiquidityOwner(this.context.tokenAData);
@@ -245,10 +251,15 @@ export class AddLiquidity extends Component<any, IState> {
 
             if (inputAmountInWei) {
               inputAmount = this.context.fromWei(
-                inputAmountInWei[0],
+                inputAmountInWei,
                 this.context.tokenAData.decimals
               );
-              inputAmountInWei = inputAmountInWei[0].toString();
+
+              if (inputAmount.split('.')[0].toString().length > 10) {
+                inputAmount = await this.context.replaceLast3DigitsWithZero(
+                  inputAmount
+                );
+              }
 
               this.inputAmountRef.current.value = inputAmount;
               this.context.getLiquidityOwner(this.context.tokenBData);

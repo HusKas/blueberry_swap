@@ -45,7 +45,7 @@ using SafeMath for uint256;
     function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) internal pure returns (uint amountOut) {
         require(amountIn > 0, 'getAmountOut: INSUFFICIENT_INPUT_AMOUNT');
         require(reserveIn > 0 && reserveOut > 0, 'getAmountOut: INSUFFICIENT_LIQUIDITY');
-         uint amountInWithFee = amountIn.mul(998);
+         uint amountInWithFee = amountIn.mul(990);
         uint numerator = amountInWithFee.mul(reserveOut);
         uint denominator = reserveIn.mul(1000).add(amountInWithFee);
         amountOut = numerator / denominator;
@@ -56,7 +56,7 @@ using SafeMath for uint256;
         require(amountOut > 0, 'getAmountIn: INSUFFICIENT_OUTPUT_AMOUNT');
         require(reserveIn > 0 && reserveOut > 0, 'getAmountIn: INSUFFICIENT_LIQUIDITY');
         uint numerator = reserveIn.mul(amountOut).mul(1000);
-        uint denominator = reserveOut.sub(amountOut).mul(998);
+        uint denominator = reserveOut.sub(amountOut).mul(990);
         amountIn = (numerator / denominator).add(1);
     }
 

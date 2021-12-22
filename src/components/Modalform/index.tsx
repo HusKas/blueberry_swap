@@ -146,7 +146,6 @@ export const Modal = ({
   const [symbol, setSymbol] = useState('');
   const [decimals, setDecimals] = useState();
   const [chainId, setChainId] = useState('');
-  const [logoURI, setlogoURI] = useState('');
   const context = useContext(Context) as IContext;
 
   useEffect(() => {
@@ -197,8 +196,10 @@ export const Modal = ({
     setTokens([newToken]);
   };
 
-  const getTokenLogoURL = async (address: string) =>
-    `https://assets.trustwalletapp.com/blockchains/smartchain/assets/${address}/logo.png`;
+  const getTokenLogoURL = async (address: string) => {
+    const addr = context.isAddress(address);
+    return `https://assets.trustwalletapp.com/blockchains/smartchain/assets/${addr}/logo.png`;
+  };
 
   const handleInput = async (e: any) => {
     e.preventDefault();
@@ -222,7 +223,6 @@ export const Modal = ({
         setSymbol(symbol);
         setDecimals(decimals);
         setChainId(decimals);
-        setlogoURI(logoURL);
 
         const newToken = new Token(
           name,
@@ -230,7 +230,7 @@ export const Modal = ({
           symbol,
           decimals,
           chainId,
-          logoURI,
+          logoURL,
           true
         ) as IToken;
 

@@ -58,27 +58,6 @@ const MsgInner = styled.div`
   display: visible;
 `;
 
-export const computePairAddress = ({
-  factoryAddress,
-  tokenA,
-  tokenB,
-}: {
-  factoryAddress: string;
-  tokenA: ITokenData;
-  tokenB: ITokenData;
-}): string => {
-  const [token0, token1] =
-    tokenA < tokenB ? [tokenA, tokenB] : [tokenB, tokenA]; // does safety checks
-  return getCreate2Address(
-    factoryAddress,
-    keccak256(
-      ['bytes'],
-      [pack(['address', 'address'], [token0.address, token1.address])]
-    ),
-    INIT_CODE_HASH
-  );
-};
-
 class App extends Component<any, IApp> {
   _isMounted = false;
   child: any;
@@ -110,8 +89,6 @@ class App extends Component<any, IApp> {
       addLiquidity: this.addLiquidity,
       removeLiquidity: this.removeLiquidity,
       getTokenAAmount: this.getTokenAAmount,
-      getTokenAAmountSwitchedForm: this.getTokenAAmountSwitchedForm,
-      getTokenBAmountSwitchedForm: this.getTokenBAmountSwitchedForm,
       getTokenBAmount: this.getTokenBAmount,
       getExchangeAddress: this.getExchangeAddress,
       getExchange: this.getExchange,
@@ -156,6 +133,8 @@ class App extends Component<any, IApp> {
       connectToWeb3: this.connectToWeb3,
       web3Modal: {},
       isAddress: this.isAddress,
+      pairAddress: '',
+      replaceLast3DigitsWithZero: this.replaceLast3DigitsWithZero,
     };
   }
 
@@ -354,6 +333,39 @@ class App extends Component<any, IApp> {
       return null;
     }
   }
+
+  replaceLast3DigitsWithZero = async (input: any, replaceNum: number) => {
+    input = input.split('.')[0];
+    input = input.split('');
+    let num = replaceNum;
+    let len = input.length - 1;
+
+    while (num > 0) {
+      input[len] = 0;
+      len--;
+      num--;
+    }
+
+    return input.join('');
+  };
+
+  computePairAddress = (
+    factoryAddress: any,
+    tokenA: ITokenData,
+    tokenB: ITokenData
+  ) => {
+    const [token0, token1] =
+      tokenA < tokenB ? [tokenA, tokenB] : [tokenB, tokenA]; // does safety checks
+
+    const token_A = this.isAddress(token0.address);
+    const token_B = this.isAddress(token1.address);
+    return getCreate2Address(
+      factoryAddress,
+      keccak256(['bytes'], [pack(['address', 'address'], [token_A, token_B])]),
+      INIT_CODE_HASH
+    );
+  };
+
   // clear at switching taps or removing input
   clearStates = () => {
     this.setState({
@@ -390,11 +402,11 @@ class App extends Component<any, IApp> {
     const REACT_APP_FACTORY_ADDRESS_NEW = this.isAddress(
       REACT_APP_FACTORY_ADDRESS
     );
-    return computePairAddress({
-      factoryAddress: REACT_APP_FACTORY_ADDRESS_NEW,
+    return this.computePairAddress(
+      REACT_APP_FACTORY_ADDRESS_NEW,
       tokenA,
-      tokenB,
-    });
+      tokenB
+    );
   };
 
   getNetworkName = async (network: string) => {
@@ -580,7 +592,6 @@ class App extends Component<any, IApp> {
 
   addLiquidity = async (tokenAAmount: any, tokenBAmount: any) => {
     this.setState({ loading: true });
-    console.log(tokenAAmount.toString(), tokenBAmount.toString());
     const checkInputs = await this.checkAllFieldInputs(
       tokenAAmount,
       tokenBAmount
@@ -1006,121 +1017,35 @@ class App extends Component<any, IApp> {
     }
   };
 
-  getTokenAAmountSwitchedForm = async (tokenAmount: BigNumber) => {
-    console.log('getTokenAAmountSwitchedForm...');
-    try {
-      console.log(`Selected token: ${this.state.tokenBData.address}`);
-      const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
-      if (checkSelectedTokens) {
-        const exchangeAddress = await this.getCalcExchangeAddress(
-          this.state.tokenAData,
-          this.state.tokenBData
-        );
-        console.log(`Exchange address - getTokenAAmount: ${exchangeAddress}`);
-        if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
-          if (BigNumber.from(tokenAmount).gt(0)) {
-            const res = await this._getTokenAmountIn(
-              tokenAmount,
-              this.state.tokenBData.address,
-              this.state.tokenAData.address
-            );
-
-            if (res && !Object.keys(res).length) {
-              console.log('The amount is to high...');
-              this.setMsg('The amount is to high...');
-              this.setState({
-                priceImpact: '100',
-              });
-              return;
-            }
-            return res;
-          } else {
-            console.log('TokenAmount is undefined..');
-          }
-        } else {
-          console.log('No Pair exists.. Please set the initial price');
-          this.setMsg('No Pair exists.. Please set the initial price');
-          return;
-        }
-      } else {
-        console.log('getTokenAAmount: Select a token..');
-        this.setMsg('Select a token..');
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  getTokenBAmountSwitchedForm = async (tokenAmount: BigNumber) => {
-    console.log('getTokenBAmountSwitchedForm...');
-    try {
-      console.log(`Selected token: ${this.state.tokenBData.address}`);
-      const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
-      if (checkSelectedTokens) {
-        const exchangeAddress = await this.getCalcExchangeAddress(
-          this.state.tokenAData,
-          this.state.tokenBData
-        );
-        console.log(`Exchange address - getTokenBAmount: ${exchangeAddress}`);
-
-        if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
-          if (BigNumber.from(tokenAmount).gt(0)) {
-            const res = await this._getTokenAmountOut(
-              tokenAmount,
-              this.state.tokenBData.address,
-              this.state.tokenAData.address
-            );
-
-            if (res && !Object.keys(res).length) {
-              console.log('The amount is to high...');
-              this.setMsg('The amount is to high...');
-              this.setState({
-                priceImpact: '100',
-              });
-              return;
-            }
-
-            return res;
-          } else {
-            console.log('TokenAmount is undefined..');
-          }
-        } else {
-          console.log('No Pair exists.. Please set the initial price');
-          this.setMsg('No Pair exists.. Please set the initial price');
-          return;
-        }
-      } else {
-        console.log('getTokenBAmount: Select a token..');
-        this.setMsg('Select a token..');
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
   getTokenAAmount = async (tokenAmount: BigNumber) => {
     console.log('getTokenAAmount...');
     try {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
       const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
       if (checkSelectedTokens) {
-        const exchangeAddress = await this.getCalcExchangeAddress(
-          this.state.tokenAData,
-          this.state.tokenBData
+        if (this.state.pairAddress === '') {
+          const pairAddress = await this.state.factory.getPair(
+            this.state.tokenAData.address,
+            this.state.tokenBData.address
+          );
+
+          this.setState({
+            pairAddress,
+          });
+        }
+
+        console.log(
+          `Pair address - getTokenAAmount: ${this.state.pairAddress}`
         );
-
-        console.log(`Exchange address - getTokenAAmount: ${exchangeAddress}`);
-        if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
+        if (this.state.pairAddress !== REACT_APP_ZERO_ADDRESS) {
           if (BigNumber.from(tokenAmount).gt(0)) {
-            let res = await this._getTokenAmountIn(
-              tokenAmount,
-              this.state.tokenAData.address,
-              this.state.tokenBData.address
-            );
+            let res = await this._getTokenAmountIn(tokenAmount);
 
-            if (res && !Object.keys(res).length) {
-              console.log('The amount is to high...');
-              this.setMsg('The amount is to high...');
+            console.log(res);
+
+            if (!res) {
+              console.log('Price impact is to high...');
+              this.setMsg('Price impact is to high...');
               this.setState({
                 priceImpact: '100',
               });
@@ -1151,30 +1076,33 @@ class App extends Component<any, IApp> {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
       const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
       if (checkSelectedTokens) {
-        const exchangeAddress = await this.getExchangeAddress(
-          this.state.tokenAData.address,
-          this.state.tokenBData.address
+        if (this.state.pairAddress === '') {
+          const pairAddress = await this.state.factory.getPair(
+            this.state.tokenAData.address,
+            this.state.tokenBData.address
+          );
+
+          this.setState({
+            pairAddress,
+          });
+        }
+
+        console.log(
+          `Exchange address - getTokenBAmount: ${this.state.pairAddress}`
         );
 
-        console.log(`Exchange address - getTokenBAmount: ${exchangeAddress}`);
-
-        if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
+        if (this.state.pairAddress !== REACT_APP_ZERO_ADDRESS) {
           if (BigNumber.from(tokenAmount).gt(0)) {
-            const res = await this._getTokenAmountOut(
-              tokenAmount,
-              this.state.tokenAData.address,
-              this.state.tokenBData.address
-            );
+            const res = await this._getTokenAmountOut(tokenAmount);
 
-            if (res && !Object.keys(res).length) {
-              console.log('The amount is to high...');
-              this.setMsg('The amount is to high...');
+            if (!res) {
+              console.log('Price impact is to high...');
+              this.setMsg('Price impact is to high...');
               this.setState({
                 priceImpact: '100',
               });
               return;
             }
-
             return res;
           } else {
             console.log('TokenAmount is undefined..');
@@ -1193,12 +1121,28 @@ class App extends Component<any, IApp> {
     }
   };
 
-  _getTokenAmountOut = async (_amount: BigNumber, token0: any, token1: any) => {
+  _getTokenAmountOut = async (_amount: BigNumber) => {
     console.log('_getTokenAmountOut..');
     try {
-      const res = await this.state.router
-        .connect(this.state.signer)
-        .getAmountsOut(_amount, [token0, token1]);
+      let res: any;
+
+      const Pair = new ethers.Contract(
+        this.state.pairAddress,
+        Exchange.abi,
+        this.state.signer
+      );
+
+      const reserves = await Pair.getReserves();
+
+      if (!this.state.switched) {
+        res = await this.state.router
+          .connect(this.state.signer)
+          .getAmountOut(_amount, reserves._reserve0, reserves._reserve1);
+      } else {
+        res = await this.state.router
+          .connect(this.state.signer)
+          .getAmountOut(_amount, reserves._reserve1, reserves._reserve0);
+      }
 
       return res;
     } catch (err: any) {
@@ -1211,17 +1155,28 @@ class App extends Component<any, IApp> {
     }
   };
 
-  _getTokenAmountIn = async (
-    _amount: BigNumber,
-    token0: string,
-    token1: string
-  ) => {
+  _getTokenAmountIn = async (_amount: BigNumber) => {
     console.log('_getTokenAmountIn..');
-    let res: any;
     try {
-      res = await this.state.router
-        .connect(this.state.signer)
-        .getAmountsIn(_amount, [token0, token1]);
+      let res: any;
+
+      const Pair = new ethers.Contract(
+        this.state.pairAddress,
+        Exchange.abi,
+        this.state.signer
+      );
+
+      const reserves = await Pair.getReserves();
+
+      if (!this.state.switched) {
+        res = await this.state.router
+          .connect(this.state.signer)
+          .getAmountIn(_amount, reserves._reserve0, reserves._reserve1);
+      } else {
+        res = await this.state.router
+          .connect(this.state.signer)
+          .getAmountIn(_amount, reserves._reserve1, reserves._reserve0);
+      }
       return res;
     } catch (err: any) {
       console.log('---------------');
@@ -1249,9 +1204,13 @@ class App extends Component<any, IApp> {
   getTokenAData = async (tokenAData: ITokenData, isModulActive: false) => {
     console.log('getTokenAData selected... ');
     if (isModulActive) {
-      this.setState({ tokenAData, isOpen: !this.state.isOpen });
+      this.setState({
+        tokenAData,
+        isOpen: !this.state.isOpen,
+        pairAddress: '',
+      });
     } else {
-      this.setState({ tokenAData });
+      this.setState({ tokenAData, pairAddress: '' });
     }
     await this.getTokenABalance(tokenAData);
     if (tokenAData?.address === this.state.tokenBData?.address) {
@@ -1270,9 +1229,13 @@ class App extends Component<any, IApp> {
   getTokenBData = async (tokenBData: ITokenData, isModulActive: false) => {
     console.log('getTokenBData selected... ');
     if (isModulActive) {
-      this.setState({ tokenBData, isOpen: !this.state.isOpen });
+      this.setState({
+        tokenBData,
+        isOpen: !this.state.isOpen,
+        pairAddress: '',
+      });
     } else {
-      this.setState({ tokenBData });
+      this.setState({ tokenBData, pairAddress: '' });
     }
     await this.getTokenBBalance(tokenBData);
 
@@ -1312,21 +1275,8 @@ class App extends Component<any, IApp> {
   getPriceImpactAToken = async (input: any) => {
     console.log('getPriceImpactAToken..');
     if (input && BigNumber.from(input).gt(0)) {
-      let pairAddress: any;
-      if (!this.state.switched) {
-        pairAddress = await this.getCalcExchangeAddress(
-          this.state.tokenAData,
-          this.state.tokenBData
-        );
-      } else {
-        pairAddress = await this.getCalcExchangeAddress(
-          this.state.tokenBData,
-          this.state.tokenAData
-        );
-      }
-
       const Pair = new ethers.Contract(
-        pairAddress,
+        this.state.pairAddress,
         Exchange.abi,
         this.state.signer
       );
@@ -1343,7 +1293,7 @@ class App extends Component<any, IApp> {
       const priceImpactCalc =
         amountInWithFee / (reserve_a_initial + amountInWithFee);
 
-      const priceImpact = (priceImpactCalc * 100).toFixed(6);
+      const priceImpact = (priceImpactCalc * 100).toFixed(2);
 
       this.setState({
         priceImpact,
@@ -1358,28 +1308,13 @@ class App extends Component<any, IApp> {
   getPriceImpactBToken = async (input: any) => {
     console.log('getPriceImpactBToken..');
     if (input && BigNumber.from(input).gt(0)) {
-      let pairAddress: any;
-      if (!this.state.switched) {
-        pairAddress = await this.getCalcExchangeAddress(
-          this.state.tokenAData,
-          this.state.tokenBData
-        );
-      } else {
-        pairAddress = await this.getCalcExchangeAddress(
-          this.state.tokenBData,
-          this.state.tokenAData
-        );
-      }
-
       const Pair = new ethers.Contract(
-        pairAddress,
+        this.state.pairAddress,
         Exchange.abi,
         this.state.signer
       );
 
       const reserves = await Pair.getReserves();
-
-      console.log(reserves.toString());
 
       let reserve_b_initial = parseFloat(
         ethers.utils.formatUnits(reserves._reserve1)
@@ -1392,7 +1327,7 @@ class App extends Component<any, IApp> {
       const priceImpactCalc =
         amountInWithFee / (reserve_b_initial + amountInWithFee);
 
-      const priceImpact = (priceImpactCalc * 100).toFixed(6);
+      const priceImpact = (priceImpactCalc * 100).toFixed(2);
       this.setState({
         priceImpact,
       });
