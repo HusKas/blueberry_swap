@@ -134,7 +134,7 @@ class App extends Component<any, IApp> {
       web3Modal: {},
       isAddress: this.isAddress,
       pairAddress: '',
-      replaceLast3DigitsWithZero: this.replaceLast3DigitsWithZero,
+      replaceDigitsWithZeros: this.replaceDigitsWithZeros,
     };
   }
 
@@ -334,7 +334,19 @@ class App extends Component<any, IApp> {
     }
   }
 
-  replaceLast3DigitsWithZero = async (input: any, replaceNum: number) => {
+  replaceDigitsWithZeros = async (inputAmount: any) => {
+    if (inputAmount.split('.')[0].toString().length > 10) {
+      inputAmount = await this.replaceLast3And6DigitsWithZero(inputAmount, 7);
+    } else if (
+      inputAmount.split('.')[0].toString().length > 6 &&
+      inputAmount.split('.')[0].toString().length < 10
+    ) {
+      inputAmount = await this.replaceLast3And6DigitsWithZero(inputAmount, 3);
+    }
+    return inputAmount;
+  };
+
+  replaceLast3And6DigitsWithZero = async (input: any, replaceNum: number) => {
     input = input.split('.')[0];
     input = input.split('');
     let num = replaceNum;
@@ -367,21 +379,26 @@ class App extends Component<any, IApp> {
   };
 
   // clear at switching taps or removing input
-  clearStates = () => {
+  clearStates = async () => {
     this.setState({
       priceImpact: '0',
       inputAmount: null,
       outputAmount: null,
       outputAmountInWei: null,
       inputAmountInWei: null,
+      pairAddress: '',
     });
   };
 
   setSlippage = (slippage: string) => {
     console.log(`setSlippage...${slippage}`);
+    if (Number.parseFloat(slippage) > 20) {
+      return false;
+    }
     this.setState({
       slippage,
     });
+    return true;
   };
 
   switchForms = async () => {
@@ -391,9 +408,12 @@ class App extends Component<any, IApp> {
 
   switchTokens = async () => {
     const tokenADataTmp = this.state.tokenAData;
+    const balanceATmp = this.state.tokenABalanceInWei;
     this.setState({
       tokenAData: this.state.tokenBData,
       tokenBData: tokenADataTmp,
+      tokenABalanceInWei: this.state.tokenBBalanceInWei,
+      tokenBBalanceInWei: balanceATmp,
       switched: !this.state.switched,
     });
   };
@@ -543,15 +563,9 @@ class App extends Component<any, IApp> {
   };
 
   checkBalances = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
-    if (
-      !this.state.switched &&
-      this.state.tokenABalanceInWei.gt(tokenAAmount)
-    ) {
-      return true;
-    } else if (
-      this.state.switched &&
-      this.state.tokenABalanceInWei.gt(tokenBAmount)
-    ) {
+    console.log(this.state.tokenAData, tokenAAmount.toString());
+    console.log(this.state.tokenABalanceInWei.toString());
+    if (this.state.tokenABalanceInWei.gte(tokenAAmount)) {
       return true;
     } else {
       console.log('Not enough balance');
@@ -1041,8 +1055,6 @@ class App extends Component<any, IApp> {
           if (BigNumber.from(tokenAmount).gt(0)) {
             let res = await this._getTokenAmountIn(tokenAmount);
 
-            console.log(res);
-
             if (!res) {
               console.log('Price impact is to high...');
               this.setMsg('Price impact is to high...');
@@ -1214,7 +1226,11 @@ class App extends Component<any, IApp> {
     }
     await this.getTokenABalance(tokenAData);
     if (tokenAData?.address === this.state.tokenBData?.address) {
-      this.setState({ tokenBData: null, tokenBBalance: '0' });
+      this.setState({
+        tokenBData: null,
+        tokenBBalance: '0',
+        switched: !this.state.switched,
+      });
     }
     await this.getTokenAmountAfterSelectedAToken();
     await this.checkIfBlueberryTokenSelected(tokenAData);
@@ -1237,10 +1253,15 @@ class App extends Component<any, IApp> {
     } else {
       this.setState({ tokenBData, pairAddress: '' });
     }
+
     await this.getTokenBBalance(tokenBData);
 
     if (tokenBData?.address === this.state.tokenAData?.address) {
-      this.setState({ tokenAData: null, tokenABalance: '0' });
+      this.setState({
+        tokenAData: null,
+        tokenABalance: '0',
+        switched: !this.state.switched,
+      });
     }
     await this.getTokenAmountAfterSelectedBToken();
     await this.checkIfBlueberryTokenSelected(tokenBData);

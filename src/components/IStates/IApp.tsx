@@ -73,5 +73,5 @@ export interface IApp {
   web3Modal: any;
   isAddress(address: any): any;
   pairAddress: any;
-  replaceLast3DigitsWithZero(input: any, replaceNum: number): any;
+  replaceDigitsWithZeros(inputAmount: any): any;
 }

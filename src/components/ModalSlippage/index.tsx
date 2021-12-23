@@ -142,6 +142,13 @@ export const ModalSlippage = ({ isOpen, toggleSlippageModal, setSlippage }) => {
     }
   };
 
+  const checkSlippage = (ev) => {
+    const res = setSlippage(ev.target.value);
+
+    if (!res) {
+      alert('Allowed max slippage is 20..');
+    }
+  };
   return (
     <>
       {isOpen ? (
@@ -163,8 +170,8 @@ export const ModalSlippage = ({ isOpen, toggleSlippageModal, setSlippage }) => {
                 </Button>
                 <ButtonText>
                   <Input
-                    value={slippage.toString()}
-                    onChange={(ev: any) => setSlippage(ev.target.value)}
+                    value={slippage.toString() || ''}
+                    onChange={(ev: any) => checkSlippage(ev)}
                   ></Input>
                 </ButtonText>
                 %

@@ -135,9 +135,12 @@ export class AddLiquidity extends Component<any, IState> {
     this.setState({ loading: true });
 
     try {
-      const inputAmountInWei = this.state.inputAmountInWei;
-
-      const outputAmountInWei = this.state.outputAmountInWei;
+      const inputAmountInWei: BigNumber = BigNumber.from(
+        this.state.inputAmountInWei
+      );
+      const outputAmountInWei: BigNumber = BigNumber.from(
+        this.state.outputAmountInWei
+      );
 
       if (inputAmountInWei && outputAmountInWei) {
         await this.context.addLiquidity(inputAmountInWei, outputAmountInWei);
@@ -173,7 +176,11 @@ export class AddLiquidity extends Component<any, IState> {
        *  ###########################################
        */
 
-      if (!this.state.switched && tokenID === Token.tokenA) {
+      if (
+        !this.state.switched &&
+        tokenID === Token.tokenA &&
+        this.context.tokenAData
+      ) {
         console.log('------------------');
         console.log(this.state.switched, tokenID);
         console.log('-------------------');
@@ -199,11 +206,14 @@ export class AddLiquidity extends Component<any, IState> {
                 this.context.tokenBData.decimals
               );
 
-              if (outputAmount.split('.')[0].toString().length > 10) {
-                outputAmount = await this.context.replaceLast3DigitsWithZero(
-                  outputAmount
-                );
-              }
+              outputAmount = await this.context.replaceDigitsWithZeros(
+                outputAmount
+              );
+
+              outputAmountInWei = this.context.toWei(
+                outputAmount,
+                this.context.tokenBData.decimals
+              );
 
               this.outputAmountRef.current.value = outputAmount;
               await this.context.getLiquidityOwner(this.context.tokenAData);
@@ -229,7 +239,11 @@ export class AddLiquidity extends Component<any, IState> {
          *  !Switched && tokenB
          *  ###########################################
          */
-      } else if (!this.state.switched && tokenID === Token.tokenB) {
+      } else if (
+        !this.state.switched &&
+        tokenID === Token.tokenB &&
+        this.context.tokenBData
+      ) {
         console.log('------------------');
         console.log(this.state.switched, tokenID);
         console.log('-------------------');
@@ -255,12 +269,14 @@ export class AddLiquidity extends Component<any, IState> {
                 this.context.tokenAData.decimals
               );
 
-              if (inputAmount.split('.')[0].toString().length > 10) {
-                inputAmount = await this.context.replaceLast3DigitsWithZero(
-                  inputAmount
-                );
-              }
+              inputAmount = await this.context.replaceDigitsWithZeros(
+                inputAmount
+              );
 
+              inputAmountInWei = this.context.toWei(
+                inputAmount,
+                this.context.tokenAData.decimals
+              );
               this.inputAmountRef.current.value = inputAmount;
               this.context.getLiquidityOwner(this.context.tokenBData);
 

@@ -129,12 +129,12 @@ class SwapTokens extends Component<IProps, IState> {
     this.outputAmountRef.current.value = null;
     this.setState({
       calcStandard: 0,
+      minimumReceived: 0,
       inputAmount: null,
       outputAmount: null,
       inputAmountInWei: null,
       outputAmountInWei: null,
     });
-    await this.context.clearStates();
   };
 
   isNumeric(n: any) {
@@ -153,12 +153,15 @@ class SwapTokens extends Component<IProps, IState> {
         this.state.outputAmountInWei
       );
 
+      console.log(inputAmountInWei.toString(), outputAmountInWei.toString());
+
       if (inputAmountInWei && outputAmountInWei) {
         await this.context.swapTokens(inputAmountInWei, outputAmountInWei);
         this.setState({ loading: false });
       }
     } catch (e: any) {
       console.log(`SwapTokens:handleSubmit ${e.error}`);
+      console.log(e);
       this.setState({
         loading: false,
       });
@@ -216,7 +219,11 @@ class SwapTokens extends Component<IProps, IState> {
        *  ###########################################
        */
 
-      if (!this.state.switched && tokenID === Token.tokenA) {
+      if (
+        !this.state.switched &&
+        tokenID === Token.tokenA &&
+        this.context.tokenAData
+      ) {
         console.log('------------------');
         console.log(this.state.switched, tokenID);
         console.log('-------------------');
@@ -242,20 +249,9 @@ class SwapTokens extends Component<IProps, IState> {
                 this.context.tokenBData.decimals
               );
 
-              if (outputAmount.split('.')[0].toString().length > 10) {
-                outputAmount = await this.context.replaceLast3DigitsWithZero(
-                  outputAmount,
-                  6
-                );
-              } else if (
-                outputAmount.split('.')[0].toString().length > 6 &&
-                outputAmount.split('.')[0].toString().length < 10
-              ) {
-                outputAmount = await this.context.replaceLast3DigitsWithZero(
-                  outputAmount,
-                  3
-                );
-              }
+              outputAmount = await this.context.replaceDigitsWithZeros(
+                outputAmount
+              );
 
               await this.context.getPriceImpactAToken(inputAmountInWei);
 
@@ -273,6 +269,10 @@ class SwapTokens extends Component<IProps, IState> {
               minimumReceived =
                 (outputAmount * (100 - this.context.slippage)) / 100;
 
+              outputAmountInWei = this.context.toWei(
+                outputAmount,
+                this.context.tokenBData.decimals
+              );
               this.outputAmountRef.current.value = outputAmount;
               await this.context.getLiquidityOwner(this.context.tokenAData);
 
@@ -294,7 +294,11 @@ class SwapTokens extends Component<IProps, IState> {
         } catch (e: any) {
           console.log(e);
         }
-      } else if (this.state.switched && tokenID === Token.tokenA) {
+      } else if (
+        this.state.switched &&
+        tokenID === Token.tokenA &&
+        this.context.tokenAData
+      ) {
         console.log('------------------');
         console.log(this.state.switched, tokenID);
         console.log('-------------------');
@@ -319,19 +323,9 @@ class SwapTokens extends Component<IProps, IState> {
                 this.context.tokenBData.decimals
               );
 
-              if (inputAmount.split('.')[0].toString().length > 10) {
-                inputAmount = await this.context.replaceLast3DigitsWithZero(
-                  inputAmount
-                );
-              } else if (
-                inputAmount.split('.')[0].toString().length > 6 &&
-                inputAmount.split('.')[0].toString().length < 10
-              ) {
-                inputAmount = await this.context.replaceLast3DigitsWithZero(
-                  inputAmount,
-                  3
-                );
-              }
+              outputAmount = await this.context.replaceDigitsWithZeros(
+                outputAmount
+              );
 
               await this.context.getPriceImpactBToken(inputAmountInWei);
 
@@ -349,6 +343,10 @@ class SwapTokens extends Component<IProps, IState> {
               minimumReceived = minimumReceived =
                 (outputAmount * (100 - this.context.slippage)) / 100;
 
+              outputAmountInWei = this.context.toWei(
+                outputAmount,
+                this.context.tokenBData.decimals
+              );
               this.outputAmountRef.current.value = outputAmount;
               await this.context.getLiquidityOwner(this.context.tokenAData);
 
@@ -375,13 +373,17 @@ class SwapTokens extends Component<IProps, IState> {
          *  !Switched && tokenB - Switched && tokenB
          *  ###########################################
          */
-      } else if (!this.state.switched && tokenID === Token.tokenB) {
+      } else if (
+        !this.state.switched &&
+        tokenID === Token.tokenB &&
+        this.context.tokenBData
+      ) {
         console.log('------------------');
         console.log(this.state.switched, tokenID);
         console.log('-------------------');
 
         outputAmountInWei = this.context.toWei(
-          inputWithoutSpace,
+          inputAmount,
           this.context.tokenBData.decimals
         );
         outputAmount = this.context.fromWei(
@@ -401,19 +403,9 @@ class SwapTokens extends Component<IProps, IState> {
                 this.context.tokenAData.decimals
               );
 
-              if (inputAmount.split('.')[0].toString().length > 10) {
-                inputAmount = await this.context.replaceLast3DigitsWithZero(
-                  inputAmount
-                );
-              } else if (
-                inputAmount.split('.')[0].toString().length > 6 &&
-                inputAmount.split('.')[0].toString().length < 10
-              ) {
-                inputAmount = await this.context.replaceLast3DigitsWithZero(
-                  inputAmount,
-                  3
-                );
-              }
+              inputAmount = await this.context.replaceDigitsWithZeros(
+                inputAmount
+              );
 
               await this.context.getPriceImpactAToken(inputAmountInWei);
 
@@ -430,8 +422,11 @@ class SwapTokens extends Component<IProps, IState> {
 
               minimumReceived =
                 (outputAmount * (100 - this.context.slippage)) / 100;
-              //outputAmount - (outputAmount * this.context.slippage) / 100;
 
+              inputAmountInWei = this.context.toWei(
+                inputAmount,
+                this.context.tokenAData.decimals
+              );
               this.inputAmountRef.current.value = inputAmount;
               this.context.getLiquidityOwner(this.context.tokenBData);
 
@@ -453,7 +448,11 @@ class SwapTokens extends Component<IProps, IState> {
         } catch (e: any) {
           console.log(e.data.message);
         }
-      } else if (this.state.switched && tokenID === Token.tokenB) {
+      } else if (
+        this.state.switched &&
+        tokenID === Token.tokenB &&
+        this.context.tokenBData
+      ) {
         console.log('------------------');
         console.log(this.state.switched, tokenID);
         console.log('-------------------');
@@ -478,19 +477,9 @@ class SwapTokens extends Component<IProps, IState> {
                 this.context.tokenAData.decimals
               );
 
-              if (inputAmount.split('.')[0].toString().length > 10) {
-                inputAmount = await this.context.replaceLast3DigitsWithZero(
-                  inputAmount
-                );
-              } else if (
-                inputAmount.split('.')[0].toString().length > 6 &&
-                inputAmount.split('.')[0].toString().length < 10
-              ) {
-                inputAmount = await this.context.replaceLast3DigitsWithZero(
-                  inputAmount,
-                  3
-                );
-              }
+              inputAmount = await this.context.replaceDigitsWithZeros(
+                inputAmount
+              );
 
               await this.context.getPriceImpactBToken(inputAmountInWei);
 
@@ -508,6 +497,10 @@ class SwapTokens extends Component<IProps, IState> {
               minimumReceived =
                 (outputAmount * (100 - this.context.slippage)) / 100;
 
+              inputAmountInWei = this.context.toWei(
+                inputAmount,
+                this.context.tokenAData.decimals
+              );
               this.inputAmountRef.current.value = inputAmount;
               await this.context.getLiquidityOwner(this.context.tokenAData);
 
