@@ -1,7 +1,7 @@
 [
   {
     "name": "BNB",
-    "address": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    "address": "0x5477FDf02CF67ADC40B33949c357A3A41C1A3024",
     "symbol": "BNB",
     "decimals": 18,
     "chainId": 4,
@@ -9,9 +9,9 @@
   },
   {
     "name": "Blueberry",
-    "address": "0xee7f7531d770498cc7917ffed31847bbc53b9618",
+    "address": "0x2D2f6fF1cdECad444f0Aa77DFaf870f1065E4F55",
     "symbol": "Blueberry",
-    "decimals": 9,
+    "decimals": 18,
     "chainId": 4,
     "logoURI": "https://avatars.githubusercontent.com/u/94470848?v=4"
   },

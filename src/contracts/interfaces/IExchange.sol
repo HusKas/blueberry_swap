@@ -50,5 +50,4 @@ interface IExchange {
     function sync() external;
 
     function initialize(address, address) external;
-
 }

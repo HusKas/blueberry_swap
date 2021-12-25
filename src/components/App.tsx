@@ -90,8 +90,6 @@ class App extends Component<any, IApp> {
       removeLiquidity: this.removeLiquidity,
       getTokenAAmount: this.getTokenAAmount,
       getTokenBAmount: this.getTokenBAmount,
-      getExchangeAddress: this.getExchangeAddress,
-      getExchange: this.getExchange,
       getLiquidityOwner: this.getLiquidityOwner,
       getPriceImpactAToken: this.getPriceImpactAToken,
       getPriceImpactBToken: this.getPriceImpactBToken,
@@ -147,14 +145,7 @@ class App extends Component<any, IApp> {
     });
 
     await this.init();
-    const isConnected: boolean = JSON.parse(
-      localStorage.getItem('WEB3_CONNECTED')
-    );
-
-    console.log(`ìsConnected ${isConnected}`);
-    if (isConnected === true) {
-      await this.connectToWeb3();
-    }
+    await this.connectToWeb3();
   }
 
   async componentDidUpdate(prevProps: any, prevState: any) {
@@ -210,14 +201,17 @@ class App extends Component<any, IApp> {
 
   connectToWeb3 = async () => {
     await this.state.web3Modal.resetState();
-    const provider = await this.state.web3Modal.connect();
-    const web3 = new Web3(provider);
+    const connection = await this.state.web3Modal.connect();
+    const web3 = new Web3(connection);
+    const provider = new ethers.providers.Web3Provider(connection);
+    const signer = provider.getSigner();
 
     localStorage.setItem('WEB3_CONNECTED', 'true');
 
     this.setState({
       web3,
       provider,
+      signer,
     });
     await this.loadBlockchainData();
     await this.getLiquidityOwner(this.state.tokenAData, this.state.tokenBData);
@@ -234,10 +228,9 @@ class App extends Component<any, IApp> {
   };
 
   async loadBlockchainData() {
+    console.log(this.state.provider);
     const accounts = await this.state.web3.eth.getAccounts();
-    const provider = new ethers.providers.Web3Provider(this.state.provider);
-    const signer = provider.getSigner(0);
-    const network = await provider.getNetwork();
+    const network = await this.state.provider.getNetwork();
 
     let networkName: any, correctNetwork: any;
     [networkName, correctNetwork] = await this.getNetworkName(network.name);
@@ -247,29 +240,29 @@ class App extends Component<any, IApp> {
       const router = new ethers.Contract(
         this.isAddress(REACT_APP_ROUTER_ADDRESS),
         Router.abi,
-        signer
+        this.state.signer
       );
 
       //Factory load
       const factory = new ethers.Contract(
-        this.isAddress(REACT_APP_FACTORY_ADDRESS),
+        REACT_APP_FACTORY_ADDRESS,
         Factory.abi,
-        signer
+        this.state.signer
       );
 
       // Subscribe to chainId change
-      this.state.provider.on('chainChanged', (chainId: number) => {
+      window.ethereum.on('chainChanged', (chainId: number) => {
         console.log(chainId);
       });
 
       // Subscribe to provider connection
-      this.state.provider.on('connect', (info: { chainId: number }) => {
+      window.ethereum.on('connect', (info: { chainId: number }) => {
         console.log('connect..');
         console.log(info);
       });
 
       // Subscribe to provider disconnection
-      this.state.provider.on(
+      window.ethereum.on(
         'disconnect',
         (error: { code: number; message: string }) => {
           this.state.web3Modal.clearCachedProvider();
@@ -278,12 +271,25 @@ class App extends Component<any, IApp> {
         }
       );
 
+      window.ethereum.on('accountsChanged', async (accounts: any) => {
+        // Time to reload your interface with accounts[0]!
+        console.log('Account changed..');
+        this.setState({
+          account: accounts[0],
+        });
+
+        if (
+          this.state.tokenAData.address ===
+          this.isAddress(REACT_APP_WETH_ADDRESS)
+        ) {
+          await this.getEthBalanceTokenA();
+        }
+      });
+
       this.setState({
         router,
         factory,
         account: accounts[0],
-        provider,
-        signer,
         networkName,
         correctNetwork,
       });
@@ -295,27 +301,8 @@ class App extends Component<any, IApp> {
         loading: false,
       });
     }
-
-    window.ethereum.on('accountsChanged', async (accounts: any) => {
-      // Time to reload your interface with accounts[0]!
-      console.log('Account changed..');
-      this.setState({
-        account: accounts[0],
-      });
-
-      if (
-        this.state.tokenAData.address ===
-          this.isAddress(REACT_APP_WETH_ADDRESS) ||
-        this.state.tokenBData.address === this.isAddress(REACT_APP_WETH_ADDRESS)
-      ) {
-        await this.getEthBalanceTokenA();
-      }
-    });
-
     if (
-      this.state.tokenAData.address ===
-        this.isAddress(REACT_APP_WETH_ADDRESS) ||
-      this.state.tokenBData.address === this.isAddress(REACT_APP_WETH_ADDRESS)
+      this.state.tokenAData.address === this.isAddress(REACT_APP_WETH_ADDRESS)
     ) {
       await this.getEthBalanceTokenA();
     }
@@ -367,13 +354,12 @@ class App extends Component<any, IApp> {
     tokenB: ITokenData
   ) => {
     const [token0, token1] =
-      tokenA < tokenB ? [tokenA, tokenB] : [tokenB, tokenA]; // does safety checks
-
-    const token_A = this.isAddress(token0.address);
-    const token_B = this.isAddress(token1.address);
+      tokenA.address < tokenB.address
+        ? [tokenA.address, tokenB.address]
+        : [tokenB.address, tokenA.address];
     return getCreate2Address(
       factoryAddress,
-      keccak256(['bytes'], [pack(['address', 'address'], [token_A, token_B])]),
+      keccak256(['bytes'], [pack(['address', 'address'], [token0, token1])]),
       INIT_CODE_HASH
     );
   };
@@ -503,7 +489,7 @@ class App extends Component<any, IApp> {
       const token1 = new ethers.Contract(
         tokenData.address,
         ERC20.abi,
-        this.state.signer
+        this.state.provider
       );
 
       let tokenABalance: any, tokenABalanceInWei: any;
@@ -525,7 +511,7 @@ class App extends Component<any, IApp> {
       const token2 = new ethers.Contract(
         tokenData.address,
         ERC20.abi,
-        this.state.signer
+        this.state.provider
       );
 
       let tokenBBalance: any, tokenBBalanceInWei: any;
@@ -563,8 +549,6 @@ class App extends Component<any, IApp> {
   };
 
   checkBalances = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
-    console.log(this.state.tokenAData, tokenAAmount.toString());
-    console.log(this.state.tokenABalanceInWei.toString());
     if (this.state.tokenABalanceInWei.gte(tokenAAmount)) {
       return true;
     } else {
@@ -606,6 +590,7 @@ class App extends Component<any, IApp> {
 
   addLiquidity = async (tokenAAmount: any, tokenBAmount: any) => {
     this.setState({ loading: true });
+
     const checkInputs = await this.checkAllFieldInputs(
       tokenAAmount,
       tokenBAmount
@@ -613,30 +598,19 @@ class App extends Component<any, IApp> {
     if (checkInputs) {
       const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
 
-      const exchangeAddress = await this.getExchangeAddress(
-        this.state.tokenAData.address,
-        this.state.tokenBData.address
-      );
-      console.log(`Token pair - àddLiquidity : ${exchangeAddress}`);
+      console.log(`Pair Address - àddLiquidity : ${this.state.pairAddress}`);
 
-      const token1 = new ethers.Contract(
-        this.state.tokenAData.address,
-        ERC20.abi,
-        this.state.signer
-      );
-
-      const token2 = new ethers.Contract(
-        this.state.tokenBData.address,
-        ERC20.abi,
-        this.state.signer
-      );
       if (
-        this.state.tokenAData.address ===
-          this.isAddress(REACT_APP_WETH_ADDRESS) &&
-        exchangeAddress === REACT_APP_ZERO_ADDRESS
+        this.state.tokenAData.address === this.isAddress(REACT_APP_WETH_ADDRESS)
       ) {
         try {
           console.log('Adding liquditiy ETH now ...');
+
+          const token2 = new ethers.Contract(
+            this.state.tokenBData.address,
+            ERC20.abi,
+            this.state.signer
+          );
 
           const tx = await token2.approve(
             this.state.router.connect(this.state.signer).address,
@@ -674,12 +648,16 @@ class App extends Component<any, IApp> {
           this.setState({ loading: false });
         }
       } else if (
-        this.state.tokenBData.address ===
-          this.isAddress(REACT_APP_WETH_ADDRESS) &&
-        exchangeAddress !== REACT_APP_ZERO_ADDRESS
+        this.state.tokenBData.address === this.isAddress(REACT_APP_WETH_ADDRESS)
       ) {
         try {
           console.log('Adding liquditiy Token to ETH now ...');
+
+          const token1 = new ethers.Contract(
+            this.state.tokenAData.address,
+            ERC20.abi,
+            this.state.signer
+          );
 
           const tx = await token1.approve(
             this.state.router.connect(this.state.signer).address,
@@ -695,7 +673,7 @@ class App extends Component<any, IApp> {
             .connect(this.state.signer)
             .addLiquidityETH(
               this.state.tokenAData.address,
-              tokenAAmount, //TokenB
+              tokenAAmount, //TokenA
               0,
               0,
               this.state.account,
@@ -716,56 +694,66 @@ class App extends Component<any, IApp> {
           this.setState({ loading: false });
         }
       } else {
-        if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
-          try {
-            console.log('Adding liquditiy Token to Token now ...');
+        try {
+          console.log('Adding liquditiy Token to Token now ...');
 
-            const tx0 = await token1.approve(
-              this.state.router.connect(this.state.signer).address,
+          const token1 = new ethers.Contract(
+            this.state.tokenAData.address,
+            ERC20.abi,
+            this.state.signer
+          );
+
+          const token2 = new ethers.Contract(
+            this.state.tokenBData.address,
+            ERC20.abi,
+            this.state.signer
+          );
+
+          const tx0 = await token1.approve(
+            this.state.router.connect(this.state.signer).address,
+            tokenAAmount,
+            {
+              from: this.state.account,
+              ...this.overrides,
+            }
+          );
+          await tx0.wait();
+
+          const tx1 = await token2.approve(
+            this.state.router.connect(this.state.signer).address,
+            tokenBAmount,
+            {
+              from: this.state.account,
+              ...this.overrides,
+            }
+          );
+
+          await tx1.wait(1);
+
+          const tx2 = await this.state.router
+            .connect(this.state.signer)
+            .addLiquidity(
+              this.state.tokenAData.address,
+              this.state.tokenBData.address,
               tokenAAmount,
-              {
-                from: this.state.account,
-                ...this.overrides,
-              }
-            );
-            await tx0.wait();
-
-            const tx1 = await token2.approve(
-              this.state.router.connect(this.state.signer).address,
               tokenBAmount,
+              0,
+              0,
+              this.state.account,
+              deadline,
               {
                 from: this.state.account,
                 ...this.overrides,
               }
             );
+          await tx2.wait(1);
 
-            await tx1.wait(1);
-
-            const tx2 = await this.state.router
-              .connect(this.state.signer)
-              .addLiquidity(
-                this.state.tokenAData.address,
-                this.state.tokenBData.address,
-                tokenAAmount,
-                tokenBAmount,
-                0,
-                0,
-                this.state.account,
-                deadline,
-                {
-                  from: this.state.account,
-                  ...this.overrides,
-                }
-              );
-            await tx2.wait(1);
-
-            this.setState({ loading: false, tx: tx2.hash });
-            setTimeout(() => {
-              this.setState({ tx: null });
-            }, 3000);
-          } catch (err) {
-            this.setState({ loading: false });
-          }
+          this.setState({ loading: false, tx: tx2.hash });
+          setTimeout(() => {
+            this.setState({ tx: null });
+          }, 3000);
+        } catch (err) {
+          this.setState({ loading: false });
         }
       }
     }
@@ -775,7 +763,7 @@ class App extends Component<any, IApp> {
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
 
     const weth = new ethers.Contract(
-      this.isAddress(REACT_APP_WETH_ADDRESS) || '',
+      REACT_APP_WETH_ADDRESS,
       WETH.abi,
       this.state.signer
     );
@@ -838,51 +826,12 @@ class App extends Component<any, IApp> {
     }
   };
 
-  getExchange = async (exchangeAddress: string) => {
-    console.log('getExchange...');
-    try {
-      if (
-        Object.keys(this.state.signer).length > 0 &&
-        exchangeAddress !== undefined
-      ) {
-        const exchange = new ethers.Contract(
-          exchangeAddress,
-          Exchange.abi,
-          this.state.signer
-        );
-
-        return exchange;
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  getExchangeAddress = async (token1Address: any, token2Address: any) => {
-    let exchangeAddress: any;
-    try {
-      exchangeAddress = await this.state.factory.getPair(
-        token1Address,
-        token2Address
-      );
-
-      return exchangeAddress;
-    } catch (err: any) {
-      console.log(err);
-    }
-  };
-
   swapTokens = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
     const checkInputs = await this.checkAllFieldInputs(
       tokenAAmount,
       tokenBAmount
     );
     if (checkInputs) {
-      const exchangeAddress = await this.getExchangeAddress(
-        this.state.tokenAData.address,
-        this.state.tokenBData.address
-      );
-
       //slippage
       const slippage = 1000 - (this.state.slippage * 1000) / 100;
 
@@ -904,130 +853,157 @@ class App extends Component<any, IApp> {
         this.state.signer
       );
 
-      if (exchangeAddress !== REACT_APP_ZERO_ADDRESS) {
-        if (
-          this.state.tokenAData.address ===
-          this.isAddress(REACT_APP_WETH_ADDRESS)
-        ) {
-          console.log(`swapExactETHForTokensSupportingFeeOnTransferTokens..`);
+      if (
+        this.state.tokenAData.address === this.isAddress(REACT_APP_WETH_ADDRESS)
+      ) {
+        console.log(`swapExactETHForTokensSupportingFeeOnTransferTokens..`);
 
-          try {
-            const tx = await this.state.router
-              .connect(this.state.signer)
-              .swapExactETHForTokensSupportingFeeOnTransferTokens(
-                _minTokens,
-                [this.state.tokenAData.address, this.state.tokenBData.address],
-                this.state.account,
-                deadline,
-                {
-                  value: tokenAAmount,
-                  from: this.state.account,
-                  ...this.overrides,
-                }
-              );
-            await tx.wait(1);
-            this.setState({ loading: false, tx: tx.hash });
-            setTimeout(() => {
-              this.setState({ tx: null });
-            }, 3000);
-          } catch (err) {
-            console.log(
-              `swapExactETHForTokensSupportingFeeOnTransferTokens failed ${err}`
+        try {
+          const tx = await this.state.router
+            .connect(this.state.signer)
+            .swapExactETHForTokensSupportingFeeOnTransferTokens(
+              _minTokens,
+              [this.state.tokenAData.address, this.state.tokenBData.address],
+              this.state.account,
+              deadline,
+              {
+                value: tokenAAmount,
+                from: this.state.account,
+                ...this.overrides,
+              }
             );
-            this.setState({ loading: false });
-          }
-        } else if (
-          this.state.tokenBData.address ===
-          this.isAddress(REACT_APP_WETH_ADDRESS)
-        ) {
-          console.log('swapExactTokensForETHSupportingFeeOnTransferTokens..');
-
-          const tx0 = await token1.approve(
-            this.state.router.address,
-            tokenAAmount,
-            {
-              from: this.state.account,
-              ...this.overrides,
-            }
+          await tx.wait(1);
+          this.setState({ loading: false, tx: tx.hash });
+          setTimeout(() => {
+            this.setState({ tx: null });
+          }, 3000);
+        } catch (err) {
+          console.log(
+            `swapExactETHForTokensSupportingFeeOnTransferTokens failed ${err}`
           );
-          await tx0.wait(1);
-          try {
-            const tx = await this.state.router
-              .connect(this.state.signer)
-              .swapExactTokensForETHSupportingFeeOnTransferTokens(
-                tokenAAmount,
-                _minTokens,
-                [this.state.tokenAData.address, this.state.tokenBData.address],
-                this.state.account,
-                deadline,
-                {
-                  from: this.state.account,
-                  ...this.overrides,
-                }
-              );
-            tx.wait(1);
+          this.setState({ loading: false });
+        }
+      } else if (
+        this.state.tokenBData.address === this.isAddress(REACT_APP_WETH_ADDRESS)
+      ) {
+        console.log('swapExactTokensForETHSupportingFeeOnTransferTokens..');
 
-            this.setState({ loading: false, tx: tx.hash });
-            setTimeout(() => {
-              this.setState({ tx: null });
-            }, 3000);
-          } catch (err) {
-            console.log(
-              `swapExactTokensForETHSupportingFeeOnTransferTokens failed ${err}`
+        const tx0 = await token1.approve(
+          this.state.router.address,
+          tokenAAmount,
+          {
+            from: this.state.account,
+            ...this.overrides,
+          }
+        );
+        await tx0.wait(1);
+        try {
+          const tx = await this.state.router
+            .connect(this.state.signer)
+            .swapExactTokensForETHSupportingFeeOnTransferTokens(
+              tokenAAmount,
+              _minTokens,
+              [this.state.tokenAData.address, this.state.tokenBData.address],
+              this.state.account,
+              deadline,
+              {
+                from: this.state.account,
+                ...this.overrides,
+              }
             );
-            this.setState({ loading: false });
-          }
-        } else {
-          console.log('swapExactTokensForTokensSupportingFeeOnTransferTokens');
+          tx.wait(1);
 
-          const tx0 = await token1.approve(
-            this.state.router.address,
-            tokenAAmount,
-            {
-              from: this.state.account,
-              ...this.overrides,
-            }
+          this.setState({ loading: false, tx: tx.hash });
+          setTimeout(() => {
+            this.setState({ tx: null });
+          }, 3000);
+        } catch (err) {
+          console.log(
+            `swapExactTokensForETHSupportingFeeOnTransferTokens failed ${err}`
           );
-          await tx0.wait(1);
-          const tx1 = await token2.approve(
-            this.state.router.address,
-            tokenAAmount,
-            {
-              from: this.state.account,
-              ...this.overrides,
-            }
-          );
-          await tx1.wait(1);
-          try {
-            const tx = await this.state.router
-              .connect(this.state.signer)
-              .swapExactTokensForTokensSupportingFeeOnTransferTokens(
-                tokenAAmount,
-                _minTokens,
-                [this.state.tokenAData.address, this.state.tokenBData.address],
-                this.state.account,
-                deadline,
-                {
-                  from: this.state.account,
-                  ...this.overrides,
-                }
-              );
-            tx.wait();
-
-            this.setState({ loading: false, tx: tx.hash });
-            setTimeout(() => {
-              this.setState({ tx: null });
-            }, 3000);
-          } catch (err) {
-            console.log(
-              `swapExactTokensForTokensSupportingFeeOnTransferTokens failed ${err}`
-            );
-            this.setState({ loading: false });
-          }
+          this.setState({ loading: false });
         }
       } else {
-        console.log('No token pair');
+        console.log('swapExactTokensForTokensSupportingFeeOnTransferTokens');
+
+        const tx0 = await token1.approve(
+          this.state.router.address,
+          tokenAAmount,
+          {
+            from: this.state.account,
+            ...this.overrides,
+          }
+        );
+        await tx0.wait(1);
+        const tx1 = await token2.approve(
+          this.state.router.address,
+          tokenAAmount,
+          {
+            from: this.state.account,
+            ...this.overrides,
+          }
+        );
+        await tx1.wait(1);
+        try {
+          const tx = await this.state.router
+            .connect(this.state.signer)
+            .swapExactTokensForTokensSupportingFeeOnTransferTokens(
+              tokenAAmount,
+              _minTokens,
+              [this.state.tokenAData.address, this.state.tokenBData.address],
+              this.state.account,
+              deadline,
+              {
+                from: this.state.account,
+                ...this.overrides,
+              }
+            );
+          tx.wait();
+
+          this.setState({ loading: false, tx: tx.hash });
+          setTimeout(() => {
+            this.setState({ tx: null });
+          }, 3000);
+        } catch (err) {
+          console.log(
+            `swapExactTokensForTokensSupportingFeeOnTransferTokens failed ${err}`
+          );
+          this.setState({ loading: false });
+        }
       }
+    }
+  };
+
+  checkIfpairAddressExists = async () => {
+    try {
+      const pairAddress = await this.getCalcExchangeAddress(
+        this.state.tokenAData,
+        this.state.tokenBData
+      );
+      const pairContract = new ethers.Contract(
+        pairAddress,
+        Exchange.abi,
+        this.state.provider
+      );
+
+      const reserves = await pairContract.getReserves();
+
+      const [reserve0, reserve1] = reserves;
+
+      const reserveCalc = BigNumber.from(reserve0).add(
+        BigNumber.from(reserve1)
+      );
+
+      if (BigNumber.from(reserveCalc).gt(0)) {
+        this.setState({
+          pairAddress,
+        });
+      }
+      return reserveCalc;
+    } catch (err: any) {
+      console.log('Error:');
+      console.log(err.toString());
+      this.state.provider.getBlockNumber().then(console.log);
     }
   };
 
@@ -1036,22 +1012,15 @@ class App extends Component<any, IApp> {
     try {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
       const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
-      if (checkSelectedTokens) {
-        if (this.state.pairAddress === '') {
-          const pairAddress = await this.state.factory.getPair(
-            this.state.tokenAData.address,
-            this.state.tokenBData.address
-          );
 
-          this.setState({
-            pairAddress,
-          });
-        }
+      if (checkSelectedTokens) {
+        const reserveCalc: BigNumber = await this.checkIfpairAddressExists();
 
         console.log(
           `Pair address - getTokenAAmount: ${this.state.pairAddress}`
         );
-        if (this.state.pairAddress !== REACT_APP_ZERO_ADDRESS) {
+
+        if (reserveCalc && reserveCalc.gt(0)) {
           if (BigNumber.from(tokenAmount).gt(0)) {
             let res = await this._getTokenAmountIn(tokenAmount);
 
@@ -1087,23 +1056,14 @@ class App extends Component<any, IApp> {
     try {
       console.log(`Selected token: ${this.state.tokenBData.address}`);
       const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
-      if (checkSelectedTokens) {
-        if (this.state.pairAddress === '') {
-          const pairAddress = await this.state.factory.getPair(
-            this.state.tokenAData.address,
-            this.state.tokenBData.address
-          );
 
-          this.setState({
-            pairAddress,
-          });
-        }
+      if (checkSelectedTokens) {
+        const reserveCalc: BigNumber = await this.checkIfpairAddressExists();
 
         console.log(
           `Exchange address - getTokenBAmount: ${this.state.pairAddress}`
         );
-
-        if (this.state.pairAddress !== REACT_APP_ZERO_ADDRESS) {
+        if (reserveCalc && reserveCalc.gt(0)) {
           if (BigNumber.from(tokenAmount).gt(0)) {
             const res = await this._getTokenAmountOut(tokenAmount);
 
@@ -1397,37 +1357,27 @@ class App extends Component<any, IApp> {
           const liquidity = await Pair.balanceOf(this.state.account);
           const lpPairBalanceAccount = liquidity.toString();
           //Token balance
-          const tokenA = token_A_LP_Balance.toString();
+          const tokenA = token_A_LP_Balance;
           //WETH balance
-          const tokenB = token_B_LP_Balance.toString();
+          const tokenB = token_B_LP_Balance;
           const totalSupply = await Pair.totalSupply();
           const lpAccountShare = liquidity / totalSupply;
+
           const tokenAShare =
             Number.parseFloat(
-              this.fromWei(tokenA, this.context.tokenAData.decimals)
+              this.fromWei(tokenA, this.state.tokenAData.decimals)
             ) * lpAccountShare;
           const tokenBShare =
             Number.parseFloat(
-              this.fromWei(tokenB, this.context.tokenBData.decimals)
+              this.fromWei(tokenB, this.state.tokenBData.decimals)
             ) * lpAccountShare;
-          const lpShareAccountviaInp: BigNumber = BigNumber.from(
-            this.child.current.state.inputAmountInWei
-          )
-            .mul(100)
-            .div(totalSupply);
-          const lpShareAccountviaInput = lpShareAccountviaInp.toString();
+
           const tokenASelectedShare = token1Data?.symbol;
           const tokenBSelectedShare = token2Data?.symbol;
-          // console.log(
-          //   `LP Account: ${this.state.fromWei(lpPairBalanceAccount)}`
-          // );
-          // console.log(`LP Token Balance ${this.state.fromWei(tokenA)}`);
-          // console.log(`LP WETH Balance ${this.state.fromWei(tokenB)}`);
-          // console.log(`LP Total Supply: ${this.state.fromWei(totalSupply)}`);
+
           this.setState({
             liquidity,
             lpPairBalanceAccount,
-            lpShareAccountviaInput,
             lpAccountShare,
             tokenASelectedShare,
             tokenBSelectedShare,

@@ -29,8 +29,6 @@ export interface IApp {
   removeLiquidity(liquidityAmount: string): void;
   getTokenAAmount(tokenAmount: BigNumber): void;
   getTokenBAmount(tokenAmount: BigNumber): void;
-  getExchangeAddress(token1: any, token2: any): any;
-  getExchange(exchange: any): any;
   getLiquidityOwner(token1Data: ITokenData, token2Data: ITokenData): void;
   getPriceImpactAToken(input: BigNumber): void;
   getPriceImpactBToken(input: BigNumber): void;

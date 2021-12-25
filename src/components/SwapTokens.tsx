@@ -153,8 +153,6 @@ class SwapTokens extends Component<IProps, IState> {
         this.state.outputAmountInWei
       );
 
-      console.log(inputAmountInWei.toString(), outputAmountInWei.toString());
-
       if (inputAmountInWei && outputAmountInWei) {
         await this.context.swapTokens(inputAmountInWei, outputAmountInWei);
         this.setState({ loading: false });
@@ -243,7 +241,6 @@ class SwapTokens extends Component<IProps, IState> {
             );
 
             if (outputAmountInWei) {
-              outputAmountInWei.toString();
               outputAmount = this.context.fromWei(
                 outputAmountInWei,
                 this.context.tokenBData.decimals
