@@ -550,7 +550,7 @@ class App extends Component<any, IApp> {
     }
   };
 
-  checkInvestorShare = async (liquidityProvider: boolean) => {
+  checkInvestorShare = async (liquidityProvider: boolean, input?: any) => {
     console.log('checkInvestorShare..');
 
     if (!liquidityProvider) {
@@ -571,13 +571,16 @@ class App extends Component<any, IApp> {
     let calc = (balanceOfUser / tokenSupply) * 100;
     calc = Number.parseInt(calc.toFixed(0));
 
-    console.log(calc);
+    const amount = this.fromWei(input, 18);
+    console.log(Number.parseInt(amount) / tokenSupply);
+    let calcInput = (Number.parseInt(amount) / tokenSupply) * 100;
+    calcInput = Number.parseInt(calcInput.toFixed(0));
 
-    if (calc <= 2) {
+    if (calc <= 2 || calcInput <= 2) {
       return true;
     } else {
-      console.log('You own already more than 1% of the total supply...');
-      this.setMsg('You own already more than 1% of the total supply...');
+      console.log('Not possible to own more than 2%...');
+      this.setMsg('Not possible to own more than 2%...');
       return false;
     }
   };
@@ -621,7 +624,10 @@ class App extends Component<any, IApp> {
       tokenAAmount,
       tokenBAmount
     );
-    const investorShare = await this.checkInvestorShare(liquidityProvider);
+    const investorShare = await this.checkInvestorShare(
+      liquidityProvider,
+      tokenBAmount
+    );
 
     return (
       checkSelectedTokens && checkBalances && checkValueInputs && investorShare

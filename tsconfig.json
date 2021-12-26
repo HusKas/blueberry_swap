@@ -1,11 +1,15 @@
 {
   "compilerOptions": {
     "target": "es2018",
-    "module": "commonjs",
+    "module": "esnext",
     "strict": false,
     "esModuleInterop": true,
     "outDir": "dist",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
@@ -17,7 +21,14 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "exclude": ["node_modules"],
-  "include": ["./src/**/*.ts", "./src/**/*.tsx"],
-  "files": ["./hardhat.config.ts"]
+  "exclude": [
+    "node_modules"
+  ],
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.tsx"
+  ],
+  "files": [
+    "./hardhat.config.ts"
+  ]
 }
