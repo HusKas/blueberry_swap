@@ -62,7 +62,7 @@ class App extends Component<any, IApp> {
   _isMounted = false;
   child: any;
   overrides = {
-    gasLimit: 9999999,
+    gas: '2000000',
   };
 
   constructor(props: any) {
@@ -632,6 +632,9 @@ class App extends Component<any, IApp> {
     );
     if (checkInputs) {
       const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+      const deadline2 = Date.now() / 1000 + 60 * 20;
+
+      console.log(deadline, deadline2);
 
       console.log(`Pair Address - àddLiquidity : ${this.state.pairAddress}`);
 
