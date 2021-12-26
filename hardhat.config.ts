@@ -2,6 +2,7 @@ import { task } from 'hardhat/config';
 import '@nomiclabs/hardhat-waffle';
 import { config as dotenvConfig } from 'dotenv';
 import { resolve } from 'path';
+import '@nomiclabs/hardhat-etherscan';
 
 dotenvConfig({ path: resolve(__dirname, './.env') });
 
@@ -46,6 +47,11 @@ module.exports = {
         runs: 1000,
       },
     },
+  },
+  etherscan: {
+    // Your API key for Etherscan
+    // Obtain one at https://bscscan.com/
+    apiKey: 'DXDSRQ8SC4EJDFIYQNPQSTW2A2E8Q1X4T3',
   },
   paths: {
     sources: './src/contracts',
