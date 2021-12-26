@@ -563,6 +563,7 @@ class App extends Component<any, IApp> {
     console.log('checkInvestorShare..');
 
     const whiteListed = await this.checkIfAccountIsWhitelisted();
+
     if (!liquidityProvider || whiteListed) {
       return true;
     }
