@@ -57,7 +57,7 @@ class Navbar extends Component<IProps, IState> {
               </>
             ) : (
               <li className="nav-item">
-                <WrongNetwork>Please Connect Metamask..</WrongNetwork>
+                <WrongNetwork>Connect Wallet</WrongNetwork>
               </li>
             )}
             <li className="px-3">
