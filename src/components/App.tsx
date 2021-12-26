@@ -551,7 +551,9 @@ class App extends Component<any, IApp> {
   };
 
   checkInvestorShare = async (liquidityProvider: boolean) => {
-    if (liquidityProvider) {
+    console.log('checkInvestorShare..');
+
+    if (!liquidityProvider) {
       return true;
     }
 
@@ -568,6 +570,8 @@ class App extends Component<any, IApp> {
     balanceOfUser = this.fromWei(balanceOfUser, 18);
     let calc = (balanceOfUser / tokenSupply) * 100;
     calc = Number.parseInt(calc.toFixed(0));
+
+    console.log(calc);
 
     if (calc <= 2) {
       return true;
@@ -610,6 +614,7 @@ class App extends Component<any, IApp> {
     tokenBAmount: BigNumber,
     liquidityProvider: boolean
   ) => {
+    console.log('checkAllInputs...');
     const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
     const checkBalances = await this.checkBalances(tokenAAmount, tokenBAmount);
     const checkValueInputs = await this.checkValueInputs(
@@ -617,6 +622,7 @@ class App extends Component<any, IApp> {
       tokenBAmount
     );
     const investorShare = await this.checkInvestorShare(liquidityProvider);
+
     return (
       checkSelectedTokens && checkBalances && checkValueInputs && investorShare
     );
@@ -628,7 +634,7 @@ class App extends Component<any, IApp> {
     const checkInputs = await this.checkAllFieldInputs(
       tokenAAmount,
       tokenBAmount,
-      true
+      false
     );
     if (checkInputs) {
       const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
@@ -864,7 +870,7 @@ class App extends Component<any, IApp> {
     const checkInputs = await this.checkAllFieldInputs(
       tokenAAmount,
       tokenBAmount,
-      false
+      true
     );
     if (checkInputs) {
       //slippage
@@ -1015,8 +1021,6 @@ class App extends Component<any, IApp> {
         this.state.tokenAData,
         this.state.tokenBData
       );
-
-      console.log(pairAddress);
 
       const pairContract = new ethers.Contract(
         pairAddress,
