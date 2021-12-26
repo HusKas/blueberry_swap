@@ -62,7 +62,7 @@ class App extends Component<any, IApp> {
   _isMounted = false;
   child: any;
   overrides = {
-    gas: '2000000',
+    gasLimit: 9999999,
   };
 
   constructor(props: any) {
@@ -356,7 +356,7 @@ class App extends Component<any, IApp> {
     tokenB: ITokenData
   ) => {
     const [token0, token1] =
-      tokenA.address < tokenB.address
+      tokenA.address.toLowerCase() < tokenB.address.toLowerCase()
         ? [tokenA.address, tokenB.address]
         : [tokenB.address, tokenA.address];
     return getCreate2Address(
@@ -632,9 +632,7 @@ class App extends Component<any, IApp> {
     );
     if (checkInputs) {
       const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
-      const deadline2 = Date.now() / 1000 + 60 * 20;
-
-      console.log(deadline, deadline2);
+      //const deadline = Date.now() + 1000 * 60;
 
       console.log(`Pair Address - àddLiquidity : ${this.state.pairAddress}`);
 
@@ -696,7 +694,7 @@ class App extends Component<any, IApp> {
           );
 
           const tx = await token1.approve(
-            this.state.router.connect(this.state.signer).address,
+            this.state.router.address,
             tokenAAmount,
             {
               from: this.state.account,
@@ -746,7 +744,7 @@ class App extends Component<any, IApp> {
           );
 
           const tx0 = await token1.approve(
-            this.state.router.connect(this.state.signer).address,
+            this.state.router.address,
             tokenAAmount,
             {
               from: this.state.account,
@@ -1018,6 +1016,8 @@ class App extends Component<any, IApp> {
         this.state.tokenBData
       );
 
+      console.log(pairAddress);
+
       const pairContract = new ethers.Contract(
         pairAddress,
         Exchange.abi,
@@ -1027,6 +1027,7 @@ class App extends Component<any, IApp> {
       const reserves = await pairContract.getReserves();
 
       console.log(reserves.toString());
+
       const [reserve0, reserve1] = reserves;
 
       const reserveCalc = BigNumber.from(reserve0).add(
@@ -1146,13 +1147,15 @@ class App extends Component<any, IApp> {
       const reserves = await Pair.getReserves();
 
       if (!this.state.switched) {
-        res = await this.state.router
-          .connect(this.state.signer)
-          .getAmountOut(_amount, reserves._reserve1, reserves._reserve0);
+        res = await this.state.router.getAmountOut(
+          _amount,
+          reserves._reserve0,
+          reserves._reserve1
+        );
       } else {
         res = await this.state.router
           .connect(this.state.signer)
-          .getAmountOut(_amount, reserves._reserve0, reserves._reserve1);
+          .getAmountOut(_amount, reserves._reserve1, reserves._reserve0);
       }
 
       return res;
@@ -1182,14 +1185,14 @@ class App extends Component<any, IApp> {
       if (!this.state.switched) {
         res = await this.state.router.getAmountIn(
           _amount,
-          reserves._reserve1,
-          reserves._reserve0
+          reserves._reserve0,
+          reserves._reserve1
         );
       } else {
         res = await this.state.router.getAmountIn(
           _amount,
-          reserves._reserve0,
-          reserves._reserve1
+          reserves._reserve1,
+          reserves._reserve0
         );
       }
       return res;
@@ -1213,7 +1216,7 @@ class App extends Component<any, IApp> {
 
   setMsg = (msgTxt: string) => {
     this.setState({ msg: true, msgTxt });
-    setTimeout(() => this.setState({ msg: false }), 3000);
+    setTimeout(() => this.setState({ msg: false }), 5000);
   };
 
   getTokenAData = async (tokenAData: ITokenData, isModulActive: false) => {

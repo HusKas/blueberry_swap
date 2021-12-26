@@ -1,7 +1,7 @@
 [
   {
     "name": "BNB",
-    "address": "0x3C63FC40B05821E4BaA704747F6B5b114E44927b",
+    "address": "0xa60f291b5663310796cA3c0a3d7551a77A9ee1DB",
     "symbol": "BNB",
     "decimals": 18,
     "chainId": 4,
@@ -9,7 +9,7 @@
   },
   {
     "name": "Blueberry",
-    "address": "0x4ecE483C4bA4d31E6F88c3D40C6c8586fA4A3690",
+    "address": "0xDE08dADF2953AEc0407758E09F1dAa3A004db644",
     "symbol": "Blueberry",
     "decimals": 18,
     "chainId": 4,
