@@ -550,7 +550,11 @@ class App extends Component<any, IApp> {
     }
   };
 
-  checkInvestorShare = async () => {
+  checkInvestorShare = async (liquidityProvider: boolean) => {
+    if (liquidityProvider) {
+      return true;
+    }
+
     const token = new ethers.Contract(
       REACT_APP_BLUEBERRY_ADDRESS,
       ERC20.abi,
@@ -603,7 +607,8 @@ class App extends Component<any, IApp> {
 
   checkAllFieldInputs = async (
     tokenAAmount: BigNumber,
-    tokenBAmount: BigNumber
+    tokenBAmount: BigNumber,
+    liquidityProvider: boolean
   ) => {
     const checkSelectedTokens = await this.checkIfBothTokeSelected(true);
     const checkBalances = await this.checkBalances(tokenAAmount, tokenBAmount);
@@ -611,7 +616,7 @@ class App extends Component<any, IApp> {
       tokenAAmount,
       tokenBAmount
     );
-    const investorShare = await this.checkInvestorShare();
+    const investorShare = await this.checkInvestorShare(liquidityProvider);
     return (
       checkSelectedTokens && checkBalances && checkValueInputs && investorShare
     );
@@ -622,7 +627,8 @@ class App extends Component<any, IApp> {
 
     const checkInputs = await this.checkAllFieldInputs(
       tokenAAmount,
-      tokenBAmount
+      tokenBAmount,
+      true
     );
     if (checkInputs) {
       const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
@@ -858,7 +864,8 @@ class App extends Component<any, IApp> {
   swapTokens = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
     const checkInputs = await this.checkAllFieldInputs(
       tokenAAmount,
-      tokenBAmount
+      tokenBAmount,
+      false
     );
     if (checkInputs) {
       //slippage
