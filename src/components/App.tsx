@@ -564,7 +564,7 @@ class App extends Component<any, IApp> {
 
     const whiteListed = await this.checkIfAccountIsWhitelisted();
 
-    if (!liquidityProvider || whiteListed) {
+    if (liquidityProvider) {
       return true;
     }
 
