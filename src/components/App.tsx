@@ -553,7 +553,7 @@ class App extends Component<any, IApp> {
   checkInvestorShare = async (liquidityProvider: boolean) => {
     console.log('checkInvestorShare..');
 
-    if (liquidityProvider) {
+    if (!liquidityProvider) {
       return true;
     }
 
