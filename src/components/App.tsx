@@ -648,7 +648,7 @@ class App extends Component<any, IApp> {
           );
 
           const tx = await token2.approve(
-            this.state.router.connect(this.state.signer).address,
+            this.state.router.address,
             tokenBAmount,
             {
               from: this.state.account,
@@ -658,21 +658,19 @@ class App extends Component<any, IApp> {
 
           await tx.wait(1);
 
-          const tx2 = await this.state.router
-            .connect(this.state.signer)
-            .addLiquidityETH(
-              this.state.tokenBData.address,
-              tokenBAmount, //TokenB
-              tokenBAmount,
-              tokenAAmount,
-              this.state.account,
-              deadline,
-              {
-                from: this.state.account,
-                value: tokenAAmount, //ETH
-                ...this.overrides,
-              }
-            );
+          const tx2 = await this.state.router.addLiquidityETH(
+            this.state.tokenBData.address,
+            tokenBAmount, //TokenB
+            tokenBAmount,
+            tokenAAmount,
+            this.state.account,
+            deadline,
+            {
+              from: this.state.account,
+              value: tokenAAmount, //ETH
+              ...this.overrides,
+            }
+          );
           await tx2.wait(1);
 
           this.setState({ loading: false, tx: tx2.hash });
