@@ -1025,6 +1025,7 @@ class App extends Component<any, IApp> {
 
       const reserves = await pairContract.getReserves();
 
+      console.log(reserves.toString());
       const [reserve0, reserve1] = reserves;
 
       const reserveCalc = BigNumber.from(reserve0).add(
@@ -1146,11 +1147,11 @@ class App extends Component<any, IApp> {
       if (!this.state.switched) {
         res = await this.state.router
           .connect(this.state.signer)
-          .getAmountOut(_amount, reserves._reserve0, reserves._reserve1);
+          .getAmountOut(_amount, reserves._reserve1, reserves._reserve0);
       } else {
         res = await this.state.router
           .connect(this.state.signer)
-          .getAmountOut(_amount, reserves._reserve1, reserves._reserve0);
+          .getAmountOut(_amount, reserves._reserve0, reserves._reserve1);
       }
 
       return res;
@@ -1178,13 +1179,17 @@ class App extends Component<any, IApp> {
       const reserves = await Pair.getReserves();
 
       if (!this.state.switched) {
-        res = await this.state.router
-          .connect(this.state.signer)
-          .getAmountIn(_amount, reserves._reserve0, reserves._reserve1);
+        res = await this.state.router.getAmountIn(
+          _amount,
+          reserves._reserve1,
+          reserves._reserve0
+        );
       } else {
-        res = await this.state.router
-          .connect(this.state.signer)
-          .getAmountIn(_amount, reserves._reserve1, reserves._reserve0);
+        res = await this.state.router.getAmountIn(
+          _amount,
+          reserves._reserve0,
+          reserves._reserve1
+        );
       }
       return res;
     } catch (err: any) {
@@ -1302,7 +1307,7 @@ class App extends Component<any, IApp> {
       const reserves = await Pair.getReserves();
 
       let reserve_a_initial = parseFloat(
-        ethers.utils.formatUnits(reserves._reserve0)
+        ethers.utils.formatUnits(reserves._reserve1)
       );
       let amount_traded = parseFloat(ethers.utils.formatUnits(input));
 
@@ -1335,7 +1340,7 @@ class App extends Component<any, IApp> {
       const reserves = await Pair.getReserves();
 
       let reserve_b_initial = parseFloat(
-        ethers.utils.formatUnits(reserves._reserve1)
+        ethers.utils.formatUnits(reserves._reserve0)
       );
 
       let amount_traded = parseFloat(ethers.utils.formatUnits(input));

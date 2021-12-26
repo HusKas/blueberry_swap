@@ -146,15 +146,11 @@ class SwapTokens extends Component<IProps, IState> {
     event.preventDefault();
     this.setState({ loading: true });
     try {
-      const inputAmountInWei: BigNumber = BigNumber.from(
-        this.state.inputAmountInWei
-      );
-      const outputAmountInWei: BigNumber = BigNumber.from(
-        this.state.outputAmountInWei
-      );
-
-      if (inputAmountInWei && outputAmountInWei) {
-        await this.context.swapTokens(inputAmountInWei, outputAmountInWei);
+      if (this.state.inputAmountInWei && this.state.outputAmountInWei) {
+        await this.context.swapTokens(
+          this.state.inputAmountInWei,
+          this.state.outputAmountInWei
+        );
         this.setState({ loading: false });
       }
     } catch (e: any) {

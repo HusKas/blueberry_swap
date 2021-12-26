@@ -135,17 +135,16 @@ export class AddLiquidity extends Component<any, IState> {
     this.setState({ loading: true });
 
     try {
-      const inputAmountInWei: BigNumber = BigNumber.from(
-        this.state.inputAmountInWei
-      );
-      const outputAmountInWei: BigNumber = BigNumber.from(
-        this.state.outputAmountInWei
+      console.log(
+        this.state.inputAmountInWei.toString(),
+        this.state.outputAmountInWei.toString()
       );
 
-      console.log(inputAmountInWei.toString(), outputAmountInWei.toString());
-
-      if (inputAmountInWei && outputAmountInWei) {
-        await this.context.addLiquidity(inputAmountInWei, outputAmountInWei);
+      if (this.state.outputAmountInWei && this.state.outputAmountInWei) {
+        await this.context.addLiquidity(
+          this.state.inputAmountInWei,
+          this.state.outputAmountInWei
+        );
         this.setState({ loading: false });
       }
     } catch (e: any) {
