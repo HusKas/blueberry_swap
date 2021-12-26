@@ -553,7 +553,7 @@ class App extends Component<any, IApp> {
   checkInvestorShare = async (liquidityProvider: boolean, input?: any) => {
     console.log('checkInvestorShare..');
 
-    if (!liquidityProvider) {
+    if (liquidityProvider) {
       return true;
     }
 
@@ -565,6 +565,11 @@ class App extends Component<any, IApp> {
 
     let tokenSupply = await token.totalSupply();
     tokenSupply = this.fromWei(tokenSupply, 18);
+
+    let balanceOfUser = await token.balanceOf(this.state.account);
+    balanceOfUser = this.fromWei(balanceOfUser, 18);
+    let calc = (balanceOfUser / tokenSupply) * 100;
+    calc = Number.parseInt(calc.toFixed(0));
 
     const amount = this.fromWei(input, 18);
     console.log(Number.parseInt(amount) / tokenSupply);
