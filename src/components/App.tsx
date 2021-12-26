@@ -562,9 +562,9 @@ class App extends Component<any, IApp> {
   checkInvestorShare = async (liquidityProvider: boolean, input?: any) => {
     console.log('checkInvestorShare..');
 
-    // const whiteListed = await this.checkIfAccountIsWhitelisted();
+    const whiteListed = await this.checkIfAccountIsWhitelisted();
 
-    if (liquidityProvider) {
+    if (!liquidityProvider || whiteListed) {
       return true;
     }
 
