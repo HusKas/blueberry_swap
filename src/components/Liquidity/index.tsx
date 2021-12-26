@@ -142,6 +142,8 @@ export class AddLiquidity extends Component<any, IState> {
         this.state.outputAmountInWei
       );
 
+      console.log(inputAmountInWei.toString(), outputAmountInWei.toString());
+
       if (inputAmountInWei && outputAmountInWei) {
         await this.context.addLiquidity(inputAmountInWei, outputAmountInWei);
         this.setState({ loading: false });

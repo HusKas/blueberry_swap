@@ -203,6 +203,7 @@ class App extends Component<any, IApp> {
     await this.state.web3Modal.resetState();
     const connection = await this.state.web3Modal.connect();
     const web3 = new Web3(connection);
+
     const provider = new ethers.providers.Web3Provider(connection);
     const signer = provider.getSigner();
 
@@ -228,7 +229,6 @@ class App extends Component<any, IApp> {
   };
 
   async loadBlockchainData() {
-    console.log(this.state.provider);
     const accounts = await this.state.web3.eth.getAccounts();
     const network = await this.state.provider.getNetwork();
 
@@ -251,7 +251,8 @@ class App extends Component<any, IApp> {
       );
 
       // Subscribe to chainId change
-      window.ethereum.on('chainChanged', (chainId: number) => {
+      window.ethereum.on('chainChanged', async (chainId: number) => {
+        console.log('chainChanged..');
         console.log(chainId);
       });
 
@@ -274,6 +275,7 @@ class App extends Component<any, IApp> {
       window.ethereum.on('accountsChanged', async (accounts: any) => {
         // Time to reload your interface with accounts[0]!
         console.log('Account changed..');
+
         this.setState({
           account: accounts[0],
         });
@@ -548,6 +550,30 @@ class App extends Component<any, IApp> {
     }
   };
 
+  checkInvestorShare = async () => {
+    const token = new ethers.Contract(
+      REACT_APP_BLUEBERRY_ADDRESS,
+      ERC20.abi,
+      this.state.provider
+    );
+
+    let tokenSupply = await token.totalSupply();
+    tokenSupply = this.fromWei(tokenSupply, 18);
+
+    let balanceOfUser = await token.balanceOf(this.state.account);
+    balanceOfUser = this.fromWei(balanceOfUser, 18);
+    let calc = (balanceOfUser / tokenSupply) * 100;
+    calc = Number.parseInt(calc.toFixed(0));
+
+    if (calc <= 2) {
+      return true;
+    } else {
+      console.log('You own already more than 1% of the total supply...');
+      this.setMsg('You own already more than 1% of the total supply...');
+      return false;
+    }
+  };
+
   checkBalances = async (tokenAAmount: BigNumber, tokenBAmount: BigNumber) => {
     if (this.state.tokenABalanceInWei.gte(tokenAAmount)) {
       return true;
@@ -585,7 +611,10 @@ class App extends Component<any, IApp> {
       tokenAAmount,
       tokenBAmount
     );
-    return checkSelectedTokens && checkBalances && checkValueInputs;
+    const investorShare = await this.checkInvestorShare();
+    return (
+      checkSelectedTokens && checkBalances && checkValueInputs && investorShare
+    );
   };
 
   addLiquidity = async (tokenAAmount: any, tokenBAmount: any) => {
@@ -980,6 +1009,7 @@ class App extends Component<any, IApp> {
         this.state.tokenAData,
         this.state.tokenBData
       );
+
       const pairContract = new ethers.Contract(
         pairAddress,
         Exchange.abi,

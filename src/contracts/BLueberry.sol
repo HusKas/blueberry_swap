@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.8.0;
 
@@ -601,13 +600,18 @@ contract Blueberry is Context, IERC20, Ownable {
  
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
+    address public taxToSetter;
+    uint256 public taxFee = 10;
 
-    string private _name = 'Blueberry Network';
+    string private _name = 'Blueberry';
     string private _symbol = 'Blueberry';
     uint8 private _decimals = 18;
 
+
+
     constructor () {
         _rOwned[_msgSender()] = _rTotal;
+        taxToSetter = _msgSender();
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
 
@@ -791,8 +795,8 @@ contract Blueberry is Context, IERC20, Ownable {
         return (rAmount, rTransferAmount, rFee, tTransferAmount, tFee);
     }
 
-    function _getTValues(uint256 tAmount) private pure returns (uint256, uint256) {
-        uint256 tFee = tAmount.div(100).mul(10);
+    function _getTValues(uint256 tAmount) private view returns (uint256, uint256) {
+        uint256 tFee = tAmount.div(100).mul(taxFee);
         uint256 tTransferAmount = tAmount.sub(tFee);
         return (tTransferAmount, tFee);
     }
@@ -819,5 +823,10 @@ contract Blueberry is Context, IERC20, Ownable {
         }
         if (rSupply < _rTotal.div(_tTotal)) return (_rTotal, _tTotal);
         return (rSupply, tSupply);
+    }
+
+    function setTaxFeePercent(uint _taxFee) external {
+        require(_msgSender() == taxToSetter, 'taxToSetter: FORBIDDEN');
+        taxFee = _taxFee;
     }
 }

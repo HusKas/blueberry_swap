@@ -1,6 +1,6 @@
 import { run, ethers, network } from 'hardhat';
 
-network.provider.send('hardhat_reset');
+//network.provider.send('hardhat_reset');
 async function main() {
   await run('compile');
 

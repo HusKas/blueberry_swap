@@ -25,10 +25,10 @@ module.exports = {
       url: 'http://127.0.0.1:8545',
       chainId: 31337,
     },
-    testnet: {
-      url: 'https://speedy-nodes-nyc.moralis.io/69616cb06e43d4b548b65d83/bsc/testnet',
-      chainId: 97,
-      accounts: [process.env.TEST_NET_KEY],
+    prod: {
+      url: 'https://bsc-dataseed.binance.org/',
+      chainId: 56,
+      accounts: [process.env.PRIVATE_KEY],
     },
   },
   solidity: {
