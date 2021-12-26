@@ -20,6 +20,7 @@ import styled from 'styled-components';
 import { Tabs } from './Tabs';
 import AddLiquidity from './Liquidity';
 import data from '../data.json';
+import whiteList from '../whiteList.json';
 import { ModalSlippage } from './ModalSlippage';
 import {
   REACT_APP_ZERO_ADDRESS,
@@ -133,6 +134,7 @@ class App extends Component<any, IApp> {
       isAddress: this.isAddress,
       pairAddress: '',
       replaceDigitsWithZeros: this.replaceDigitsWithZeros,
+      whiteListUser: [],
     };
   }
 
@@ -142,6 +144,7 @@ class App extends Component<any, IApp> {
       tokensData: data,
       tokenAData: data[0],
       tokensGData: data,
+      whiteListUser: whiteList,
     });
 
     await this.init();
@@ -559,7 +562,8 @@ class App extends Component<any, IApp> {
   checkInvestorShare = async (liquidityProvider: boolean, input?: any) => {
     console.log('checkInvestorShare..');
 
-    if (!liquidityProvider) {
+    const whiteListed = await this.checkIfAccountIsWhitelisted();
+    if (!liquidityProvider || whiteListed) {
       return true;
     }
 
@@ -620,6 +624,10 @@ class App extends Component<any, IApp> {
     }
   };
 
+  checkIfAccountIsWhitelisted = async () => {
+    const whiteListed = this.state.whiteListUser.includes(this.state.account);
+    return whiteListed;
+  };
   checkAllFieldInputs = async (
     tokenAAmount: BigNumber,
     tokenBAmount: BigNumber,

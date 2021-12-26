@@ -72,4 +72,5 @@ export interface IApp {
   isAddress(address: any): any;
   pairAddress: any;
   replaceDigitsWithZeros(inputAmount: any): any;
+  whiteListUser: any[];
 }
