@@ -568,15 +568,14 @@ class App extends Component<any, IApp> {
 
     let balanceOfUser = await token.balanceOf(this.state.account);
     balanceOfUser = this.fromWei(balanceOfUser, 18);
-    let calc = (balanceOfUser / tokenSupply) * 100;
+    const amount = this.fromWei(input, 18);
+    const balancePlusTrade =
+      Number.parseInt(balanceOfUser) + Number.parseInt(amount);
+
+    let calc = (balancePlusTrade / Number.parseInt(tokenSupply)) * 100;
     calc = Number.parseInt(calc.toFixed(0));
 
-    const amount = this.fromWei(input, 18);
-    console.log(Number.parseInt(amount) / tokenSupply);
-    let calcInput = (Number.parseInt(amount) / tokenSupply) * 100;
-    calcInput = Number.parseInt(calcInput.toFixed(0));
-
-    if (calcInput <= 2) {
+    if (calc <= 2) {
       return true;
     } else {
       console.log('Not possible to own more than 2%...');
