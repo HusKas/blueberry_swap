@@ -453,7 +453,8 @@ class App extends Component<any, IApp> {
         ethBalance = this.fromWei(
           ethBalanceInWei,
           this.state.tokenAData.decimals
-        ).toString();
+        );
+        ethBalance = Number.parseFloat(ethBalance).toFixed(3);
 
         this.setState({
           tokenABalance: ethBalance,
@@ -475,7 +476,9 @@ class App extends Component<any, IApp> {
         ethBalance = this.fromWei(
           ethBalanceInWei,
           this.state.tokenBData.decimals
-        ).toString();
+        );
+        ethBalance = Number.parseFloat(ethBalance).toFixed(3);
+
         this.setState({
           tokenBBalance: ethBalance,
           tokenBBalanceInWei: ethBalanceInWei,
@@ -499,7 +502,8 @@ class App extends Component<any, IApp> {
       tokenABalance = this.fromWei(
         tokenABalanceInWei,
         this.state.tokenAData.decimals
-      ).toString();
+      );
+      tokenABalance = Number.parseFloat(tokenABalance).toFixed(3);
 
       this.setState({ tokenABalance, tokenABalanceInWei });
     } catch (err) {
@@ -522,7 +526,9 @@ class App extends Component<any, IApp> {
       tokenBBalance = this.fromWei(
         tokenBBalanceInWei,
         this.state.tokenBData.decimals
-      ).toString();
+      );
+
+      tokenBBalance = Number.parseFloat(tokenBBalance).toFixed(3);
 
       this.setState({ tokenBBalance, tokenBBalanceInWei });
     } catch (err) {
