@@ -586,10 +586,31 @@ class App extends Component<any, IApp> {
     const balancePlusTrade =
       Number.parseInt(balanceOfUser) + Number.parseInt(amount);
 
-    let calc = (balancePlusTrade / Number.parseInt(tokenSupply)) * 100;
-    calc = Number.parseInt(calc.toFixed(2)) * 100;
+    let calcMaxTransactionVal = Number.parseInt(tokenSupply) * 0.0005;
+    calcMaxTransactionVal = Number.parseInt(calcMaxTransactionVal.toFixed(2));
 
-    if (calc <= 250) {
+    let calcPercentInputPercent =
+      (Number.parseInt(amount) / Number.parseInt(tokenSupply)) * 100;
+    console.log(calcPercentInputPercent);
+    calcPercentInputPercent = calcPercentInputPercent * 1000;
+    calcPercentInputPercent = Number.parseInt(
+      calcPercentInputPercent.toFixed()
+    );
+
+    let calcPercent = (balancePlusTrade / Number.parseInt(tokenSupply)) * 100;
+    console.log(calcPercent);
+    calcPercent = calcPercent * 1000;
+    calcPercent = Number.parseInt(calcPercent.toFixed());
+
+    console.log(calcMaxTransactionVal, calcPercent, calcPercentInputPercent);
+
+    if (calcPercentInputPercent > 50) {
+      console.log(`Max allowed transaction is: ${calcMaxTransactionVal}`);
+      this.setMsg(`Max allowed transaction is: ${calcMaxTransactionVal}`);
+      return false;
+    }
+
+    if (calcPercent <= 2500) {
       return true;
     } else {
       console.log('Not possible to own more than 2%...');
@@ -1133,8 +1154,6 @@ class App extends Component<any, IApp> {
         if (reserveCalc && reserveCalc.gt(0)) {
           if (BigNumber.from(tokenAmount).gt(0)) {
             const res = await this._getTokenAmountOut(tokenAmount);
-
-            console.log(res);
 
             if (!res) {
               console.log('Price impact is to high...');
