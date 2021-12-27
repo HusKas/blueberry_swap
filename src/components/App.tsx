@@ -639,7 +639,7 @@ class App extends Component<any, IApp> {
       return true;
     } else {
       console.log('Input fields must not be empty');
-      this.state.setMsg('Input fields must not be empty');
+      this.setMsg('Input fields must not be empty');
       this.setState({
         loading: false,
       });
@@ -1264,7 +1264,7 @@ class App extends Component<any, IApp> {
 
   setMsg = (msgTxt: string) => {
     this.setState({ msg: true, msgTxt });
-    setTimeout(() => this.setState({ msg: false }), 5000);
+    setTimeout(() => this.setState({ msg: false }), 7000);
   };
 
   getTokenAData = async (tokenAData: ITokenData, isModulActive: false) => {
