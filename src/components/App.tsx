@@ -604,11 +604,11 @@ class App extends Component<any, IApp> {
 
     console.log(calcMaxTransactionVal, calcPercent, calcPercentInputPercent);
 
-    if (calcPercentInputPercent > 50) {
-      console.log(`Max allowed transaction is: ${calcMaxTransactionVal}`);
-      this.setMsg(`Max allowed transaction is: ${calcMaxTransactionVal}`);
-      return false;
-    }
+    // if (calcPercentInputPercent > 50) {
+    //   console.log(`Max allowed transaction is: ${calcMaxTransactionVal}`);
+    //   this.setMsg(`Max allowed transaction is: ${calcMaxTransactionVal}`);
+    //   return false;
+    // }
 
     if (calcPercent <= 2500) {
       return true;
