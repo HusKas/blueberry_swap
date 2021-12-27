@@ -738,7 +738,6 @@ class App extends Component<any, IApp> {
           setTimeout(() => {
             this.setState({ tx: null });
           }, 3000);
-          window.location.reload(true);
         } catch (err) {
           this.setState({ loading: false });
         }
@@ -807,7 +806,6 @@ class App extends Component<any, IApp> {
           setTimeout(() => {
             this.setState({ tx: null });
           }, 3000);
-          window.location.reload(true);
         } catch (err) {
           this.setState({ loading: false });
         }
@@ -894,7 +892,6 @@ class App extends Component<any, IApp> {
           setTimeout(() => {
             this.setState({ tx: null });
           }, 3000);
-          window.location.reload(true);
         } catch (err) {
           this.setState({ loading: false });
         }
@@ -979,7 +976,6 @@ class App extends Component<any, IApp> {
       setTimeout(() => {
         this.setState({ tx: null });
       }, 3000);
-      window.location.reload(true);
     } catch (e: any) {
       console.log(e);
       console.log('Could not remove liquidity');
@@ -1056,7 +1052,6 @@ class App extends Component<any, IApp> {
           setTimeout(() => {
             this.setState({ tx: null });
           }, 3000);
-          window.location.reload(true);
         } catch (err) {
           console.log(
             `swapExactETHForTokensSupportingFeeOnTransferTokens failed ${err}`
@@ -1121,7 +1116,6 @@ class App extends Component<any, IApp> {
           setTimeout(() => {
             this.setState({ tx: null });
           }, 3000);
-          window.location.reload(true);
         } catch (err) {
           console.log(
             `swapExactTokensForETHSupportingFeeOnTransferTokens failed ${err}`
@@ -1193,7 +1187,6 @@ class App extends Component<any, IApp> {
           setTimeout(() => {
             this.setState({ tx: null });
           }, 3000);
-          window.location.reload(true);
         } catch (err) {
           console.log(
             `swapExactTokensForTokensSupportingFeeOnTransferTokens failed ${err}`
