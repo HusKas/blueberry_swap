@@ -322,7 +322,7 @@ class SwapTokens extends Component<IProps, IState> {
 
               await this.context.getPriceImpactBToken(inputAmountInWei);
 
-              exchangePrice = await this.context.getTokenBAmount(
+              exchangePrice = await this.context.getTokenAAmount(
                 this.context.toWei(1, this.context.tokenBData.decimals)
               );
 
@@ -476,7 +476,7 @@ class SwapTokens extends Component<IProps, IState> {
 
               await this.context.getPriceImpactBToken(inputAmountInWei);
 
-              exchangePrice = await this.context.getTokenBAmount(
+              exchangePrice = await this.context.getTokenAAmount(
                 this.context.toWei(1, this.context.tokenBData.decimals)
               );
 
@@ -649,7 +649,10 @@ class SwapTokens extends Component<IProps, IState> {
                 <>
                   <span className="float-left text-muted">Exchange Rate</span>
                   <br />
-                  <span className="float-right text-muted">
+                  <span
+                    className="float-right text-muted"
+                    style={{ width: '100%', padding: 5 }}
+                  >
                     <i style={{ margin: '3px' }}>1</i>
                     {this.context.tokenBData?.symbol} =
                     <i style={{ margin: '3px' }}>{this.state?.calcStandard}</i>
