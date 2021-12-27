@@ -624,7 +624,7 @@ class App extends Component<any, IApp> {
       return true;
     } else {
       console.log('Not enough balance');
-      this.state.setMsg('Not enough balance..');
+      this.setMsg('Not enough balance..');
       this.setState({
         loading: false,
       });
