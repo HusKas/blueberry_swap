@@ -3,7 +3,7 @@ import Identicon from 'identicon.js';
 import styled from 'styled-components';
 import logo from '../images/logo_blueberry.png';
 import Context from './Context';
-import { FaWallet } from 'react-icons/fa';
+import { FaWallet, FaSignOutAlt } from 'react-icons/fa';
 
 const WrongNetwork = styled.div`
   border: 0.5px solid deeppink;
@@ -68,6 +68,18 @@ class Navbar extends Component<IProps, IState> {
                 onClick={this.context.connectToWeb3}
               ></FaWallet>
             </li>
+            {this.props.account ? (
+              <li className="px-3">
+                <FaSignOutAlt
+                  size={34}
+                  color="orange"
+                  cursor="pointer"
+                  onClick={this.context.disConnect}
+                ></FaSignOutAlt>
+              </li>
+            ) : (
+              ''
+            )}
           </ul>
         </div>
       </nav>

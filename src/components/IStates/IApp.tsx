@@ -73,4 +73,5 @@ export interface IApp {
   pairAddress: any;
   replaceDigitsWithZeros(inputAmount: any): any;
   whiteListUser: any[];
+  disConnect(): void;
 }

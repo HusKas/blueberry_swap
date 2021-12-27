@@ -135,6 +135,7 @@ class App extends Component<any, IApp> {
       pairAddress: '',
       replaceDigitsWithZeros: this.replaceDigitsWithZeros,
       whiteListUser: [],
+      disConnect: this.disConnect,
     };
   }
 
@@ -226,6 +227,7 @@ class App extends Component<any, IApp> {
       console.log('disconnect...');
       await this.state.web3Modal.clearCachedProvider();
       localStorage.clear();
+      window.location.reload(true);
     } catch (e: any) {
       console.log(e);
     }
@@ -1051,6 +1053,8 @@ class App extends Component<any, IApp> {
 
       const reserves = await pairContract.getReserves();
 
+      console.log(reserves.toString());
+
       const [reserve0, reserve1] = reserves;
 
       const reserveCalc = BigNumber.from(reserve0).add(
@@ -1129,6 +1133,8 @@ class App extends Component<any, IApp> {
         if (reserveCalc && reserveCalc.gt(0)) {
           if (BigNumber.from(tokenAmount).gt(0)) {
             const res = await this._getTokenAmountOut(tokenAmount);
+
+            console.log(res);
 
             if (!res) {
               console.log('Price impact is to high...');
