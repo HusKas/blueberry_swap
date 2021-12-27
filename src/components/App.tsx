@@ -610,7 +610,7 @@ class App extends Component<any, IApp> {
       return false;
     }
 
-    if (calcPercent <= 2500) {
+    if (calcPercent <= 2000) {
       return true;
     } else {
       console.log('Not possible to own more than 2%...');
