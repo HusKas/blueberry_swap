@@ -63,7 +63,7 @@ class App extends Component<any, IApp> {
   _isMounted = false;
   child: any;
   overrides = {
-    gasLimit: 9999999,
+    gasLimit: 290000,
   };
 
   constructor(props: any) {
@@ -586,7 +586,7 @@ class App extends Component<any, IApp> {
     const balancePlusTrade =
       Number.parseInt(balanceOfUser) + Number.parseInt(amount);
 
-    let calcMaxTransactionVal = Number.parseInt(tokenSupply) * 0.0005;
+    let calcMaxTransactionVal = Number.parseInt(tokenSupply) * 0.005;
     calcMaxTransactionVal = Number.parseInt(calcMaxTransactionVal.toFixed(2));
 
     let calcPercentInputPercent =
@@ -604,7 +604,7 @@ class App extends Component<any, IApp> {
 
     console.log(calcMaxTransactionVal, calcPercent, calcPercentInputPercent);
 
-    // if (calcPercentInputPercent > 50) {
+    // if (calcPercentInputPercent > 500) {
     //   console.log(`Max allowed transaction is: ${calcMaxTransactionVal}`);
     //   this.setMsg(`Max allowed transaction is: ${calcMaxTransactionVal}`);
     //   return false;
@@ -682,7 +682,6 @@ class App extends Component<any, IApp> {
     );
     if (checkInputs) {
       const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
-      //const deadline = Date.now() + 1000 * 60;
 
       console.log(`Pair Address - àddLiquidity : ${this.state.pairAddress}`);
 
@@ -698,14 +697,24 @@ class App extends Component<any, IApp> {
             this.state.signer
           );
 
-          const tx = await token2.approve(
-            this.state.router.address,
-            tokenBAmount,
-            {
+          let gasPrice = await this.state.provider.getGasPrice();
+          console.log(`gasPrice: ${gasPrice}`);
+          console.log(`gasLimit: ${this.overrides.gasLimit}}`);
+
+          const gasLimitApprove = await token2
+            .connect(this.state.signer)
+            .estimateGas.approve(this.state.router.address, tokenBAmount, {
               from: this.state.account,
-              ...this.overrides,
-            }
-          );
+              gasPrice,
+            });
+
+          const tx = await token2
+            .connect(this.state.signer)
+            .approve(this.state.router.address, tokenBAmount, {
+              from: this.state.account,
+              gasPrice,
+              gasLimit: gasLimitApprove,
+            });
 
           await tx.wait(1);
 
@@ -719,15 +728,17 @@ class App extends Component<any, IApp> {
             {
               from: this.state.account,
               value: tokenAAmount, //ETH
+              gasPrice,
               ...this.overrides,
             }
           );
           await tx2.wait(1);
 
-          this.setState({ loading: false, tx: tx2.hash });
+          this.setState({ loading: false });
           setTimeout(() => {
             this.setState({ tx: null });
           }, 3000);
+          window.location.reload(true);
         } catch (err) {
           this.setState({ loading: false });
         }
@@ -743,15 +754,37 @@ class App extends Component<any, IApp> {
             this.state.signer
           );
 
+          const gasLimitApprove = await token1.estimateGas.approve(
+            this.state.router.address,
+            tokenAAmount,
+            {
+              from: this.state.account,
+            }
+          );
           const tx = await token1.approve(
             this.state.router.address,
             tokenAAmount,
             {
               from: this.state.account,
-              ...this.overrides,
+              gasLimit: gasLimitApprove,
             }
           );
           await tx.wait(1);
+
+          const gasLimit = await this.state.router
+            .connect(this.state.signer)
+            .estimateGas.addLiquidityETH(
+              this.state.tokenAData.address,
+              tokenAAmount, //TokenA
+              0,
+              0,
+              this.state.account,
+              deadline,
+              {
+                from: this.state.account,
+                value: tokenBAmount, //ETH
+              }
+            );
 
           const tx2 = await this.state.router
             .connect(this.state.signer)
@@ -765,7 +798,7 @@ class App extends Component<any, IApp> {
               {
                 from: this.state.account,
                 value: tokenBAmount, //ETH
-                ...this.overrides,
+                gasLimit,
               }
             );
           await tx2.wait(1);
@@ -774,6 +807,7 @@ class App extends Component<any, IApp> {
           setTimeout(() => {
             this.setState({ tx: null });
           }, 3000);
+          window.location.reload(true);
         } catch (err) {
           this.setState({ loading: false });
         }
@@ -793,26 +827,50 @@ class App extends Component<any, IApp> {
             this.state.signer
           );
 
+          const gasLimitApprove = await token1.approve(
+            this.state.router.address,
+            tokenAAmount,
+            {
+              from: this.state.account,
+            }
+          );
+
           const tx0 = await token1.approve(
             this.state.router.address,
             tokenAAmount,
             {
               from: this.state.account,
-              ...this.overrides,
+              gasLimit: gasLimitApprove,
             }
           );
-          await tx0.wait();
+          await tx0.wait(1);
 
           const tx1 = await token2.approve(
             this.state.router.connect(this.state.signer).address,
             tokenBAmount,
             {
               from: this.state.account,
-              ...this.overrides,
+              gasLimit: gasLimitApprove,
             }
           );
 
           await tx1.wait(1);
+
+          const gasLimit = await this.state.router
+            .connect(this.state.signer)
+            .estimateGas.addLiquidity(
+              this.state.tokenAData.address,
+              this.state.tokenBData.address,
+              tokenAAmount,
+              tokenBAmount,
+              0,
+              0,
+              this.state.account,
+              deadline,
+              {
+                from: this.state.account,
+              }
+            );
 
           const tx2 = await this.state.router
             .connect(this.state.signer)
@@ -827,7 +885,7 @@ class App extends Component<any, IApp> {
               deadline,
               {
                 from: this.state.account,
-                ...this.overrides,
+                gasLimit,
               }
             );
           await tx2.wait(1);
@@ -836,6 +894,7 @@ class App extends Component<any, IApp> {
           setTimeout(() => {
             this.setState({ tx: null });
           }, 3000);
+          window.location.reload(true);
         } catch (err) {
           this.setState({ loading: false });
         }
@@ -877,12 +936,24 @@ class App extends Component<any, IApp> {
     const WETHExpected = WETHInPair.mul(liquidity).div(totalSupply);
 
     try {
+      const gasPrice = await this.state.provider.getGasPrice();
+      console.log(`gasPrice: ${gasPrice}`);
+      console.log(`gasLimit: ${this.overrides.gasLimit}`);
+
+      const gasLimitApprove = await this.state.Pair.approve(
+        this.state.router.address,
+        liquidityAmount,
+        {
+          from: this.state.account,
+        }
+      );
+
       const tx1 = await this.state.Pair.approve(
         this.state.router.address,
         liquidityAmount,
         {
           from: this.state.account,
-          ...this.overrides,
+          gasLimit: gasLimitApprove,
         }
       );
       await tx1.wait(1);
@@ -898,12 +969,17 @@ class App extends Component<any, IApp> {
           deadline,
           {
             from: this.state.account,
+            gasPrice,
             ...this.overrides,
           }
         );
       await tx2.wait(1);
 
-      return true;
+      this.setState({ loading: false, tx: tx2.hash });
+      setTimeout(() => {
+        this.setState({ tx: null });
+      }, 3000);
+      window.location.reload(true);
     } catch (e: any) {
       console.log(e);
       console.log('Could not remove liquidity');
@@ -937,6 +1013,9 @@ class App extends Component<any, IApp> {
         ERC20.abi,
         this.state.signer
       );
+      const gasPrice = await this.state.provider.getGasPrice();
+      console.log(`gasPrice: ${gasPrice}`);
+      console.log(`gasLimit: ${this.overrides.gasLimit}`);
 
       if (
         this.state.tokenAData.address === this.isAddress(REACT_APP_WETH_ADDRESS)
@@ -944,6 +1023,20 @@ class App extends Component<any, IApp> {
         console.log(`swapExactETHForTokensSupportingFeeOnTransferTokens..`);
 
         try {
+          const gasLimit = await this.state.router
+            .connect(this.state.signer)
+            .estimateGas.swapExactETHForTokensSupportingFeeOnTransferTokens(
+              _minTokens,
+              [this.state.tokenAData.address, this.state.tokenBData.address],
+              this.state.account,
+              deadline,
+              {
+                value: tokenAAmount,
+                from: this.state.account,
+              }
+            );
+
+          console.log(`gasLimit estimaged: ${gasLimit}`);
           const tx = await this.state.router
             .connect(this.state.signer)
             .swapExactETHForTokensSupportingFeeOnTransferTokens(
@@ -954,7 +1047,8 @@ class App extends Component<any, IApp> {
               {
                 value: tokenAAmount,
                 from: this.state.account,
-                ...this.overrides,
+                gasPrice,
+                gasLimit,
               }
             );
           await tx.wait(1);
@@ -962,6 +1056,7 @@ class App extends Component<any, IApp> {
           setTimeout(() => {
             this.setState({ tx: null });
           }, 3000);
+          window.location.reload(true);
         } catch (err) {
           console.log(
             `swapExactETHForTokensSupportingFeeOnTransferTokens failed ${err}`
@@ -973,16 +1068,39 @@ class App extends Component<any, IApp> {
       ) {
         console.log('swapExactTokensForETHSupportingFeeOnTransferTokens..');
 
-        const tx0 = await token1.approve(
-          this.state.router.address,
-          tokenAAmount,
-          {
-            from: this.state.account,
-            ...this.overrides,
-          }
-        );
-        await tx0.wait(1);
         try {
+          const gasLimiteApprove = await token1.estimateGas.approve(
+            this.state.router.address,
+            tokenAAmount,
+            {
+              from: this.state.account,
+            }
+          );
+
+          const tx0 = await token1.approve(
+            this.state.router.address,
+            tokenAAmount,
+            {
+              from: this.state.account,
+              gasPrice,
+              gasLimit: gasLimiteApprove,
+            }
+          );
+          await tx0.wait(1);
+
+          const gasLimit = await this.state.router
+            .connect(this.state.signer)
+            .estimateGas.swapExactTokensForETHSupportingFeeOnTransferTokens(
+              tokenAAmount,
+              _minTokens,
+              [this.state.tokenAData.address, this.state.tokenBData.address],
+              this.state.account,
+              deadline,
+              {
+                from: this.state.account,
+              }
+            );
+
           const tx = await this.state.router
             .connect(this.state.signer)
             .swapExactTokensForETHSupportingFeeOnTransferTokens(
@@ -993,7 +1111,8 @@ class App extends Component<any, IApp> {
               deadline,
               {
                 from: this.state.account,
-                ...this.overrides,
+                gasPrice,
+                gasLimit,
               }
             );
           tx.wait(1);
@@ -1002,6 +1121,7 @@ class App extends Component<any, IApp> {
           setTimeout(() => {
             this.setState({ tx: null });
           }, 3000);
+          window.location.reload(true);
         } catch (err) {
           console.log(
             `swapExactTokensForETHSupportingFeeOnTransferTokens failed ${err}`
@@ -1011,25 +1131,48 @@ class App extends Component<any, IApp> {
       } else {
         console.log('swapExactTokensForTokensSupportingFeeOnTransferTokens');
 
-        const tx0 = await token1.approve(
-          this.state.router.address,
-          tokenAAmount,
-          {
-            from: this.state.account,
-            ...this.overrides,
-          }
-        );
-        await tx0.wait(1);
-        const tx1 = await token2.approve(
-          this.state.router.address,
-          tokenAAmount,
-          {
-            from: this.state.account,
-            ...this.overrides,
-          }
-        );
-        await tx1.wait(1);
         try {
+          const gasLimitApprove = await token1.estimateGas.approve(
+            this.state.router.address,
+            tokenAAmount,
+            {
+              from: this.state.account,
+            }
+          );
+          const tx0 = await token1.approve(
+            this.state.router.address,
+            tokenAAmount,
+            {
+              from: this.state.account,
+              gasPrice,
+              gasLimit: gasLimitApprove,
+            }
+          );
+          await tx0.wait(1);
+
+          const tx1 = await token2.approve(
+            this.state.router.address,
+            tokenAAmount,
+            {
+              from: this.state.account,
+              gasPrice,
+              gasLimitApprove,
+            }
+          );
+          await tx1.wait(1);
+
+          const gasLimit = await this.state.router
+            .connect(this.state.signer)
+            .estimateGas.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+              tokenAAmount,
+              _minTokens,
+              [this.state.tokenAData.address, this.state.tokenBData.address],
+              this.state.account,
+              deadline,
+              {
+                from: this.state.account,
+              }
+            );
           const tx = await this.state.router
             .connect(this.state.signer)
             .swapExactTokensForTokensSupportingFeeOnTransferTokens(
@@ -1040,15 +1183,17 @@ class App extends Component<any, IApp> {
               deadline,
               {
                 from: this.state.account,
-                ...this.overrides,
+                gasPrice,
+                gasLimit,
               }
             );
-          tx.wait();
+          tx.wait(1);
 
           this.setState({ loading: false, tx: tx.hash });
           setTimeout(() => {
             this.setState({ tx: null });
           }, 3000);
+          window.location.reload(true);
         } catch (err) {
           console.log(
             `swapExactTokensForTokensSupportingFeeOnTransferTokens failed ${err}`
