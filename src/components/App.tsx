@@ -585,11 +585,9 @@ class App extends Component<any, IApp> {
       Number.parseInt(balanceOfUser) + Number.parseInt(amount);
 
     let calc = (balancePlusTrade / Number.parseInt(tokenSupply)) * 100;
-    calc = Number.parseInt(calc.toFixed(0));
+    calc = Number.parseInt(calc.toFixed(2)) * 100;
 
-    console.log(calc);
-
-    if (calc <= 2) {
+    if (calc <= 250) {
       return true;
     } else {
       console.log('Not possible to own more than 2%...');
@@ -691,8 +689,8 @@ class App extends Component<any, IApp> {
           const tx2 = await this.state.router.addLiquidityETH(
             this.state.tokenBData.address,
             tokenBAmount, //TokenB
-            tokenBAmount,
-            tokenAAmount,
+            0,
+            0,
             this.state.account,
             deadline,
             {
@@ -1052,8 +1050,6 @@ class App extends Component<any, IApp> {
       );
 
       const reserves = await pairContract.getReserves();
-
-      console.log(reserves.toString());
 
       const [reserve0, reserve1] = reserves;
 
