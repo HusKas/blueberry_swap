@@ -4,7 +4,6 @@
     "address": "0xa60f291b5663310796cA3c0a3d7551a77A9ee1DB",
     "symbol": "BNB",
     "decimals": 18,
-    "chainId": 4,
     "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png"
   },
   {
@@ -12,7 +11,27 @@
     "address": "0xDE08dADF2953AEc0407758E09F1dAa3A004db644",
     "symbol": "Blueberry",
     "decimals": 18,
-    "chainId": 4,
     "logoURI": "https://avatars.githubusercontent.com/u/94470848?v=4"
+  },
+  {
+    "name": "BTCB",
+    "address": "0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c",
+    "symbol": "BTCB",
+    "decimals": 18,
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/1.png"
+  },
+  {
+    "name": "BUSD",
+    "address": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
+    "symbol": "BUSD",
+    "decimals": 18,
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/4687.png"
+  },
+  {
+    "name": "USDT",
+    "address": "0x63b7e5aE00cc6053358fb9b97B361372FbA10a5e",
+    "symbol": "USDT",
+    "decimals": 6,
+    "logoURI": "https://s2.coinmarketcap.com/static/img/coins/64x64/825.png"
   }
 ]
