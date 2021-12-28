@@ -1,9 +1,8 @@
 import { task } from 'hardhat/config';
 import '@nomiclabs/hardhat-waffle';
+import '@nomiclabs/hardhat-etherscan';
 import { config as dotenvConfig } from 'dotenv';
 import { resolve } from 'path';
-import '@nomiclabs/hardhat-etherscan';
-
 dotenvConfig({ path: resolve(__dirname, './.env') });
 
 task('accounts', 'Prints the list of accounts', async (args, hre) => {

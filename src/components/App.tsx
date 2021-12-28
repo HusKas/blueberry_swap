@@ -22,6 +22,7 @@ import AddLiquidity from './Liquidity';
 import data from '../data.json';
 import whiteList from '../whiteList.json';
 import { ModalSlippage } from './ModalSlippage';
+
 import {
   REACT_APP_ZERO_ADDRESS,
   REACT_APP_BLUEBERRY_ADDRESS,
@@ -1339,9 +1340,11 @@ class App extends Component<any, IApp> {
           reserves._reserve1
         );
       } else {
-        res = await this.state.router
-          .connect(this.state.signer)
-          .getAmountOut(_amount, reserves._reserve1, reserves._reserve0);
+        res = await this.state.router.getAmountOut(
+          _amount,
+          reserves._reserve1,
+          reserves._reserve0
+        );
       }
 
       return res;
